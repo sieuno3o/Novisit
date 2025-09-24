@@ -2,9 +2,9 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ main, test ]
+    branches: [ main, devevlop, test ]
   pull_request:
-    branches: [ main, test ]
+    branches: [ main, develop, test ]
 
 env:
   NODE_VERSION: '18'
