@@ -6,6 +6,33 @@ on:
   workflow_dispatch: # Manual trigger
 
 jobs:
+  check-ci-status:
+    name: Check CI Status
+    runs-on: ubuntu-latest
+    outputs:
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
+
+    steps:
+      - name: Check CI workflow status
+        id: check
+        run: |
+          # CI 워크플로우가 성공했는지 확인
+          CI_STATUS=$(gh api repos/${{ github.repository }}/actions/runs \
+            --jq '.workflow_runs[] | select(.head_sha == "${{ github.sha }}" and .name == "Continuous Integration") | .conclusion' \
+            --limit 1)
+          
+          if [ "$CI_STATUS" = "success" ]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "✅ CI completed successfully, proceeding with deployment"
+          else
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "❌ CI not completed or failed, skipping deployment"
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          
   deploy:
     name: Deploy to AWS EC2
     runs-on: ubuntu-latest
