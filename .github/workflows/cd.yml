@@ -1,0 +1,126 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [ main, test ]
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-files-${{ github.sha }}
+          path: ./artifacts
+
+      - name: Create deployment package
+        run: |
+          mkdir -p deployment
+          cp -r artifacts/client/dist deployment/
+          cp -r artifacts/server/dist deployment/
+          cp -r artifacts/server/package.json deployment/
+          cp -r artifacts/docker-compose.yml deployment/
+          cp -r artifacts/docker-compose.dev.yml deployment/
+          cp -r artifacts/Dockerfile deployment/
+          cp -r artifacts/package.json deployment/
+          tar -czf deployment.tar.gz -C deployment .
+
+      - name: Deploy to AWS EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          script: |
+            # Create application directory
+            sudo mkdir -p /opt/novisit
+            cd /opt/novisit
+            
+            # Stop existing services
+            sudo docker-compose down || echo "No existing services to stop"
+            
+            # Backup current deployment (if exists)
+            if [ -d "current" ]; then
+              sudo mv current backup-$(date +%Y%m%d-%H%M%S) || echo "No current deployment to backup"
+            fi
+            
+            # Create new deployment directory
+            sudo mkdir -p current
+            cd current
+
+      - name: Upload deployment package
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          source: "deployment.tar.gz"
+          target: "/opt/novisit/current/"
+
+      - name: Extract and setup deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          script: |
+            cd /opt/novisit/current
+            
+            # Extract deployment package
+            tar -xzf deployment.tar.gz
+            rm deployment.tar.gz
+            
+            # Set proper permissions
+            sudo chown -R $USER:$USER /opt/novisit/current
+            
+            # Install production dependencies
+            cd server && npm ci --only=production
+            cd ..
+            
+            # Create environment file
+            cat > server/.env << EOF
+            NODE_ENV=production
+            PORT=5000
+            MONGODB_URI=${{ secrets.MONGODB_URI }}
+            REDIS_URL=${{ secrets.REDIS_URL }}
+            EOF
+            
+            # Start services with Docker Compose
+            sudo docker-compose up -d --build
+            
+            # Wait for services to be ready
+            sleep 30
+            
+            # Health check
+            curl -f http://localhost:5000/health || exit 1
+            
+            # Cleanup old backups (keep last 5)
+            cd /opt/novisit
+            ls -t backup-* | tail -n +6 | xargs -r sudo rm -rf
+
+      - name: Notify deployment status
+        if: always()
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          script: |
+            echo "Deployment ${{ job.status }} at $(date)"
+            if [ "${{ job.status }}" = "success" ]; then
+              echo "✅ Deployment successful!"
+              echo "🌐 Application URL: http://${{ secrets.EC2_HOST }}:5000"
+            else
+              echo "❌ Deployment failed!"
+            fi

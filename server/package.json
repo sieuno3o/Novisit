@@ -1,0 +1,25 @@
+{
+  "name": "novisit-server",
+  "version": "1.0.0",
+  "description": "Novisit server with Express, BullMQ, Redis, MongoDB",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "mongoose": "^8.0.3",
+    "redis": "^4.6.10",
+    "bullmq": "^4.15.4"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.9.0",
+    "typescript": "^5.2.2",
+    "tsx": "^4.6.0"
+  }
+}

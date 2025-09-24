@@ -1,0 +1,36 @@
+{
+  "name": "novisit",
+  "version": "1.0.0",
+  "description": "Novisit - A full-stack web application with React, Node.js, Express, BullMQ, Redis, and MongoDB",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "cd server && npm run dev",
+    "client:dev": "cd client && npm run dev",
+    "build": "npm run client:build && npm run server:build",
+    "client:build": "cd client && npm run build",
+    "server:build": "cd server && npm run build",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": [
+    "react",
+    "nodejs",
+    "express",
+    "bullmq",
+    "redis",
+    "mongodb",
+    "docker"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "workspaces": [
+    "client",
+    "server"
+  ]
+}

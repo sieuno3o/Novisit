@@ -1,0 +1,58 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, test ]
+  pull_request:
+    branches: [ main, test ]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  ci:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint code
+        run: |
+          cd client && npm run lint || echo "No lint script in client"
+          cd ../server && npm run lint || echo "No lint script in server"
+
+      - name: Type check
+        run: |
+          cd client && npm run type-check || echo "No type-check script in client"
+          cd ../server && npm run type-check || echo "No type-check script in server"
+
+      - name: Build client
+        run: npm run client:build
+
+      - name: Build server
+        run: npm run server:build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-files-${{ github.sha }}
+          path: |
+            client/dist/
+            server/dist/
+            server/package.json
+            docker-compose.yml
+            docker-compose.dev.yml
+            Dockerfile
+            package.json
+          retention-days: 7
