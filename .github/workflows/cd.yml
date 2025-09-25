@@ -93,11 +93,29 @@ jobs:
 
       - name: Debug connection info
         run: |
+          echo "EC2_HOST: '${{ secrets.EC2_HOST }}'"
           echo "EC2_HOST length: $(echo '${{ secrets.EC2_HOST }}' | wc -c)"
           echo "EC2_USERNAME: '${{ secrets.EC2_USERNAME }}'"
           echo "EC2_PORT: '${{ secrets.EC2_PORT }}'"
           echo "SSH_KEY length: $(echo '${{ secrets.EC2_SSH_KEY }}' | wc -c)"
           echo "SSH_KEY starts with: $(echo '${{ secrets.EC2_SSH_KEY }}' | head -c 50)"
+          echo "SSH_KEY ends with: $(echo '${{ secrets.EC2_SSH_KEY }}' | tail -c 50)"
+
+      - name: Test SSH connection
+        run: |
+          echo "Testing SSH connection..."
+          # Save SSH key to file
+          echo '${{ secrets.EC2_SSH_KEY }}' > /tmp/ssh_key
+          chmod 600 /tmp/ssh_key
+          
+          # Test SSH connection with timeout
+          timeout 10 ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no -i /tmp/ssh_key \
+            -p ${{ secrets.EC2_PORT || 22 }} \
+            ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} \
+            "echo 'SSH connection successful'" || echo "SSH connection failed"
+          
+          # Clean up
+          rm -f /tmp/ssh_key
 
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@v1.0.3
