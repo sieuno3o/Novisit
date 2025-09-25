@@ -89,6 +89,7 @@ jobs:
           
           # Copy client files
           cp -r client/dist deployment/client/
+          cp client/package.json deployment/client/
           
           # Copy server files
           cp -r server/dist deployment/server/
@@ -210,12 +211,28 @@ jobs:
               find . -name "*.yml" -o -name "*.yaml"
             fi
             
+            # Check if required package.json files exist
+            echo "=== Checking package.json files ==="
+            if [ -f "client/package.json" ]; then
+              echo "✅ client/package.json found"
+            else
+              echo "❌ client/package.json not found"
+            fi
+            
+            if [ -f "server/package.json" ]; then
+              echo "✅ server/package.json found"
+            else
+              echo "❌ server/package.json not found"
+            fi
+            
+            if [ -f "package.json" ]; then
+              echo "✅ root package.json found"
+            else
+              echo "❌ root package.json not found"
+            fi
+            
             # Set proper permissions after extraction
             sudo chown -R $USER:$USER /opt/novisit/current
-            
-            # Install production dependencies
-            cd server && npm ci --only=production
-            cd ..
             
             # Create environment file
             cat > server/.env << EOF
