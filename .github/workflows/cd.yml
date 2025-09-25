@@ -64,23 +64,40 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          name: build-files-${{ github.sha }}
-          path: ./artifacts
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build client
+        run: npm run client:build
+
+      - name: Build server
+        run: npm run server:build
 
       - name: Create deployment package
         run: |
           mkdir -p deployment
-          cp -r artifacts/client/dist deployment/
-          cp -r artifacts/server/dist deployment/
-          cp -r artifacts/server/package.json deployment/
-          cp -r artifacts/docker-compose.yml deployment/
-          cp -r artifacts/docker-compose.dev.yml deployment/
-          cp -r artifacts/Dockerfile deployment/
-          cp -r artifacts/package.json deployment/
+          cp -r client/dist deployment/
+          cp -r server/dist deployment/
+          cp -r server/package.json deployment/
+          cp -r docker-compose.yml deployment/
+          cp -r docker-compose.dev.yml deployment/
+          cp -r Dockerfile deployment/
+          cp -r package.json deployment/
           tar -czf deployment.tar.gz -C deployment .
+
+      - name: Debug connection info
+        run: |
+          echo "EC2_HOST length: $(echo '${{ secrets.EC2_HOST }}' | wc -c)"
+          echo "EC2_USERNAME: '${{ secrets.EC2_USERNAME }}'"
+          echo "EC2_PORT: '${{ secrets.EC2_PORT }}'"
+          echo "SSH_KEY length: $(echo '${{ secrets.EC2_SSH_KEY }}' | wc -c)"
+          echo "SSH_KEY starts with: $(echo '${{ secrets.EC2_SSH_KEY }}' | head -c 50)"
 
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@v1.0.3
