@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Redis service
+  redis:
+    image: redis:7-alpine
+    container_name: novisit-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - novisit-network
+
+  # MongoDB service
+  mongodb:
+    image: mongo:7
+    container_name: novisit-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: novisit
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - novisit-network
+
+  # Application service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: novisit-app
+    ports:
+      - "5000:5000"
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongodb:27017/novisit
+      REDIS_URL: redis://redis:6379
+      PORT: 5000
+    depends_on:
+      - redis
+      - mongodb
+    networks:
+      - novisit-network
+
+volumes:
+  redis_data:
+  mongodb_data:
+
+networks:
+  novisit-network:
+    driver: bridge
