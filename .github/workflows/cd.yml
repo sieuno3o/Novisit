@@ -180,6 +180,9 @@ jobs:
           script: |
             cd /opt/novisit/current
             
+            # Set proper permissions BEFORE extraction
+            sudo chown -R $USER:$USER /opt/novisit/current
+            
             # Extract deployment package
             tar -xzf deployment.tar.gz
             rm deployment.tar.gz
@@ -197,7 +200,7 @@ jobs:
               find . -name "*.yml" -o -name "*.yaml"
             fi
             
-            # Set proper permissions
+            # Set proper permissions after extraction
             sudo chown -R $USER:$USER /opt/novisit/current
             
             # Install production dependencies
