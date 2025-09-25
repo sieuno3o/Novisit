@@ -184,6 +184,19 @@ jobs:
             tar -xzf deployment.tar.gz
             rm deployment.tar.gz
             
+            # Debug: List extracted files
+            echo "=== Extracted files ==="
+            ls -la
+            
+            # Check if docker-compose.yml exists
+            if [ -f "docker-compose.yml" ]; then
+              echo "✅ docker-compose.yml found"
+            else
+              echo "❌ docker-compose.yml not found"
+              echo "Available files:"
+              find . -name "*.yml" -o -name "*.yaml"
+            fi
+            
             # Set proper permissions
             sudo chown -R $USER:$USER /opt/novisit/current
             
