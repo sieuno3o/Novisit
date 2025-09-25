@@ -27,7 +27,7 @@ jobs:
     name: Deploy to AWS EC2
     runs-on: ubuntu-latest
     needs: wait-for-ci
-    if: needs.wait-for-ci.outputs.ci-success == 'true'
+    if: needs.wait-for-ci.outputs.ci-success == true
     
     steps:
       - name: Checkout code
