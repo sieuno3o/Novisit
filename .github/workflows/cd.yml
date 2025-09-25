@@ -83,13 +83,23 @@ jobs:
       - name: Create deployment package
         run: |
           mkdir -p deployment
-          cp -r client/dist deployment/
-          cp -r server/dist deployment/
-          cp -r server/package.json deployment/
-          cp -r docker-compose.yml deployment/
-          cp -r docker-compose.dev.yml deployment/
-          cp -r Dockerfile deployment/
-          cp -r package.json deployment/
+          # Create proper directory structure
+          mkdir -p deployment/client
+          mkdir -p deployment/server
+          
+          # Copy client files
+          cp -r client/dist deployment/client/
+          
+          # Copy server files
+          cp -r server/dist deployment/server/
+          cp server/package.json deployment/server/
+          
+          # Copy root files
+          cp docker-compose.yml deployment/
+          cp docker-compose.dev.yml deployment/
+          cp Dockerfile deployment/
+          cp package.json deployment/
+          
           tar -czf deployment.tar.gz -C deployment .
 
       - name: Debug connection info
