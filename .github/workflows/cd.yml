@@ -141,6 +141,12 @@ jobs:
             # Create new deployment directory
             sudo mkdir -p current
 
+      - name: Check deployment package
+        run: |
+          echo "Checking deployment package..."
+          ls -la deployment.tar.gz
+          echo "Package size: $(du -h deployment.tar.gz)"
+
       - name: Upload deployment package
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -149,7 +155,20 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT || 22 }}
           source: "deployment.tar.gz"
-          target: "/opt/novisit/current/"
+          target: "/home/${{ secrets.EC2_USERNAME }}/"
+
+      - name: Move deployment package to final location
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          script: |
+            # Move package to final location with proper permissions
+            sudo mv /home/${{ secrets.EC2_USERNAME }}/deployment.tar.gz /opt/novisit/current/
+            sudo chown ${{ secrets.EC2_USERNAME }}:${{ secrets.EC2_USERNAME }} /opt/novisit/current/deployment.tar.gz
+            ls -la /opt/novisit/current/
 
       - name: Extract and setup deployment
         uses: appleboy/ssh-action@v1.0.3
