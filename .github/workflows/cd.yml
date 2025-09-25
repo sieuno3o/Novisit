@@ -90,16 +90,19 @@ jobs:
           # Copy client files
           cp -r client/dist deployment/client/
           cp client/package.json deployment/client/
+          if [ -f "client/package-lock.json" ]; then cp client/package-lock.json deployment/client/; fi
           
           # Copy server files
           cp -r server/dist deployment/server/
           cp server/package.json deployment/server/
+          if [ -f "server/package-lock.json" ]; then cp server/package-lock.json deployment/server/; fi
           
           # Copy root files
           cp docker-compose.yml deployment/
           cp docker-compose.dev.yml deployment/
           cp Dockerfile deployment/
           cp package.json deployment/
+          if [ -f "package-lock.json" ]; then cp package-lock.json deployment/; fi
           
           tar -czf deployment.tar.gz -C deployment .
 

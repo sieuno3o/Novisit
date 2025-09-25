@@ -11,7 +11,11 @@ COPY package*.json ./
 COPY server/package*.json ./server/
 
 # Install production dependencies
-RUN npm ci --only=production --workspace=server
+RUN if [ -f "package-lock.json" ]; then \
+      npm ci --omit=dev --workspace=server; \
+    else \
+      npm install --omit=dev --workspace=server; \
+    fi
 
 # Copy built application
 COPY --chown=nodejs:nodejs server/dist ./server/dist
