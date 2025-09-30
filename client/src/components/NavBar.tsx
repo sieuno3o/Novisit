@@ -1,8 +1,9 @@
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../auth";
 import "./NavBar.scss";
-// import "assets/style/_flex.scss";
-// import "assets/style/_typography.scss";
+import "../../public/assets/style/_typography.scss";
+import "../../public/assets/style/_flex.scss";
+import "../../public/assets/style/_colors.scss";
 
 export default function NavBar() {
   const { user, signout } = useAuth();
@@ -12,28 +13,40 @@ export default function NavBar() {
   };
 
   return (
-    <header className="navbar">
-      <Link to="/" className="navbar__logo">
-        Novisit
-      </Link>
+    <header className="navbar flex-between">
+      <div>
+        <Link to="/" className="navbar__logo logo-text heading1">
+          Novisit
+        </Link>
+      </div>
 
-      <nav className="navbar__menu">
-        <NavLink to="/">홈</NavLink>
-        <NavLink to="/notice">공지</NavLink>
-        {user && <NavLink to="/mypage">마이페이지</NavLink>}
-      </nav>
+      <div className="navbar__menu body2 flex-center">
+        <NavLink to="/" className="nav-btn">
+          홈
+        </NavLink>
+        <NavLink to="/notice" className="nav-btn">
+          알림
+        </NavLink>
+        {user && (
+          <NavLink to="/mypage" className="nav-btn">
+            마이
+          </NavLink>
+        )}
+      </div>
 
-      <div className="navbar__auth">
+      <div className="navbar__auth body2 flex-center">
         {user ? (
           <>
             <span className="navbar__user">{user.name}님</span>
-            <button onClick={onLogout}>로그아웃</button>
+            <button className="nav-btn" onClick={onLogout}>
+              로그아웃
+            </button>
           </>
         ) : (
           <>
-            <Link to="/login">로그인</Link>
-            <span className="divider">|</span>
-            <Link to="/signup">회원가입</Link>
+            <NavLink to="/login" className="login">
+              로그인
+            </NavLink>
           </>
         )}
       </div>
