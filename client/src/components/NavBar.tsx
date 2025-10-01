@@ -38,13 +38,13 @@ export default function NavBar() {
         {user ? (
           <>
             <span className="navbar__user body3">{user.name}님</span>
-            <button className="logout-btn nav-btn body3" onClick={onLogout}>
+            <button className="logout-btn body3" onClick={onLogout}>
               로그아웃
             </button>
           </>
         ) : (
           <>
-            <NavLink to="/login" className="login-btn nav-btn body3">
+            <NavLink to="/login" className="login-btn body3">
               로그인
             </NavLink>
           </>
