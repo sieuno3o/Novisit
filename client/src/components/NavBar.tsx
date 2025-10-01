@@ -44,7 +44,7 @@ export default function NavBar() {
           </>
         ) : (
           <>
-            <NavLink to="/login" className="login body3">
+            <NavLink to="/login" className="login-btn nav-btn body3">
               로그인
             </NavLink>
           </>
