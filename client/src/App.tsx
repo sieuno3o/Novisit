@@ -1,20 +1,22 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Routes, Route } from "react-router-dom";
+import MainPage from "./pages/MainPage";
+import NoticePage from "./pages/NoticePage";
+import MyPage from "./pages/MyPage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import Layout from "./components/Layout";
 
-function App() {
+export default function App() {
   return (
-    <Router>
-      <div className="App">
-        <header>
-          <h1>Novisit</h1>
-        </header>
-        <main>
-          <Routes>
-            <Route path="/" element={<div>Welcome to Novisit!</div>} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
-  )
-}
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<MainPage />} />
+        <Route path="/notice" element={<NoticePage />} />
+        <Route path="/mypage" element={<MyPage />} />
+      </Route>
 
-export default App
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+    </Routes>
+  );
+}
