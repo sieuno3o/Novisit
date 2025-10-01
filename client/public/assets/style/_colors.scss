@@ -1,0 +1,17 @@
+$main-color-blue: #462aff;
+$main-color-pink: #d8349f;
+$main-color-yellow: #ffdc4e;
+$main-color-purple: #8f2990;
+
+.logo-text {
+  background: linear-gradient(
+    125deg,
+    $main-color-blue 0%,
+    $main-color-pink 50%,
+    $main-color-yellow 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}

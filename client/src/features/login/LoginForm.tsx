@@ -2,6 +2,9 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth";
+import "./LoginForm.scss";
+import "../../../public/assets/style/_flex.scss";
+import "../../../public/assets/style/_typography.scss";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -30,13 +33,9 @@ export default function LoginForm() {
   };
 
   return (
-    <form
-      onSubmit={onSubmit}
-      style={{ display: "grid", gap: 10, maxWidth: 360 }}
-    >
-      <h2>로그인</h2>
-
-      <label>
+    <div className="login-form flex-col-center">
+      <div className="login-logo heading1">로그인</div>
+      {/* <label>
         이메일
         <input
           type="email"
@@ -56,22 +55,48 @@ export default function LoginForm() {
           placeholder="••••••••"
           required
         />
-      </label>
+      </label> */}
+      {/* {error && <div style={{ color: "crimson" }}>{error}</div>} */}
+      <div className="login-actions flex-col-center">
+        <div className="kakao-login flex-row-center">
+          <img
+            className="kakao-img logo-img"
+            src="../../../public/assets/img/kakaologo.png"
+            alt="KakaoLogo"
+          />
+          <button
+            type="button"
+            className="login-form-btn kakao-login-button flex-center body2"
+          >
+            카카오로 계속하기
+          </button>
+        </div>
+        <div className="discord-login flex-row-center">
+          <img
+            className="discord-img logo-img"
+            src="../../../public/assets/img/discordlogo.png"
+            alt="discord"
+          />
+          <button
+            type="button"
+            className="login-form-btn discord-login-button flex-center body2"
+          >
+            디스코드로 계속하기
+          </button>
+        </div>
 
-      {error && <div style={{ color: "crimson" }}>{error}</div>}
-
-      <button type="submit">로그인</button>
-
-      {/* 테스트 로그인 */}
-      <button
-        type="button"
-        onClick={() => {
-          signin("FAKE_TOKEN_123", { id: "1", name: "tester" });
-          navigate(from, { replace: true });
-        }}
-      >
-        테스트 로그인
-      </button>
-    </form>
+        {/* 테스트 로그인 */}
+        <button
+          className="login-form-btn test-login-button flex-center body2"
+          type="button"
+          onClick={() => {
+            signin("FAKE_TOKEN_123", { id: "1", name: "tester" });
+            navigate(from, { replace: true });
+          }}
+        >
+          테스트 로그인
+        </button>
+      </div>
+    </div>
   );
 }
