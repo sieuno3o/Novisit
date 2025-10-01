@@ -29,6 +29,7 @@ router.get('/kakao/callback', async (req, res) => {
   try {
     const code = req.query.code as string // authorization code 
     const jwtTokens = await kakaoCallback(code)
+
     res.json(jwtTokens) // 프론트에는 전용 JWT만 보냄
   } catch (err) {
     console.error(err)

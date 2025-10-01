@@ -1,9 +1,10 @@
-import axios from 'axios'
-import { generateTokens } from './jwt'
+import axios from 'axios';
+import { generateTokens } from './jwt';
+import { findOrCreateUser } from '../services/authService';
 
+// 카카오 로그인 콜백
 export async function kakaoCallback(code: string) {
   // 1. Authorization Code → Access Token 교환
-  // 카카오 토큰 발급 api에 post 요청
   const tokenResponse = await axios.post(
     'https://kauth.kakao.com/oauth/token',
     new URLSearchParams({
@@ -14,23 +15,39 @@ export async function kakaoCallback(code: string) {
       code,
     }),
     { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-  )
+  );
 
-  const accessToken = tokenResponse.data.access_token
+  const { access_token, refresh_token, expires_in } = tokenResponse.data;
 
   // 2. 사용자 정보 조회
   const userResponse = await axios.get('https://kapi.kakao.com/v2/user/me', {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
+    headers: { Authorization: `Bearer ${access_token}` },
+  });
 
-  const kakaoUser = userResponse.data
+  const kakaoUser = userResponse.data;
+  const kakaoId = String(kakaoUser.id);
+  const kakaoEmail = kakaoUser.kakao_account?.email;
+  const kakaoNickname = kakaoUser.kakao_account?.profile?.nickname;
 
+  // 3. UserProfile 형태로 변환
+  const userProfile = {
+    id: kakaoId,
+    email: kakaoEmail,
+    name: kakaoNickname,
+    accessToken: access_token,
+    refreshToken: refresh_token,
+    tokenExpiresAt: new Date(Date.now() + expires_in * 1000),
+  };
+
+  // 4. DB에서 사용자 찾거나 생성 (공통 로직 활용)
+  const user = await findOrCreateUser('kakao', userProfile);
+
+  // 5. 자체 JWT 발급
   const payload = {
-    id: String(kakaoUser.id),
-    name: kakaoUser.kakao_account.profile.nickname,
-    email: kakaoUser.kakao_account.email,
-  }
+    id: String(user._id),
+    name: user.name ?? 'Unknown',
+    email: user.email,
+  };
 
-  // 3. 자체 JWT 발급
-  return generateTokens(payload)
+  return generateTokens(payload);
 }

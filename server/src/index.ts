@@ -23,7 +23,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/novisit')
   })
 
 // Redis connection
-const redisClient = createClient({
+export const redisClient = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379'
 })
 
