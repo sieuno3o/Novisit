@@ -1,4 +1,4 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
 import "./NavBar.scss";
 import "../../public/assets/style/_typography.scss";
@@ -7,9 +7,11 @@ import "../../public/assets/style/_colors.scss";
 
 export default function NavBar() {
   const { user, signout } = useAuth();
+  const navigate = useNavigate();
 
   const onLogout = () => {
     signout();
+    navigate("/");
   };
 
   return (
