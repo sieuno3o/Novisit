@@ -1,11 +1,12 @@
-$main-color-purple: #462aff;
+$main-color-blue: #462aff;
 $main-color-pink: #d8349f;
 $main-color-yellow: #ffdc4e;
+$main-color-purple: #8f2990;
 
 .logo-text {
   background: linear-gradient(
     125deg,
-    $main-color-purple 0%,
+    $main-color-blue 0%,
     $main-color-pink 50%,
     $main-color-yellow 100%
   );
