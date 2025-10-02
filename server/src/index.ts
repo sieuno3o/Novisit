@@ -2,6 +2,7 @@ import express from 'express'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import { createClient } from 'redis'
+import authRouter from './routes/authRoutes'
 
 // Load environment variables
 dotenv.config()
@@ -22,7 +23,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/novisit')
   })
 
 // Redis connection
-const redisClient = createClient({
+export const redisClient = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379'
 })
 
@@ -38,6 +39,8 @@ redisClient.connect()
 app.get('/api', (req, res) => {
   res.json({ message: 'Novisit API is running!' })
 })
+
+app.use('/auth', authRouter)
 
 // Health check endpoint
 app.get('/health', (req, res) => {
