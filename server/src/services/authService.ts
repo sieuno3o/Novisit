@@ -12,17 +12,12 @@ interface UserProfile {
   refreshToken?: string;
 }
 
-/**
- * Provider 정보를 받아 사용자를 찾거나 생성하고, 소셜 토큰을 Redis에 저장합니다.
- * @param providerName - 'kakao' | 'discord'
- * @param profile - 소셜 로그인 성공 시 받아온 사용자 프로필
- * @returns IUser - 시스템의 사용자 객체
- */
+// Provider 정보를 받아 사용자를 찾거나 생성하고 소셜 토큰을 Redis에 저장
 export async function findOrCreateUser(
   providerName: ProviderName,
   profile: UserProfile
 ): Promise<IUser> {
-  // C1: 이미 해당 provider로 로그인한 적 있는지 확인
+  // 이미 해당 provider로 로그인한 적 있는지 확인
   let user = await userRepository.findUserByProvider(providerName, profile.id);
   if (user) {
     await tokenRepository.storeProviderTokens(
@@ -41,25 +36,9 @@ export async function findOrCreateUser(
     name: profile.name,
   };
 
-  // C2: 다른 소셜 로그인으로 가입한 이메일이 있는지 확인 (계정 연동)
-  if (profile.email) {
-    const existingUserByEmail = await userRepository.findUserByEmail(profile.email);
-    if (existingUserByEmail) {
-      const linkedUser = await userRepository.linkProviderToUser(existingUserByEmail, providerData);
-      await tokenRepository.storeProviderTokens(
-        linkedUser.id,
-        providerName,
-        profile.accessToken,
-        profile.refreshToken
-      );
-      return linkedUser;
-    }
-  }
 
-  // C3: 완전히 새로운 사용자 생성
+  // 완전히 새로운 사용자 생성
   if (!profile.email) {
-    // 이메일이 없는 경우엔 에러를 발생시키거나, 고유한 임시 이메일을 생성해야 합니다.
-    // 여기서는 에러를 발생시키는 것으로 처리합니다.
     throw new Error('Email is required for new user registration.');
   }
   const newUser = await userRepository.createUser(
@@ -76,4 +55,43 @@ export async function findOrCreateUser(
   );
 
   return newUser;
+}
+
+// 기존 사용자에게 Discord 계정을 연동.
+export async function linkDiscordToUser(
+  userId: string,
+  profile: UserProfile
+): Promise<IUser> {
+  // 1. Discord 계정이 이미 다른 사용자와 연결되어 있는지 확인
+  const existingUserByProvider = await userRepository.findUserByProvider('discord', profile.id);
+  if (existingUserByProvider) {
+    throw new Error('이미 다른 계정에 연동된 디스코드 계정입니다.');
+  }
+
+  // 2. 현재 로그인한 사용자 정보 가져오기
+  const currentUser = await userRepository.findUserById(userId);
+  if (!currentUser) {
+    throw new Error('사용자를 찾을 수 없습니다.');
+  }
+
+  // 3. 연동할 프로바이더 정보 생성
+  const providerData: IOAuthProvider = {
+    provider: 'discord',
+    providerId: profile.id,
+    email: profile.email,
+    name: profile.name,
+  };
+
+  // 4. 사용자 계정에 프로바이더 연동
+  const linkedUser = await userRepository.linkProviderToUser(currentUser, providerData);
+
+  // 5. 소셜 토큰 저장
+  await tokenRepository.storeProviderTokens(
+    linkedUser.id,
+    'discord',
+    profile.accessToken,
+    profile.refreshToken
+  );
+
+  return linkedUser;
 }

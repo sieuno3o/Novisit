@@ -1,8 +1,7 @@
 import axios from 'axios';
-import { generateTokens } from './jwt';
-import { findOrCreateUser } from '../services/authService';
+import { linkDiscordToUser } from '../services/authService';
 
-export async function discordCallback(code: string) {
+export async function linkDiscordAccount(code: string, userId: string) {
   // 1. Authorization Code → Access Token 교환
   const tokenResponse = await axios.post(
     'https://discord.com/api/oauth2/token',
@@ -35,16 +34,11 @@ export async function discordCallback(code: string) {
     tokenExpiresAt: new Date(Date.now() + expires_in * 1000),
   };
 
-  // 4. DB에서 사용자 찾거나 생성 (공통 로직 활용)
-  const user = await findOrCreateUser('discord', userProfile);
+  // 4. DB에서 사용자 찾아서 디스코드 계정 연동
+  const user = await linkDiscordToUser(userId, userProfile);
 
-  // 5. 자체 JWT 발급
-  const payload = {
-    id: String(user._id),
-    name: user.name ?? 'Unknown',
-    email: user.email,
-  };
-
-
-  return generateTokens(payload);
+  return user;
 }
+
+
+

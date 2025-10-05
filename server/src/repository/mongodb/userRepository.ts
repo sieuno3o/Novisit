@@ -14,6 +14,11 @@ export const findUserByEmail = (email: string): Promise<IUser | null> => {
   return User.findOne({ email }).exec();
 };
 
+// ID로 사용자를 찾습니다.
+export const findUserById = (id: string): Promise<IUser | null> => {
+  return User.findById(id).exec();
+};
+
 //새로운 사용자를 생성합니다.
 
 export const createUser = (email: string, name: string | undefined, providerData: IOAuthProvider): Promise<IUser> => {
