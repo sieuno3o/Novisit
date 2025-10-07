@@ -2,11 +2,12 @@
 import { Request, Response, NextFunction } from 'express'
 import { verifyAccessToken, JwtPayload } from '../auth/jwt'
 
-// Request 타입 확장 TypeScript에서는 req.user 기본적으로 없음 JWT를 검증하고 payload를 req.user에 담기 위해 타입 확장
+// Request 타입 확장. req.user와 req.userId를 추가합니다.
 declare global {
   namespace Express {
     interface Request {
-      user?: JwtPayload
+      user?: JwtPayload;
+      userId?: string;
     }
   }
 }
@@ -24,6 +25,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
   try {
     const decoded = verifyAccessToken(token)
     req.user = decoded
+    req.userId = decoded.id // JWT payload의 id를 req.userId에 할당
     next()
   } catch (err: any) {
     if (err.message.includes('EXPIRED')) {
