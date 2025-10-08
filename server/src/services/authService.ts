@@ -39,7 +39,7 @@ export async function findOrCreateUser(
 
   // 완전히 새로운 사용자 생성
   if (!profile.email) {
-    throw new Error('Email is required for new user registration.');
+    throw new Error('이메일 정보가 필요합니다.');
   }
   const newUser = await userRepository.createUser(
     profile.email,
@@ -53,7 +53,6 @@ export async function findOrCreateUser(
     profile.accessToken,
     profile.refreshToken
   );
-
   return newUser;
 }
 

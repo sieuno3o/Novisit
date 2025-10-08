@@ -3,6 +3,8 @@ import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import { createClient } from 'redis'
 import authRouter from './routes/authRoutes'
+import notificationRouter from './routes/notificationRoutes'
+import testRouter from './routes/testRoutes'
 import cors from 'cors'
 
 // Load environment variables
@@ -46,6 +48,8 @@ app.get('/api', (req, res) => {
 })
 
 app.use('/auth', authRouter)
+app.use('/notifications', notificationRouter)
+app.use('/test', testRouter)
 
 // Health check endpoint
 app.get('/health', (req, res) => {

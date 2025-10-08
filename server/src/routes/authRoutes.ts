@@ -43,7 +43,7 @@ router.get('/kakao/callback', async (req, res) => {
 router.get('/discord/callback', async (req, res) => {
   try {
     const code = req.query.code as string;
-    const token = req.query.state as string; // state에 담겨온 accessToken
+    const token = req.query.state as string; 
 
     if (!token) {
       return res.status(400).json({ message: 'Token not found in state' });
