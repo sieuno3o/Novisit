@@ -3,7 +3,7 @@ import http, { tokenStore } from "./http";
 // 카카오, 디스코드 연결 상태
 export type ChannelState = "disconnected" | "off" | "on";
 
-/** 사용자 정보 (표: name, email, kakao, discord) */
+// 사용자 정보
 export type User = {
   id?: number | string;
   name: string;
