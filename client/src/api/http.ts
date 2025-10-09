@@ -3,7 +3,6 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 const ACCESS_KEY = "accessToken";
 const REFRESH_KEY = "refreshToken";
 
-// 새로고침/탭 유지만 원해서 sessionStorage 사용 (localStorage는 장기보관이라 비추천)
 export const tokenStore = {
   getAccess: () => sessionStorage.getItem(ACCESS_KEY),
   setAccess: (t: string | null) =>
@@ -23,7 +22,7 @@ const http = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
-// 요청: Authorization 헤더 자동 부착
+// Authorization 헤더 자동 부착
 http.interceptors.request.use((config) => {
   const at = tokenStore.getAccess();
   if (at) config.headers.Authorization = `Bearer ${at}`;
