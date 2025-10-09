@@ -14,9 +14,7 @@ export default function Layout() {
   return (
     <div>
       <NavBar />
-      <main style={{ padding: 16 }}>
-        <Outlet />
-      </main>
+      <Outlet />
     </div>
   );
 }
