@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { me as apiMe, logout as apiLogout, User } from "./api/auth";
+import { tokenStore } from "./api/http";
 
 type AuthState = {
   user: User | null;
@@ -29,13 +30,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     (async () => {
       setLoading(true);
-      await refreshMe();
+      const hasToken = !!(tokenStore.getAccess() || tokenStore.getRefresh());
+      if (hasToken) {
+        try {
+          await refreshMe();
+        } catch {
+          /* 무시 */
+        }
+      }
       setLoading(false);
     })();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 초기 1회만
 
   const logout = async () => {
-    await apiLogout();
+    await apiLogout(); // 내부에서 토큰 정리
     setUser(null);
   };
 
