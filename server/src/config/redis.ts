@@ -2,7 +2,7 @@ import { Queue, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { WebCrawler } from '../crawl/webCrawler.js';
 import { JobData, JobResult, JobProcessor } from '../types/crawl.js';
-import { saveNotices } from '../repository/mongodb/noticeRepository.js';
+import { saveNotices, getLatestNoticeNumber } from '../repository/mongodb/noticeRepository.js';
 
 // Redis 연결 설정
 const connection = new IORedis({
@@ -26,13 +26,19 @@ const processJob: JobProcessor = async (job) => {
     let result: any;
     
     if (jobType === 'crawl-pknu-notices') {
-      // 부경대학교 공지사항 크롤링
-      result = await crawler.crawlPKNUNotices(url);
+      // 부경대학교 공지사항 증분 크롤링
+      // 1. 마지막 크롤링 번호 조회
+      const lastKnownNumber = await getLatestNoticeNumber('PKNU');
       
-      // MongoDB에 저장
+      // 2. 증분 크롤링 (새 공지만)
+      result = await crawler.crawlPKNUNotices(lastKnownNumber);
+      
+      // 3. MongoDB에 저장
       if (result.notices && result.notices.length > 0) {
-        await saveNotices(result.notices, result.url);
+        await saveNotices(result.notices, 'PKNU');
         console.log(`[Job] ${job.name} 완료: ${result.notices.length}개 저장`);
+      } else {
+        console.log(`[Job] ${job.name} 완료: 새 공지 없음`);
       }
     } else {
       // 기본 작업

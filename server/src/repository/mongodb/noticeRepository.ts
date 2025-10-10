@@ -2,6 +2,23 @@ import { Notice, INotice } from '../../models/Notice.js';
 import { PKNUNotice } from '../../types/crawl.js';
 
 /**
+ * 가장 최신 공지사항 번호 조회
+ */
+export async function getLatestNoticeNumber(source: string = 'PKNU'): Promise<string | null> {
+  try {
+    const latest = await Notice.findOne({ source })
+      .sort({ number: -1 })
+      .select('number')
+      .exec();
+    
+    return latest ? latest.number : null;
+  } catch (error) {
+    console.error('[DB] 최신 공지번호 조회 오류:', error);
+    return null;
+  }
+}
+
+/**
  * 공지사항을 MongoDB에 저장 (새로운 것만 삽입)
  * 중복은 unique index로 자동 방지
  */

@@ -1,8 +1,9 @@
 import { chromium, Browser } from 'playwright';
-import { PKNUNoticeResult } from '../types/crawl.js';
+import { PKNUNoticeResult, PKNUNotice } from '../types/crawl.js';
 
 export class WebCrawler {
   private browser: Browser | null = null;
+  private readonly PKNU_BASE_URL = 'https://www.pknu.ac.kr/main/163';
 
   // 브라우저 인스턴스 초기화 (헤드리스 고정)
   private async initBrowser(): Promise<Browser> {
@@ -19,28 +20,27 @@ export class WebCrawler {
     return this.browser;
   }
 
-  // 부경대학교 공지사항 크롤링
-  async crawlPKNUNotices(url: string = 'https://www.pknu.ac.kr/main/163'): Promise<PKNUNoticeResult> {
+  // 한 페이지의 공지사항 크롤링
+  private async crawlPage(pageIndex: number, lastKnownNumber: string | null): Promise<{ notices: PKNUNotice[], shouldContinue: boolean }> {
+    const url = pageIndex === 1 
+      ? this.PKNU_BASE_URL 
+      : `${this.PKNU_BASE_URL}?pageIndex=${pageIndex}`;
+    
+    const browser = await this.initBrowser();
+    const context = await browser.newContext({
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      viewport: { width: 1920, height: 1080 }
+    });
+    
+    const page = await context.newPage();
+    
     try {
-      const browser = await this.initBrowser();
-      const context = await browser.newContext({
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        viewport: { width: 1920, height: 1080 }
-      });
-      
-      const page = await context.newPage();
-      
-      // 페이지 로드
       await page.goto(url, { 
         waitUntil: 'networkidle',
         timeout: 30000
       });
       
-      // 테이블 로딩 대기
       await page.waitForSelector('tbody tr', { timeout: 10000 });
-      
-      // 페이지 제목 먼저 가져오기
-      const pageTitle = await page.title();
       
       // 공지사항 데이터 추출
       const notices = await page.evaluate(() => {
@@ -52,23 +52,20 @@ export class WebCrawler {
           const cells = tr.querySelectorAll('td');
           
           if (cells.length >= 2) {
-            // 번호 추출 (td.bdlNum.noti)
             const numberCell = tr.querySelector('td.bdlNum.noti');
             const number = numberCell?.textContent?.trim() || '';
             
-            // 제목과 링크 추출 (td.bdlTitle a)
             const titleCell = tr.querySelector('td.bdlTitle a');
             const title = titleCell?.textContent?.trim() || '';
             const link = titleCell?.getAttribute('href') || '';
             const fullLink = link.startsWith('http') ? link : `https://www.pknu.ac.kr${link}`;
             
-            // 번호와 제목이 있는 공지사항만 수집
             if (number && title) {
               notices.push({
                 number: number,
                 title: title,
                 link: fullLink,
-                postedAt: new Date().toISOString().split('T')[0], // 크롤링한 날짜 사용
+                postedAt: new Date().toISOString().split('T')[0],
                 crawledAt: new Date()
               });
             }
@@ -80,23 +77,75 @@ export class WebCrawler {
       
       await context.close();
       
-      console.log(`[PKNU] 크롤링 완료: ${notices.length}개 공지사항 | ${url}`);
+      // 이전 크롤링 번호를 찾았는지 확인
+      const foundLastKnown = lastKnownNumber 
+        ? notices.some(n => n.number === lastKnownNumber)
+        : false;
+      
+      // 필터링: 이전 번호보다 큰 것만
+      const newNotices = lastKnownNumber
+        ? notices.filter(n => parseInt(n.number) > parseInt(lastKnownNumber))
+        : notices;
       
       return {
-        url: url,
-        title: pageTitle,
+        notices: newNotices,
+        shouldContinue: !foundLastKnown && notices.length > 0
+      };
+      
+    } catch (error) {
+      await context.close();
+      throw error;
+    }
+  }
+
+  // 부경대학교 공지사항 증분 크롤링 (새 공지만)
+  async crawlPKNUNotices(lastKnownNumber: string | null = null): Promise<PKNUNoticeResult> {
+    try {
+      const allNewNotices: PKNUNotice[] = [];
+      let pageIndex = 1;
+      let shouldContinue = true;
+      
+      console.log(`[PKNU] 증분 크롤링 시작 (마지막 번호: ${lastKnownNumber || '없음'})`);
+      
+      // 페이지별로 크롤링
+      while (shouldContinue && pageIndex <= 10) { // 최대 10페이지
+        console.log(`[PKNU] 페이지 ${pageIndex} 크롤링 중...`);
+        
+        const result = await this.crawlPage(pageIndex, lastKnownNumber);
+        
+        if (result.notices.length > 0) {
+          allNewNotices.push(...result.notices);
+          console.log(`[PKNU] 페이지 ${pageIndex}: ${result.notices.length}개 새 공지 발견`);
+        }
+        
+        shouldContinue = result.shouldContinue;
+        
+        if (shouldContinue) {
+          pageIndex++;
+          // 페이지 간 딜레이 (서버 부하 방지)
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          console.log(`[PKNU] 이전 크롤링 지점 도달 (페이지 ${pageIndex})`);
+        }
+      }
+      
+      console.log(`[PKNU] 크롤링 완료: 총 ${allNewNotices.length}개 새 공지사항 (${pageIndex}페이지 탐색)`);
+      
+      return {
+        url: this.PKNU_BASE_URL,
+        title: '부경대학교 공지사항',
         timestamp: new Date().toISOString(),
-        totalNotices: notices.length,
-        notices: notices,
+        totalNotices: allNewNotices.length,
+        notices: allNewNotices,
         summary: {
           extractedAt: new Date().toISOString(),
           source: '부경대학교 공지사항',
-          totalCount: notices.length
+          totalCount: allNewNotices.length
         }
       };
       
     } catch (error) {
-      console.error(`[PKNU] 크롤링 실패: ${(error as Error).message} | ${url}`);
+      console.error(`[PKNU] 크롤링 실패: ${(error as Error).message}`);
       throw error;
     }
   }
