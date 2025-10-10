@@ -57,7 +57,7 @@ app.use("/auth", authRouter);
 app.use("/notifications", notificationRouter);
 app.use("/test", testRouter);
 app.use(mainRoutes);
-app.use("/", settingsRoutes);
+app.use("/settings", settingsRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
