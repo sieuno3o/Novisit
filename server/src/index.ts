@@ -3,8 +3,7 @@ import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import { createClient } from 'redis'
 import authRouter from './routes/authRoutes.js'
-import { JobScheduler } from './schedule/jobScheduler.js'
-import { connection as bullmqConnection } from './config/redis.js'
+import { CrawlingService } from './services/crawlingService.js'
 
 // Load environment variables
 dotenv.config()
@@ -37,15 +36,6 @@ redisClient.connect()
     console.error('❌ Redis connection error:', error)
   })
 
-// BullMQ Redis connection check
-bullmqConnection.ping()
-  .then(() => {
-    console.log('✅ Redis (BullMQ) connected successfully')
-  })
-  .catch((error) => {
-    console.error('❌ BullMQ Redis connection error:', error)
-  })
-
 // API routes
 app.get('/api', (req, res) => {
   res.json({ message: 'Novisit API is running!' })
@@ -65,51 +55,24 @@ app.get('/health', (req, res) => {
   })
 })
 
-// 크롤링 스케줄러 초기화
-async function initializeScheduler() {
-  try {
-    console.log('🔄 크롤링 스케줄러 초기화 중...')
-    
-    // BullMQ 연결 확인
-    await bullmqConnection.ping()
-    console.log('✅ BullMQ Redis 연결 확인 완료')
-    
-    const scheduler = new JobScheduler()
-    
-    // 부경대학교 공지사항 크롤링 스케줄링 (9, 12, 15, 18시)
-    scheduler.start()
-    
-    console.log('✅ 크롤링 스케줄러가 성공적으로 시작되었습니다!')
-    console.log('📅 정기 스케줄: 한국시간 9시, 12시, 15시, 18시에 자동 크롤링')
-    
-    // 큐 상태 모니터링 (5분마다)
-    setInterval(async () => {
-      const status = await scheduler.getQueueStatus()
-      if (status) {
-        console.log(`📊 큐 상태 - 대기: ${status.waiting}, 실행중: ${status.active}, 완료: ${status.completed}, 실패: ${status.failed}`)
-      }
-    }, 5 * 60 * 1000)
-    
-  } catch (error) {
-    console.error('❌ 크롤링 스케줄러 초기화 실패:', error)
-  }
-}
+// 크롤링 서비스 인스턴스
+const crawlingService = new CrawlingService()
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`)
   console.log(`📊 Health check: http://localhost:${PORT}/health`)
   
-  // 스케줄러 초기화 (서버 시작 후)
-  initializeScheduler()
+  // 크롤링 스케줄러 초기화 (서버 시작 후)
+  crawlingService.initialize()
 })
 
 // Graceful shutdown 처리
-process.on('SIGINT', async () => {
+const shutdown = async () => {
   console.log('\n🛑 서버를 종료합니다...')
   
   try {
+    await crawlingService.shutdown()
     await redisClient.disconnect()
-    await bullmqConnection.disconnect()
     await mongoose.connection.close()
     console.log('✅ 모든 연결이 종료되었습니다.')
     process.exit(0)
@@ -117,19 +80,7 @@ process.on('SIGINT', async () => {
     console.error('❌ 종료 중 오류:', error)
     process.exit(1)
   }
-})
+}
 
-process.on('SIGTERM', async () => {
-  console.log('\n🛑 서버를 종료합니다...')
-  
-  try {
-    await redisClient.disconnect()
-    await bullmqConnection.disconnect()
-    await mongoose.connection.close()
-    console.log('✅ 모든 연결이 종료되었습니다.')
-    process.exit(0)
-  } catch (error) {
-    console.error('❌ 종료 중 오류:', error)
-    process.exit(1)
-  }
-})
+process.on('SIGINT', shutdown)
+process.on('SIGTERM', shutdown)

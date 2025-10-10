@@ -108,7 +108,7 @@ export class WebCrawler {
       console.log(`[PKNU] 증분 크롤링 시작 (마지막 번호: ${lastKnownNumber || '없음'})`);
       
       // 페이지별로 크롤링
-      while (shouldContinue && pageIndex <= 10) { // 최대 10페이지
+      while (shouldContinue && pageIndex <= 3) { // 최대 3페이지
         console.log(`[PKNU] 페이지 ${pageIndex} 크롤링 중...`);
         
         const result = await this.crawlPage(pageIndex, lastKnownNumber);

@@ -85,7 +85,8 @@ Novisit/
 │   │   ├── routes/             # API routes
 │   │   │   └── authRoutes.ts
 │   │   ├── services/           # Business logic
-│   │   │   └── authService.ts
+│   │   │   ├── authService.ts
+│   │   │   └── crawlingService.ts
 │   │   ├── middleware/         # Express middleware
 │   │   │   └── authMiddleware.ts
 │   │   ├── types/              # TypeScript types
@@ -315,8 +316,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### 크롤링 스케줄
 
 자동 크롤링은 다음 시간에 실행됩니다 (한국시간 기준):
-- 매일 오전 9시
-- 매일 오후 2시
+- 매일 오전 9시, 12시, 오후 3시, 6시
 
 스케줄 변경: `server/src/schedule/jobScheduler.ts` 참조
 
