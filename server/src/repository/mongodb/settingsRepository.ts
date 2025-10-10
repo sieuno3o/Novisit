@@ -40,3 +40,30 @@ export const getSettings = async (userId: string) => {
     throw new Error("알림 설정을 불러오지 못했습니다.");
   }
 };
+
+// 알림 설정 수정
+export const updateSetting = async (settingId: string, updateData: any) => {
+  try {
+    const updated = await Setting.findByIdAndUpdate(
+      settingId,
+      updateData,
+      { new: true } // 수정된 문서 반환
+    ).lean();
+
+    return updated;
+  } catch (error) {
+    console.error("알림 설정 수정 실패:", error);
+    throw new Error("알림 설정 수정에 실패했습니다.");
+  }
+};
+
+// 알림 설정 삭제
+export const deleteSetting = async (settingId: string) => {
+  try {
+    await Setting.findByIdAndDelete(settingId);
+    return true;
+  } catch (error) {
+    console.error("알림 설정 삭제 실패:", error);
+    throw new Error("알림 설정 삭제에 실패했습니다.");
+  }
+};
