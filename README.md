@@ -1,6 +1,6 @@
 # Novisit
 
-A full-stack web application built with React, Node.js, Express, BullMQ, Redis, and MongoDB.
+부경대학교 공지사항 자동 크롤링 및 알림 서비스를 제공하는 풀스택 웹 애플리케이션입니다.
 
 ## 🚀 Tech Stack
 
@@ -11,6 +11,7 @@ A full-stack web application built with React, Node.js, Express, BullMQ, Redis, 
 - **React Router** - Client-side routing
 - **React Query** - Server state management
 - **Zustand** - Client state management
+- **SCSS** - Styling
 
 ### Backend
 - **Node.js** - Runtime environment
@@ -19,41 +20,85 @@ A full-stack web application built with React, Node.js, Express, BullMQ, Redis, 
 - **MongoDB** - Database
 - **Redis** - Caching and session storage
 - **BullMQ** - Job queue management
+- **Playwright** - Web crawling automation
+- **node-cron** - Job scheduling
 
 ### DevOps
 - **Docker** - Containerization
 - **GitHub Actions** - CI/CD pipeline
 
+## ✨ Features
+
+- 🔐 **OAuth 인증** - 카카오, Discord 소셜 로그인
+- 🕷️ **자동 크롤링** - 부경대학교 공지사항 자동 수집
+- ⏰ **스케줄링** - 매일 정해진 시간에 자동 크롤링 (9시, 14시)
+- 💾 **데이터 관리** - MongoDB를 통한 공지사항 저장 및 검색
+- 🔄 **작업 큐** - BullMQ를 통한 안정적인 작업 관리
+- 📊 **실시간 모니터링** - 큐 상태 및 크롤링 현황 확인
+
 ## 📁 Project Structure
 
 ```
-novisit/
-├── client/                 # React frontend
+Novisit/
+├── client/                     # React frontend
 │   ├── src/
-│   │   ├── App.tsx        # Main App component
-│   │   ├── main.tsx       # Application entry point
-│   │   ├── index.css      # Global styles
-│   │   └── vite-env.d.ts  # Vite type definitions
-│   ├── index.html         # HTML template
-│   ├── package.json       # Frontend dependencies
-│   ├── tsconfig.json      # TypeScript config
-│   ├── tsconfig.node.json # Node TypeScript config
-│   └── vite.config.ts     # Vite configuration
-├── server/                # Node.js backend
+│   │   ├── components/         # React components
+│   │   │   ├── Layout.tsx
+│   │   │   └── NavBar.tsx
+│   │   ├── features/           # Feature modules
+│   │   │   └── login/
+│   │   ├── pages/              # Page components
+│   │   │   ├── LoginPage.tsx
+│   │   │   ├── MainPage.tsx
+│   │   │   ├── MyPage.tsx
+│   │   │   ├── NoticePage.tsx
+│   │   │   └── SignupPage.tsx
+│   │   ├── routes/             # Route configuration
+│   │   │   └── RequireAuth.tsx
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── public/
+│   │   └── assets/             # Static assets
+│   ├── package.json
+│   └── vite.config.ts
+├── server/                     # Node.js backend
 │   ├── src/
-│   │   └── index.ts       # Server entry point
-│   ├── env.example        # Environment variables template
-│   ├── package.json       # Backend dependencies
-│   └── tsconfig.json      # TypeScript config
-├── .github/
-│   └── workflows/
-│       └── build.yml      # GitHub Actions CI/CD
-├── docker-compose.yml     # Production Docker services
-├── docker-compose.dev.yml # Development Docker services
-├── Dockerfile            # Multi-stage Docker image
-├── Dockerfile.playwright # Playwright Docker image
-├── package.json          # Root package.json (workspaces)
-└── README.md             # Project documentation
+│   │   ├── auth/               # OAuth providers
+│   │   │   ├── discord.ts
+│   │   │   ├── jwt.ts
+│   │   │   └── kakao.ts
+│   │   ├── crawl/              # Web crawling
+│   │   │   └── webCrawler.ts
+│   │   ├── schedule/           # Job scheduling
+│   │   │   └── jobScheduler.ts
+│   │   ├── config/             # Configuration
+│   │   │   └── redis.ts        # BullMQ & Redis setup
+│   │   ├── models/             # MongoDB models
+│   │   │   ├── User.ts
+│   │   │   └── Notice.ts
+│   │   ├── repository/         # Data access layer
+│   │   │   ├── mongodb/
+│   │   │   │   ├── userRepository.ts
+│   │   │   │   └── noticeRepository.ts
+│   │   │   └── redis/
+│   │   │       └── tokenRepository.ts
+│   │   ├── routes/             # API routes
+│   │   │   └── authRoutes.ts
+│   │   ├── services/           # Business logic
+│   │   │   └── authService.ts
+│   │   ├── middleware/         # Express middleware
+│   │   │   └── authMiddleware.ts
+│   │   ├── types/              # TypeScript types
+│   │   │   └── crawl.ts
+│   │   └── index.ts            # Server entry point
+│   ├── CRAWLING_GUIDE.md       # Crawling documentation
+│   ├── package.json
+│   └── tsconfig.json
+├── docker-compose.yml          # Production services
+├── docker-compose.dev.yml      # Development services
+├── Dockerfile                  # Application image
+├── package.json                # Root package.json
+└── README.md                   # This file
 ```
 
 ## 🛠️ Development Setup
@@ -85,7 +130,14 @@ novisit/
    # Edit server/.env with your configuration
    ```
 
-4. **Start development services**
+4. **Install Playwright browsers** (크롤링 기능 사용 시)
+   ```bash
+   cd server
+   npm run install-playwright
+   cd ..
+   ```
+
+5. **Start development services**
    ```bash
    # Option 1: Start only database services
    docker-compose -f docker-compose.dev.yml up -d
@@ -97,7 +149,7 @@ novisit/
    npm run dev
    ```
 
-5. **Access the application**
+6. **Access the application**
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:5000
    - Health Check: http://localhost:5000/health
@@ -122,6 +174,19 @@ MONGODB_URI=mongodb://localhost:27017/novisit
 
 # Redis Configuration
 REDIS_URL=redis://localhost:6379
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# OAuth Configuration
+KAKAO_CLIENT_ID=your_kakao_client_id
+KAKAO_REDIRECT_URI=http://localhost:5000/auth/kakao/callback
+DISCORD_CLIENT_ID=your_discord_client_id
+DISCORD_CLIENT_SECRET=your_discord_client_secret
+DISCORD_REDIRECT_URI=http://localhost:5000/auth/discord/callback
+
+# JWT Configuration
+JWT_SECRET=your_jwt_secret_key
 ```
 
 ## 🐳 Docker
@@ -213,6 +278,7 @@ REDIS_URL=redis://your-redis-connection-string
 - `npm run server:dev` - Start server with hot reload (tsx watch)
 - `npm run server:build` - Build TypeScript to JavaScript
 - `npm run server:start` - Start production server (node dist/index.js)
+- `npm run server:install-playwright` - Install Playwright browsers
 
 ## 🤝 Contributing
 
@@ -230,19 +296,70 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### MongoDB
 - Default database: `novisit`
-- Collections: `users`, `sessions`, `jobs` (to be created by application)
+- Collections:
+  - `users` - 사용자 정보 및 OAuth 연동
+  - `notices` - 크롤링된 공지사항
 - Connection: `mongodb://localhost:27017/novisit`
-- Note: Collections and indexes will be created by the application code
+- Indexes:
+  - `users`: `email` (unique)
+  - `notices`: `number + source` (unique, 중복 방지)
 
 ### Redis
 - Default port: `6379`
-- Used for caching and session storage
-- BullMQ job queue backend
+- Used for:
+  - OAuth 토큰 저장
+  - BullMQ 작업 큐 (크롤링 스케줄링)
+  - 세션 관리
 - Connection: `redis://localhost:6379`
+
+### 크롤링 스케줄
+
+자동 크롤링은 다음 시간에 실행됩니다 (한국시간 기준):
+- 매일 오전 9시
+- 매일 오후 2시
+
+스케줄 변경: `server/src/schedule/jobScheduler.ts` 참조
 
 ## 📊 Monitoring
 
-- Health check endpoint: `/health`
+- **Health check**: `/health` - 서비스 상태 확인
+- **큐 상태**: 서버 로그에서 5분마다 자동 출력
+  ```
+  📊 큐 상태 - 대기: 0, 실행중: 1, 완료: 5, 실패: 0
+  ```
+
+## 🕷️ Crawling System
+
+### 크롤링 대상
+- 부경대학교 공지사항 (https://www.pknu.ac.kr/main/163)
+
+### 기술 스택
+- **Playwright**: 헤드리스 브라우저 기반 크롤링
+- **BullMQ**: 작업 큐 관리 및 재시도 로직
+- **node-cron**: 시간 기반 스케줄링
+
+### 데이터 저장
+크롤링된 공지사항은 MongoDB에 저장되며, 다음 정보를 포함합니다:
+- 공지사항 번호
+- 제목
+- 링크
+- 크롤링 시간
+
+중복 공지사항은 자동으로 업데이트되며, 새로운 공지사항만 추가됩니다.
+
+자세한 내용은 [server/CRAWLING_GUIDE.md](server/CRAWLING_GUIDE.md)를 참조하세요.
+
+## 📡 API Endpoints
+
+### 인증 (Auth)
+- `POST /auth/kakao` - 카카오 로그인
+- `POST /auth/discord` - Discord 로그인
+- `GET /auth/kakao/callback` - 카카오 OAuth 콜백
+- `GET /auth/discord/callback` - Discord OAuth 콜백
+
+### 시스템
+- `GET /health` - 서비스 상태 확인
+- `GET /api` - API 정보
 
 ## 🆘 Troubleshooting
 
