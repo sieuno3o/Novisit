@@ -12,7 +12,10 @@ export default function LoginForm() {
   return (
     <div className="login-form flex-col-center">
       <div className="login-logo heading1">로그인</div>
-      <div className="login-actions flex-col-center">
+      <div
+        onClick={() => beginKakaoLogin(from)}
+        className="login-actions flex-col-center"
+      >
         <div className="kakao-login flex-row-center">
           <img
             className="kakao-img logo-img"
@@ -22,7 +25,6 @@ export default function LoginForm() {
           <button
             type="button"
             className="login-form-btn kakao-login-button flex-center body2"
-            onClick={() => beginKakaoLogin(from)}
           >
             카카오로 계속하기
           </button>
