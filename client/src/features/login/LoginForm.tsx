@@ -30,6 +30,7 @@ export default function LoginForm() {
   };
 
   return (
+<<<<<<< Updated upstream
     <form
       onSubmit={onSubmit}
       style={{ display: "grid", gap: 10, maxWidth: 360 }}
@@ -57,6 +58,37 @@ export default function LoginForm() {
           required
         />
       </label>
+=======
+    <div className="login-form flex-col-center">
+      <div className="login-logo heading1">로그인</div>
+      <div className="login-actions flex-col-center">
+        <div className="kakao-login flex-row-center">
+          <img
+            className="kakao-img logo-img"
+            src="../../../public/assets/img/kakaologo.png"
+            alt="KakaoLogo"
+          />
+          <button
+            type="button"
+            className="login-form-btn kakao-login-button flex-center body2"
+          >
+            카카오로 계속하기
+          </button>
+        </div>
+        <div className="discord-login flex-row-center">
+          <img
+            className="discord-img logo-img"
+            src="../../../public/assets/img/discordlogo.png"
+            alt="discord"
+          />
+          <button
+            type="button"
+            className="login-form-btn discord-login-button flex-center body2"
+          >
+            디스코드로 계속하기
+          </button>
+        </div>
+>>>>>>> Stashed changes
 
       {error && <div style={{ color: "crimson" }}>{error}</div>}
 

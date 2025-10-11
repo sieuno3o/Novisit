@@ -1,0 +1,73 @@
+@use "../../../../public/assets/style/_colors.scss" as *;
+@use "../../../../public/assets/style/_flex.scss" as *;
+@use "../../../../public/assets/style/_typography.scss" as *;
+
+
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 28px;
+}
+
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb; 
+  border-radius: 28px;
+  padding: 28px 22px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(2, 6, 23, .06);
+  transition: transform .2s ease, box-shadow .25s ease;
+  &:hover {
+    box-shadow:
+      0 0 0 2px rgba(85, 164, 234, 0.5), //라인
+      0 0 24px 6px rgba(63, 112, 203, 0.35); //그림자
+  }
+}
+
+
+.icon {
+  width: 64px; height: 64px;
+  border-radius: 999px;
+  margin: 0 auto;
+  display: grid; place-items: center;
+  background: radial-gradient(
+    circle at 30% 20%,
+    color-mix(in srgb, #4f46e5 14%, #fff),
+    color-mix(in srgb, #7c3aed 10%, #fff)
+  );
+}
+
+.title { 
+  margin: 16px 0 0; 
+  font-size: 22px; 
+  font-weight: 900; 
+  
+}
+
+
+.desc  { 
+  margin: 8px 0 18px; 
+  color: var(--muted); 
+  line-height: 2.0;
+}
+
+
+.button {
+  height: 44px; 
+  padding: 0 90px; 
+  border-radius: 200px; 
+  font-weight: 580;
+  background: #fff;
+  color: var(--text);
+  border: 1px solid #000000;
+  &:hover {
+    border-color: var(--primary);
+    color:#3a88ed;
+  }
+}
+  
+
+  

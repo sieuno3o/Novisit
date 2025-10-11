@@ -1,0 +1,7 @@
+.card { background:#fff; border:1px solid #e5e7eb; border-radius:28px; padding:28px 22px; text-align:center; box-shadow:0 10px 30px rgba(2,6,23,.06); }
+.icon { width:64px; height:64px; border-radius:999px; margin:0 auto; display:grid; place-items:center;
+  background:radial-gradient(circle at 30% 20%, color-mix(in srgb,#4f46e5 14%, #fff), color-mix(in srgb,#7c3aed 10%, #fff));
+}
+.title { margin:16px 0 0; font-size:22px; font-weight:900; }
+.desc { margin:8px 0 18px; color:#64748b; line-height:1.7; }
+.button { height:44px; padding:0 18px; border-radius:14px; font-weight:700; }

@@ -1,0 +1,9 @@
+@use "../../../../public/assets/style/_colors.scss" as *;
+@use "../../../../public/assets/style/_flex.scss" as *;
+@use "../../../../public/assets/style/_typography.scss" as *;
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+}

@@ -1,5 +1,11 @@
-const MainPage = () => {
-  return <div>메인 페이지</div>;
+import Hero from "../features/main/hero/Hero";
+import Domains from "../features/main/domains/Domains";
+
+const MainPage = () => {  
+  return <div>
+    <Hero />
+      <Domains />
+  </div>;
 };
 
 export default MainPage;
