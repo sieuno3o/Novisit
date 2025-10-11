@@ -44,9 +44,46 @@ export async function sendMemo(accessToken: string, templateObject: any): Promis
   //  성공/실패 결과를 그대로 상위 호출자에게 반환하는 역할만.
   return axios.post(KAKAO_MSG_URL, body.toString(), {
     headers: {
-      Authorization: `Bearer ${accessToken}`, 
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
     },
   });
 }
 
+// 카카오 사용자 연결 끊기
+export async function unlinkKakaoUser(kakaoProviderId: string): Promise<any> {
+  const KAKAO_UNLINK_URL = 'https://kapi.kakao.com/v1/user/unlink';
+  try {
+    const body = new URLSearchParams({
+      target_id_type: 'user_id',
+      target_id: kakaoProviderId,
+    });
+
+    const response = await axios.post(KAKAO_UNLINK_URL, body.toString(), {
+      headers: {
+        'Authorization': `KakaoAK ${process.env.KAKAO_ADMIN_KEY}`,
+        'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('카카오 사용자 연결 끊기 API 호출 실패', error);
+    throw error;
+  }
+}
+
+// 카카오 로그아웃
+export async function logoutKakaoUser(accessToken: string): Promise<any> {
+  const KAKAO_LOGOUT_URL = 'https://kapi.kakao.com/v1/user/logout';
+  try {
+    const response = await axios.post(KAKAO_LOGOUT_URL, null, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('카카오 로그아웃 API 호출 실패', error);
+    throw error;
+  }
+}
