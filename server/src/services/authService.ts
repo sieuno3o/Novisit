@@ -29,17 +29,6 @@ export async function findOrCreateUser(
       profile.refreshToken,
       profile.expiresIn
     );
-
-    // 사용자가 동의 화면을 다시 거친 경우(scope 정보가 넘어온 경우),
-    // 스코프 정보를 기반으로 알림 설정 업데이트
-    if (profile.scopes) {
-      const provider = user.providers.find(p => p.provider === providerName);
-      if (provider) {
-        provider.talk_message_enabled = profile.scopes.includes('talk_message');
-        await user.save();
-      }
-    }
-
     return user;
   }
 
@@ -128,4 +117,3 @@ export async function linkDiscordToUser(
 export async function updateKakaoNotificationSetting(userId: string, enabled: boolean): Promise<IUser | null> {
   return await userRepository.updateProviderTalkStatus(userId, 'kakao', enabled);
 }
-  
