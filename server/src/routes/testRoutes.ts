@@ -6,7 +6,7 @@ const router = Router();
 
 // BullMQ나 스케줄러와 같은 비동기 흐름을 거치지 않고, notificationService의 기능을 직접 테스트.
 // 카카오 메시지 전송 기능을 직접 테스트하기 위한 엔드포인트
-router.post('/test/kakao', authMiddleware, async (req, res) => {
+router.post('/kakao', authMiddleware, async (req, res) => {
   const userId = req.userId;
 
   if (!userId) {
@@ -16,7 +16,11 @@ router.post('/test/kakao', authMiddleware, async (req, res) => {
   // 테스트용 메시지 템플릿
   const dummyTemplate = {
     object_type: 'text',
-    text: '[테스트] 이것은 더미 데이터로 보내는 테스트 메시지입니다.'
+    text: '[테스트] 이것은 더미 데이터로 보내는 테스트 메시지입니다.',
+    link: {
+      web_url: 'https://developers.kakao.com',
+      mobile_web_url: 'https://developers.kakao.com',
+    },
   };
 
   try {

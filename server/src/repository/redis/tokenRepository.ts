@@ -7,11 +7,14 @@ export const storeProviderTokens = async (
   userId: string,
   providerName: ProviderName,
   accessToken: string,
-  refreshToken?: string
+  refreshToken?: string,
+  expiresIn?: number // 초 단위
 ): Promise<void> => {
-  // Redis 키를 생성. ex: "token:12345:kakao:accessToken"
   const accessTokenKey = `token:${userId}:${providerName}:accessToken`;
   await redisClient.set(accessTokenKey, accessToken);
+  if (expiresIn) {
+    await redisClient.expire(accessTokenKey, expiresIn);
+  }
 
   if (refreshToken) {
     const refreshTokenKey = `token:${userId}:${providerName}:refreshToken`;
@@ -23,14 +26,29 @@ export const storeProviderTokens = async (
 export const getProviderTokens = async (
   userId: string,
   providerName: ProviderName
-): Promise<{ accessToken: string | null; refreshToken: string | null }> => {
+): Promise<{ accessToken: string | null; refreshToken: string | null; expiresIn: number | null }> => {
   const accessTokenKey = `token:${userId}:${providerName}:accessToken`;
   const refreshTokenKey = `token:${userId}:${providerName}:refreshToken`;
 
-  const [accessToken, refreshToken] = await Promise.all([
+  const [accessToken, refreshToken, expiresIn] = await Promise.all([
     redisClient.get(accessTokenKey),
     redisClient.get(refreshTokenKey),
+    redisClient.ttl(accessTokenKey) // Time To Live (남은 만료 시간)
   ]);
 
-  return { accessToken, refreshToken };
+  return { accessToken, refreshToken, expiresIn: expiresIn !== -1 ? expiresIn : null };
+};
+
+// Provider의 AccessToken과 RefreshToken을 Redis에서 삭제.
+export const deleteProviderTokens = async (
+  userId: string,
+  providerName: ProviderName
+): Promise<void> => {
+  const accessTokenKey = `token:${userId}:${providerName}:accessToken`;
+  const refreshTokenKey = `token:${userId}:${providerName}:refreshToken`;
+
+  await Promise.all([
+    redisClient.del(accessTokenKey),
+    redisClient.del(refreshTokenKey),
+  ]);
 };

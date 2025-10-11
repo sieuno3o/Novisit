@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { createClient } from "redis";
 import authRouter from "./routes/authRoutes";
-import notificationRouter from "./routes/notificationRoutes";
 import testRouter from "./routes/testRoutes";
 import mainRoutes from "./routes/mainRoutes";
 import cors from "cors";
@@ -12,11 +11,13 @@ import cors from "cors";
 dotenv.config();
 
 const app = express();
+
 const PORT = process.env.PORT || 5000;
 
 app.use(
   cors({
     origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
   })
 );
@@ -53,7 +54,6 @@ app.get("/api", (req, res) => {
 });
 
 app.use("/auth", authRouter);
-app.use("/notifications", notificationRouter);
 app.use("/test", testRouter);
 app.use(mainRoutes);
 
