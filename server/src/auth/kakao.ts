@@ -3,7 +3,7 @@ import { generateTokens } from './jwt';
 import { findOrCreateUser } from '../services/authService';
 
 // 카카오 로그인 콜백
-export async function kakaoCallback(code: string) {
+export async function kakaoCallback(code: string, scope: string) {
   // 1. Authorization Code → Access Token 교환
   const tokenResponse = await axios.post(
     'https://kauth.kakao.com/oauth/token',
@@ -34,9 +34,10 @@ export async function kakaoCallback(code: string) {
     id: kakaoId,
     email: kakaoEmail,
     name: kakaoNickname,
+    scopes: scope ? scope.split(' ') : [], // scope가 있을 때만 배열로 변환
     accessToken: access_token,
     refreshToken: refresh_token,
-    tokenExpiresAt: new Date(Date.now() + expires_in * 1000),
+    expiresIn: expires_in,
   };
 
   // 4. DB에서 사용자 찾거나 생성 (공통 로직 활용)
