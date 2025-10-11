@@ -55,3 +55,13 @@ export const updateProviderTalkStatus = async (userId: string, providerName: str
   }
   return null;
 };
+
+// 사용자의 이름을 업데이트합니다.
+export const updateUserName = async (userId: string, name: string): Promise<IUser | null> => {
+  return User.findByIdAndUpdate(userId, { name }, { new: true }).exec();
+};
+
+// 사용자를 삭제합니다.
+export const deleteUser = async (userId: string): Promise<IUser | null> => {
+  return User.findByIdAndDelete(userId).exec();
+};
