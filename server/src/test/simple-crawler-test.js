@@ -1,5 +1,5 @@
 // Simple Playwright crawler test
-const { chromium } = require('playwright');
+import { chromium } from 'playwright';
 
 async function testCrawler() {
   console.log('🚀 Starting Playwright Crawler Test...');
@@ -41,3 +41,4 @@ async function testCrawler() {
 }
 
 testCrawler();
+
