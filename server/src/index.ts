@@ -6,6 +6,7 @@ import authRouter from "./routes/authRoutes";
 import testRouter from "./routes/testRoutes";
 import mainRoutes from "./routes/mainRoutes";
 import settingsRoutes from "./routes/settingsRoutes";
+import userRoutes from "./routes/userRoutes";
 import cors from "cors";
 import { CrawlingService } from './services/crawlingService.js'
 
@@ -59,6 +60,7 @@ app.use("/auth", authRouter);
 app.use("/test", testRouter);
 app.use(mainRoutes);
 app.use("/settings", settingsRoutes);
+app.use("/users", userRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
