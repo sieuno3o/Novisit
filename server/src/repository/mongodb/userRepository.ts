@@ -9,10 +9,6 @@ export const findUserByProvider = (providerName: string, providerId: string): Pr
   }).exec();
 };
 
-// 이메일로 사용자를 찾습니다.
-export const findUserByEmail = (email: string): Promise<IUser | null> => {
-  return User.findOne({ email }).exec();
-};
 
 // ID로 사용자를 찾습니다.
 export const findUserById = (id: string): Promise<IUser | null> => {
@@ -34,4 +30,38 @@ export const createUser = (email: string, name: string | undefined, providerData
 export const linkProviderToUser = (user: IUser, providerData: IOAuthProvider): Promise<IUser> => {
   user.providers.push(providerData);
   return user.save();
+};
+
+
+// 사용자의 특정 provider 연결을 해제합니다.
+export const unlinkProvider = async (userId: string, providerName: string): Promise<IUser | null> => {
+  return User.findByIdAndUpdate(
+    userId,
+    { $pull: { providers: { provider: providerName } } },
+    { new: true }
+  ).exec();
+};
+
+// 사용자의 특정 provider의 talk_message_enabled 상태를 업데이트합니다.
+export const updateProviderTalkStatus = async (userId: string, providerName: string, talkEnabled: boolean): Promise<IUser | null> => {
+  const user = await User.findById(userId);
+  if (user) {
+    const provider = user.providers.find(p => p.provider === providerName);
+    if (provider) {
+      provider.talk_message_enabled = talkEnabled;
+      user.markModified('providers'); // Mark the array as modified
+      return user.save();
+    }
+  }
+  return null;
+};
+
+// 사용자의 이름을 업데이트합니다.
+export const updateUserName = async (userId: string, name: string): Promise<IUser | null> => {
+  return User.findByIdAndUpdate(userId, { name }, { new: true }).exec();
+};
+
+// 사용자를 삭제합니다.
+export const deleteUser = async (userId: string): Promise<IUser | null> => {
+  return User.findByIdAndDelete(userId).exec();
 };

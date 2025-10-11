@@ -6,6 +6,7 @@ export interface IOAuthProvider {
   providerId: string;
   email: string | undefined;
   name: string | undefined;
+  talk_message_enabled?: boolean;
 }
 
 // User 인터페이스
@@ -20,6 +21,7 @@ const OAuthProviderSchema = new Schema<IOAuthProvider>({
   providerId: { type: String, required: true },
   email: { type: String },
   name: { type: String },
+  talk_message_enabled: { type: Boolean, default: true },
 }, { _id: false });
 
 // User 스키마

@@ -3,15 +3,24 @@ import { kakaoCallback } from '../auth/kakao';
 import { linkDiscordAccount } from '../auth/discord';
 import { verifyRefreshToken, generateTokens, verifyAccessToken } from '../auth/jwt';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { unlinkDiscord, updateKakaoNotificationSetting } from '../services/authService';
+
 const router = Router();
 
 // 카카오 로그인 프론트에서 이 주소로 이동시킴
 router.get('/kakao/login', (req, res) => {
-  const kakaoAuthUrl =
+  let kakaoAuthUrl =
     `https://kauth.kakao.com/oauth/authorize?client_id=${process.env.KAKAO_CLIENT_ID}` +
     `&redirect_uri=${process.env.KAKAO_REDIRECT_URI}` +
     `&response_type=code` +
     `&scope=profile_nickname,account_email,talk_message`;
+
+  // prompt 파라미터 추가 (e.g., 'login', 'consent')
+  const prompt = req.query.prompt as string;
+  if (prompt) {
+    kakaoAuthUrl += `&prompt=${prompt}`;
+  }
+
   res.redirect(kakaoAuthUrl);
 });
 
@@ -30,7 +39,8 @@ router.get('/discord/login', authMiddleware, (req, res) => {
 router.get('/kakao/callback', async (req, res) => {
   try {
     const code = req.query.code as string; // authorization code
-    const jwtTokens = await kakaoCallback(code);
+    const scope = req.query.scope as string; // 동의한 권한 목록
+    const jwtTokens = await kakaoCallback(code, scope);
 
     res.json(jwtTokens); // 프론트에는 전용 JWT만 보냄
   } catch (err) {
@@ -79,4 +89,22 @@ router.post('/refresh', (req, res) => {
     return res.status(403).json({ message: '유효하지 않은 RefreshToken' });
   }
 });
+
+// 디스코드 연동 해제
+router.delete('/discord', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user!.id; // authMiddleware를 통해 추가된 사용자 ID
+    const updatedUser = await unlinkDiscord(userId);
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없거나 업데이트할 수 없습니다.' });
+    }
+
+    res.status(200).json({ message: '디스코드 연동이 성공적으로 해제되었습니다.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: '디스코드 연동 해제 실패' });
+  }
+});
+
 export default router;
