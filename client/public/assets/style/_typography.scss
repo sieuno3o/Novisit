@@ -1,0 +1,104 @@
+@use "./_colors.scss";
+
+@font-face {
+  font-family: "Suit400";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Regular.woff2")
+    format("woff2");
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Suit600";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-SemiBold.woff2")
+    format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Suit800";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-ExtraBold.woff2")
+    format("woff2");
+  font-weight: 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SchoolSafetyGoodSupport400";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2307-2@1.0/HakgyoansimBareondotumR.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SchoolSafetyGoodSupport700";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2307-2@1.0/HakgyoansimBareondotumB.woff2")
+    format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+// 타이틀명
+.title {
+  font-size: 50px;
+  font-family: "", sans-serif;
+}
+
+// 페이지 제목 명
+.heading1 {
+  font-size: 30px;
+  font-family: "", sans-serif;
+}
+
+//
+.heading2 {
+  font-size: 25px;
+  font-family: "", sans-serif;
+}
+
+//
+.heading3 {
+  font-size: 20px;
+  font-family: "", sans-serif;
+}
+
+// 강조 텍스트
+.body1 {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: bold;
+  font-family: "", sans-serif;
+}
+
+.body2 {
+  font-size: 16px;
+  line-height: 16px;
+  font-family: "", sans-serif;
+}
+
+.body3 {
+  font-size: 14px;
+  line-height: 16px;
+  font-family: "", sans-serif;
+}
+
+.button1 {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: bold;
+  font-family: "", sans-serif;
+}
+
+.button2 {
+  font-size: 12px;
+  line-height: 16px;
+  font-family: "", sans-serif;
+}
+
+.button3 {
+  font-size: 10px;
+  line-height: 16px;
+  font-family: "", sans-serif;
+}

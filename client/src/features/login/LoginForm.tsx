@@ -2,6 +2,9 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth";
+import "./LoginForm.scss";
+import "../../../public/assets/style/_flex.scss";
+import "../../../public/assets/style/_typography.scss";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -29,16 +32,14 @@ export default function LoginForm() {
     navigate(from, { replace: true });
   };
 
-  // ⬇️ div → form 으로 바꾸고 onSubmit 연결
   return (
-    <form className="login-form flex-col-center" onSubmit={onSubmit}>
+    <div className="login-form flex-col-center">
       <div className="login-logo heading1">로그인</div>
-
-      <div className="login-actions flex-col-center">{/* ✅ 이 div 나중에 닫기 */}
+      <div className="login-actions flex-col-center">
         <div className="kakao-login flex-row-center">
           <img
             className="kakao-img logo-img"
-            src="/assets/img/kakaologo.png"
+            src="../../../public/assets/img/kakaologo.png"
             alt="KakaoLogo"
           />
           <button
@@ -48,11 +49,10 @@ export default function LoginForm() {
             카카오로 계속하기
           </button>
         </div>
-
         <div className="discord-login flex-row-center">
           <img
             className="discord-img logo-img"
-            src="/assets/img/discordlogo.png"
+            src="../../../public/assets/img/discordlogo.png"
             alt="discord"
           />
           <button
@@ -63,13 +63,9 @@ export default function LoginForm() {
           </button>
         </div>
 
-        {error && <div style={{ color: "crimson" }}>{error}</div>}
-
-        {/* 제출 버튼은 form 안에서 type="submit" 유지 */}
-        <button type="submit">로그인</button>
-
-        {/* 테스트 로그인은 버튼 클릭만 */}
+        {/* 테스트 로그인 */}
         <button
+          className="login-form-btn test-login-button flex-center body2"
           type="button"
           onClick={() => {
             signin("FAKE_TOKEN_123", { id: "1", name: "tester" });
@@ -78,8 +74,7 @@ export default function LoginForm() {
         >
           테스트 로그인
         </button>
-      </div>{/* ✅ login-actions div 닫기 */}
-
-    </form> // ✅ form 닫기
+      </div>
+    </div>
   );
 }

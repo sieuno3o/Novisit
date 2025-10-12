@@ -1,0 +1,77 @@
+.login-form {
+  padding: 8%;
+}
+
+.login-logo {
+  padding-bottom: 4%;
+}
+
+.login-actions {
+  gap: 25px;
+}
+
+.login-form-btns {
+  border: none;
+}
+
+.login-form-btn {
+  cursor: pointer;
+  text-decoration: none;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.discord-login {
+  width: 330px;
+  height: 55px;
+  padding: 10px 13px;
+  background-color: #5865f2;
+  cursor: pointer;
+  border-radius: 5px;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  .discord-login-button {
+    background-color: #5865f2;
+    color: #ffffff;
+  }
+
+  .discord-img {
+    width: 37px;
+    margin-top: -3px;
+    margin-right: 5px;
+    margin-left: -10px;
+  }
+}
+
+.kakao-login {
+  width: 330px;
+  height: 55px;
+  padding: 10px 13px;
+  background-color: #ffeb3b;
+  cursor: pointer;
+  border-radius: 5px;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  .kakao-login-button {
+    background-color: #ffeb3b;
+    color: black;
+  }
+
+  .kakao-img {
+    width: 30px;
+    margin-right: 10px;
+    margin-left: -10px;
+  }
+}
+
+.test-login-button {
+  margin-top: 10px;
+  color: gray;
+}
