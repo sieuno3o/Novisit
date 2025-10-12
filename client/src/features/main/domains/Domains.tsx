@@ -6,8 +6,10 @@ import s from "./domains.module.scss";
 export default function Domains() {
   return (
     <Section  
-
-    title={<span className="heading1" style={{ fontSize: 31, fontWeight: 600 }} > 관심 분야를 선택하세요.</span>}
+    title={
+    <span className="heading1" style={{ fontSize: 31, fontWeight: 600 }} >
+       관심 분야를 선택하세요
+       </span>}
     titleClassName="text-center">
     
       <div className={s.grid}>
