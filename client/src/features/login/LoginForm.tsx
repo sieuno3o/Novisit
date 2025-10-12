@@ -29,43 +29,16 @@ export default function LoginForm() {
     navigate(from, { replace: true });
   };
 
+  // ⬇️ div → form 으로 바꾸고 onSubmit 연결
   return (
-<<<<<<< Updated upstream
-    <form
-      onSubmit={onSubmit}
-      style={{ display: "grid", gap: 10, maxWidth: 360 }}
-    >
-      <h2>로그인</h2>
-
-      <label>
-        이메일
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          required
-        />
-      </label>
-
-      <label>
-        비밀번호
-        <input
-          type="password"
-          value={pw}
-          onChange={(e) => setPw(e.target.value)}
-          placeholder="••••••••"
-          required
-        />
-      </label>
-=======
-    <div className="login-form flex-col-center">
+    <form className="login-form flex-col-center" onSubmit={onSubmit}>
       <div className="login-logo heading1">로그인</div>
-      <div className="login-actions flex-col-center">
+
+      <div className="login-actions flex-col-center">{/* ✅ 이 div 나중에 닫기 */}
         <div className="kakao-login flex-row-center">
           <img
             className="kakao-img logo-img"
-            src="../../../public/assets/img/kakaologo.png"
+            src="/assets/img/kakaologo.png"
             alt="KakaoLogo"
           />
           <button
@@ -75,10 +48,11 @@ export default function LoginForm() {
             카카오로 계속하기
           </button>
         </div>
+
         <div className="discord-login flex-row-center">
           <img
             className="discord-img logo-img"
-            src="../../../public/assets/img/discordlogo.png"
+            src="/assets/img/discordlogo.png"
             alt="discord"
           />
           <button
@@ -88,22 +62,24 @@ export default function LoginForm() {
             디스코드로 계속하기
           </button>
         </div>
->>>>>>> Stashed changes
 
-      {error && <div style={{ color: "crimson" }}>{error}</div>}
+        {error && <div style={{ color: "crimson" }}>{error}</div>}
 
-      <button type="submit">로그인</button>
+        {/* 제출 버튼은 form 안에서 type="submit" 유지 */}
+        <button type="submit">로그인</button>
 
-      {/* 테스트 로그인 */}
-      <button
-        type="button"
-        onClick={() => {
-          signin("FAKE_TOKEN_123", { id: "1", name: "tester" });
-          navigate(from, { replace: true });
-        }}
-      >
-        테스트 로그인
-      </button>
-    </form>
+        {/* 테스트 로그인은 버튼 클릭만 */}
+        <button
+          type="button"
+          onClick={() => {
+            signin("FAKE_TOKEN_123", { id: "1", name: "tester" });
+            navigate(from, { replace: true });
+          }}
+        >
+          테스트 로그인
+        </button>
+      </div>{/* ✅ login-actions div 닫기 */}
+
+    </form> // ✅ form 닫기
   );
 }
