@@ -5,6 +5,7 @@ import MyPage from "./pages/MyPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import Layout from "./components/Layout";
+import StartPage from "./pages//StartPage";
 
 export default function App() {
   return (
