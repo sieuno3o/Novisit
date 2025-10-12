@@ -35,28 +35,6 @@ export default function LoginForm() {
   return (
     <div className="login-form flex-col-center">
       <div className="login-logo heading1">로그인</div>
-      {/* <label>
-        이메일
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          required
-        />
-      </label>
-
-      <label>
-        비밀번호
-        <input
-          type="password"
-          value={pw}
-          onChange={(e) => setPw(e.target.value)}
-          placeholder="••••••••"
-          required
-        />
-      </label> */}
-      {/* {error && <div style={{ color: "crimson" }}>{error}</div>} */}
       <div className="login-actions flex-col-center">
         <div className="kakao-login flex-row-center">
           <img
