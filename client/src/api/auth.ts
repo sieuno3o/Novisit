@@ -1,9 +1,7 @@
-import http, { tokenStore } from "./http";
+import http, { tokenStore, hardLogout } from "./http";
 
-// 카카오, 디스코드 연결 상태
+// 타입
 export type ChannelState = "disconnected" | "off" | "on";
-
-// 사용자 정보
 export type User = {
   id?: number | string;
   name: string;
@@ -12,7 +10,6 @@ export type User = {
   discord: ChannelState;
 };
 
-// main 도메인
 export type Domain = {
   id: number | string;
   name: string;
@@ -21,32 +18,39 @@ export type Domain = {
   keywords: string[];
 };
 
-// 카카오 로그인 관련
+// 하드 로그아웃 외부에서도 쓸 수 있게 re-export (선택)
+export { hardLogout } from "./http";
+
+// 카카오 시작
 export async function beginKakaoLogin(state?: string) {
+  const safeState = state ?? "/";
+  // 콜백에서 쿼리에 state가 없을 때 사용할 백업
+  sessionStorage.setItem("__oauth_state", safeState);
+
   const url = new URL(`${import.meta.env.VITE_API_BASE_URL}/auth/kakao/login`);
-  if (state) url.searchParams.set("state", state);
+  url.searchParams.set("state", safeState);
   window.location.assign(url.toString());
 }
 
-// 콜백 이후 app_code 교환 -> 서비스 토큰 획득
+// (옵션) 콜백 교환 엔드포인트 사용하는 경우
 export async function exchangeKakao(appCode: string) {
   const { data } = await http.post<{
     accessToken: string;
     refreshToken: string;
     user: User;
   }>("/auth/kakao/exchange", { appCode });
+
   tokenStore.setAccess(data.accessToken);
   tokenStore.setRefresh(data.refreshToken);
   return data.user;
 }
 
-// 내 정보 조회
+// 내 정보 조회 (서버 계약에 맞춰 경로 확인)
 export async function me() {
-  const { data } = await http.get<User>("/users");
+  const { data } = await http.get<User>("/users"); // 서버가 /auth/me면 변경
   return data;
 }
 
-// 사용자 정보 업데이트
 export async function updateUserChannels(
   payload: Partial<Pick<User, "kakao" | "discord">>
 ) {
@@ -57,35 +61,21 @@ export async function updateUserChannels(
   return data;
 }
 
-// 회원탈퇴
 export async function deleteUser() {
   await http.delete("/users");
 }
 
-// 메인 도메인 목록 조회
+// 메인 도메인
 export async function fetchMain() {
   const { data } = await http.get<{ domains: Domain[] }>("/main");
   return data;
 }
 
-// 로그아웃(서버 엔드포인트 없으면 토큰만 비움)
+// 로그아웃(엔드포인트 없을 수도 있음)
 export async function logout() {
   try {
-    await http.post("/auth/logout"); // 없으면 그냥 무시
+    await http.post("/auth/logout"); // 없으면 무시
   } catch {}
-  tokenStore.setAccess(null);
-  tokenStore.setRefresh(null);
-}
-
-// 리프레시 토큰으로 액세스 토큰 재발급
-export async function refreshToken() {
-  const rt = tokenStore.getRefresh();
-  if (!rt) throw new Error("NO_REFRESH_TOKEN");
-  const { data } = await http.post<{ accessToken: string }>("/auth/refresh", {
-    refreshToken: rt,
-  });
-  const newAT = data?.accessToken;
-  if (!newAT) throw new Error("INVALID_REFRESH_RESPONSE");
-  tokenStore.setAccess(newAT);
-  return newAT;
+  // 통신 여부 무관하게 즉시 클라이언트 상태 정리 + /login 이동
+  hardLogout();
 }

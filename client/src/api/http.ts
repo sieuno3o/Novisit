@@ -20,51 +20,83 @@ type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
 const http = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
+  // withCredentials: true, // 쿠키 전략으로 변경 시 주석 해제
 });
 
-// Authorization 헤더 자동 부착
+// === 요청 인터셉터: 액세스 토큰 자동 부착 ===
 http.interceptors.request.use((config) => {
   const at = tokenStore.getAccess();
   if (at) config.headers.Authorization = `Bearer ${at}`;
   return config;
 });
 
-// 401 대응: refresh 토큰으로 재발급 → 원요청 재시도(동시요청 큐 처리)
+// === 동시요청 큐 기반 401 → refresh 처리 ===
 let refreshing = false;
 let queue: Array<(t: string | null) => void> = [];
 
-async function refreshAccessToken() {
+async function doRefresh(): Promise<string> {
   const rt = tokenStore.getRefresh();
   if (!rt) throw new Error("NO_REFRESH_TOKEN");
+
+  // refresh는 순환 방지 위해 기본 axios 사용
   const { data } = await axios.post(
     `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
     { refreshToken: rt }
+    // , { withCredentials: true } // 쿠키 전략이면 사용
   );
+
   const newAT = data?.accessToken as string | undefined;
   if (!newAT) throw new Error("INVALID_REFRESH_RESPONSE");
   tokenStore.setAccess(newAT);
   return newAT;
 }
 
+export function hardLogout(opts?: { redirectTo?: string | false }) {
+  // 1) 토큰/임시 상태 정리
+  tokenStore.setAccess(null);
+  tokenStore.setRefresh(null);
+  sessionStorage.removeItem("__oauth_state");
+
+  // 2) (옵션) 강제 리다이렉트
+  if (opts?.redirectTo !== false) {
+    const to =
+      typeof opts?.redirectTo === "string" ? opts.redirectTo : "/login";
+    window.location.replace(to); // 히스토리 대체
+  }
+}
+
+// === 응답 인터셉터: 401 처리 ===
 http.interceptors.response.use(
   (res) => res,
   async (err: AxiosError) => {
     const original = (err.config || {}) as RetriableConfig;
-    if (err.response?.status === 401 && !original._retry) {
+    const status = err.response?.status;
+
+    // refresh 호출 자체는 재시도 금지
+    const isRefreshCall =
+      typeof original.url === "string" &&
+      original.url.includes("/auth/refresh");
+    if (isRefreshCall) {
+      hardLogout(); // 실패 시 즉시 로그아웃
+      return Promise.reject(err);
+    }
+
+    // 일반 요청 401 → refresh 후 재시도
+    if (status === 401 && !original._retry) {
       if (!refreshing) {
         refreshing = true;
         try {
-          const newAT = await refreshAccessToken();
+          const newAT = await doRefresh();
           queue.forEach((cb) => cb(newAT));
         } catch {
           queue.forEach((cb) => cb(null));
-          tokenStore.setAccess(null);
-          tokenStore.setRefresh(null);
+          hardLogout(); // RT까지 무효 → 하드 로그아웃
         } finally {
           refreshing = false;
           queue = [];
         }
       }
+
       return new Promise((resolve, reject) => {
         queue.push((token) => {
           if (!token) return reject(err);
@@ -75,6 +107,7 @@ http.interceptors.response.use(
         });
       });
     }
+
     return Promise.reject(err);
   }
 );
