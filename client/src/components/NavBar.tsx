@@ -6,11 +6,11 @@ import "../../public/assets/style/_flex.scss";
 import "../../public/assets/style/_colors.scss";
 
 export default function NavBar() {
-  const { user, signout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const onLogout = () => {
-    signout();
+    logout();
     navigate("/");
   };
 
@@ -39,7 +39,7 @@ export default function NavBar() {
       <div className="navbar__auth flex-center">
         {user ? (
           <>
-            <span className="navbar__user body3">{user.name}님</span>
+            <span className="navbar__user">{user.name}님</span>
             <button className="logout-btn body3" onClick={onLogout}>
               로그아웃
             </button>
