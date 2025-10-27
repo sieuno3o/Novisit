@@ -8,8 +8,10 @@ interface UserProfile {
   id: string;
   email?: string;
   name?: string;
+  scopes?: string[];
   accessToken: string;
   refreshToken?: string;
+  expiresIn?: number; // 초 단위
 }
 
 // Provider 정보를 받아 사용자를 찾거나 생성하고 소셜 토큰을 Redis에 저장
@@ -24,16 +26,19 @@ export async function findOrCreateUser(
       user.id,
       providerName,
       profile.accessToken,
-      profile.refreshToken
+      profile.refreshToken,
+      profile.expiresIn
     );
     return user;
   }
 
+  // 새로운 사용자를 위한 provider 데이터 생성
   const providerData: IOAuthProvider = {
     provider: providerName,
     providerId: profile.id,
     email: profile.email,
     name: profile.name,
+    talk_message_enabled: providerName === 'kakao',
   };
 
 
@@ -51,7 +56,8 @@ export async function findOrCreateUser(
     newUser.id,
     providerName,
     profile.accessToken,
-    profile.refreshToken
+    profile.refreshToken,
+    profile.expiresIn
   );
   return newUser;
 }
@@ -85,12 +91,29 @@ export async function linkDiscordToUser(
   const linkedUser = await userRepository.linkProviderToUser(currentUser, providerData);
 
   // 5. 소셜 토큰 저장
-  await tokenRepository.storeProviderTokens(
-    linkedUser.id,
-    'discord',
-    profile.accessToken,
-    profile.refreshToken
-  );
-
-  return linkedUser;
+    await tokenRepository.storeProviderTokens(
+      linkedUser.id,
+      'discord',
+      profile.accessToken,
+      profile.refreshToken,
+      profile.expiresIn
+    );
+  
+    return linkedUser;
+  }
+  
+  // 사용자의 Discord 연동을 해제합니다.
+  export async function unlinkDiscord(userId: string): Promise<IUser | null> {
+    // 1. Redis에서 소셜 토큰 삭제
+    await tokenRepository.deleteProviderTokens(userId, 'discord');
+  
+    // 2. MongoDB에서 provider 정보 삭제
+    const updatedUser = await userRepository.unlinkProvider(userId, 'discord');
+  
+    return updatedUser;
+  }
+  
+// 사용자의 카카오 알림 수신 동의 상태를 변경합니다.
+export async function updateKakaoNotificationSetting(userId: string, enabled: boolean): Promise<IUser | null> {
+  return await userRepository.updateProviderTalkStatus(userId, 'kakao', enabled);
 }

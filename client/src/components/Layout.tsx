@@ -3,20 +3,18 @@ import NavBar from "./NavBar";
 import { useAuth } from "../auth";
 
 export default function Layout() {
-  const { signout } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    signout();
+    logout();
     navigate("/", { replace: true });
   };
 
   return (
     <div>
       <NavBar />
-      <main style={{ padding: 16 }}>
-        <Outlet />
-      </main>
+      <Outlet />
     </div>
   );
 }

@@ -6,11 +6,11 @@ import "../../public/assets/style/_flex.scss";
 import "../../public/assets/style/_colors.scss";
 
 export default function NavBar() {
-  const { user, signout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const onLogout = () => {
-    signout();
+    logout();
     navigate("/");
   };
 
