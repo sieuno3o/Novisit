@@ -8,7 +8,7 @@ import { deleteUserSetting } from "../services/settingsService";
 const router = Router();
 
 // POST - 알림 설정 생성
-router.post("/settings", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
   try {
     const userId = req.userId as string;
     const settings = await createUserSetting(userId, req.body);
