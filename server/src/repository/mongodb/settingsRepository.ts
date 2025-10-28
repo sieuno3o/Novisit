@@ -1,10 +1,30 @@
 import Setting from "../../models/Setting";
 import Message from "../../models/Message";
 
+// 날짜 포맷
+function formatKoreanDate(date?: Date) {
+  if (!date) return null;
+  return date.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
+
 // 알림 설정 생성
 export async function createSetting(settingData: any) {
-  const setting = new Setting(settingData);
-  return await setting.save();
+  try {
+    const setting = new Setting(settingData);
+    const saved = await setting.save();
+
+    return {
+      ...saved.toObject(),
+      created_at: formatKoreanDate(saved.created_at),
+    };
+  } catch (error) {
+    console.error("알림 설정 생성 실패:", error);
+    throw new Error("알림 설정 생성에 실패했습니다.");
+  }
 }
 
 // 알림 설정 + 메시지 조회
@@ -24,6 +44,8 @@ export const getSettings = async (userId: string) => {
           domain_id: setting.domain_id,
           url_list: setting.url_list,
           filter_keywords: setting.filter_keywords,
+          channel: setting.channel,
+          created_at: formatKoreanDate(setting.created_at),
           messages: messages.map((m) => ({
             id: m._id,
             contents: m.contents,
@@ -49,6 +71,11 @@ export const updateSetting = async (settingId: string, updateData: any) => {
       updateData,
       { new: true } // 수정된 문서 반환
     ).lean();
+
+    if (updated) {
+      const { created_at, ...rest } = updated;
+      return rest;
+    }
 
     return updated;
   } catch (error) {
