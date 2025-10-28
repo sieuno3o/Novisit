@@ -12,12 +12,14 @@ $brand-gradient: linear-gradient(
 .wrap {
   display: flex;
   justify-content: center;
-  margin: clamp(12px, 3vw, 28px) 0 64px;
+  margin: 57px 0 64px;
 }
 
 //버튼
 .cta {
   @extend .button1; 
+  font-size: 1rem;
+  font-weight: 600; 
 
   padding: 14px 28px;
   border: 0;
