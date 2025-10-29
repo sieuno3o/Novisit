@@ -47,7 +47,7 @@ export default function NavBar() {
         ) : (
           <>
             <NavLink to="/login" className="login-btn body3">
-              로그인
+              시작하기
             </NavLink>
           </>
         )}

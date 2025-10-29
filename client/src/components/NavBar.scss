@@ -1,8 +1,14 @@
 @use "../../public/assets/style/_colors.scss" as *;
 
 .navbar {
-  padding: 20px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border-bottom: 1px solid #ddd;
+  background-color: #ffffffd0;
+  padding: 20px 20px;
   font-weight: 500;
 
   &__logo {
@@ -29,7 +35,6 @@
   border-radius: 15px;
   text-decoration: none;
   color: #333;
-  background-color: #ffffff;
   transition: all 0.2s ease;
 
   &:hover {
