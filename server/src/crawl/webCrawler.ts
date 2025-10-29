@@ -42,36 +42,44 @@ export class WebCrawler {
       
       await page.waitForSelector('tbody tr', { timeout: 10000 });
       
-      // 공지사항 데이터 추출
+      // 공지사항 데이터 추출 (고정 공지 제외: tr.noti)
       const notices = await page.evaluate(() => {
         const rows = document.querySelectorAll('tbody tr');
         const notices: any[] = [];
-        
+
         rows.forEach((row: Element) => {
           const tr = row as HTMLTableRowElement;
+
+          // 고정 공지 제외: tr 혹은 번호 셀에 noti 클래스가 있는 경우 스킵
+          if (tr.classList.contains('noti')) return;
+
+          const numberCell = tr.querySelector('td.bdlNum') as HTMLElement | null;
+          if (numberCell && numberCell.classList.contains('noti')) return;
+
           const cells = tr.querySelectorAll('td');
-          
-          if (cells.length >= 2) {
-            const numberCell = tr.querySelector('td.bdlNum.noti');
-            const number = numberCell?.textContent?.trim() || '';
-            
-            const titleCell = tr.querySelector('td.bdlTitle a');
-            const title = titleCell?.textContent?.trim() || '';
-            const link = titleCell?.getAttribute('href') || '';
-            const fullLink = link.startsWith('http') ? link : `https://www.pknu.ac.kr${link}`;
-            
-            if (number && title) {
-              notices.push({
-                number: number,
-                title: title,
-                link: fullLink,
-                postedAt: new Date().toISOString().split('T')[0],
-                crawledAt: new Date()
-              });
-            }
+          if (cells.length < 2) return;
+
+          // 번호 텍스트 정제 (숫자만 추출)
+          const rawNumber = numberCell?.textContent?.trim() || '';
+          const number = rawNumber.replace(/[^0-9]/g, '');
+
+          const titleCell = tr.querySelector('td.bdlTitle a') as HTMLAnchorElement | null;
+          const title = titleCell?.textContent?.trim() || '';
+          const link = titleCell?.getAttribute('href') || '';
+          const fullLink = link.startsWith('http') ? link : `https://www.pknu.ac.kr${link}`;
+
+          if (number && title) {
+            notices.push({
+              number: number,
+              title: title,
+              link: fullLink,
+              postedAt: new Date().toISOString().split('T')[0],
+              crawledAt: new Date()
+            });
           }
         });
-        
+
+        // 상단 공지 번호는 notices[0]?.number 로 확인 가능 (페이지 상위 순서 유지)
         return notices;
       });
       
