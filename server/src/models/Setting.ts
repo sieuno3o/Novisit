@@ -7,6 +7,8 @@ export interface ISetting extends Document {
   name: string;
   url_list: string[];
   filter_keywords: string[];
+  channel: string;
+  created_at: Date;
   messages: string[];
 }
 
@@ -17,6 +19,8 @@ const SettingSchema = new Schema<ISetting>({
   name: { type: String, required: true },
   url_list: { type: [String], default: [] },
   filter_keywords: { type: [String], default: [] },
+  channel: { type: String, required: true },
+  created_at: { type: Date, default: Date.now },
   messages: [{ type: Schema.Types.ObjectId, ref: "Message" }],
 });
 
