@@ -11,6 +11,17 @@ export async function findAllDomains() {
   }
 }
 
+// domain_id로 도메인 조회
+export async function findDomainById(domainId: string) {
+  try {
+    const domain = await Domain.findById(domainId);
+    return domain;
+  } catch (error) {
+    console.error("❌ 도메인 조회 실패:", error);
+    throw error;
+  }
+}
+
 // Domain에 setting_id 추가
 export async function addSettingIdToDomain(domainId: string, settingId: string) {
   try {

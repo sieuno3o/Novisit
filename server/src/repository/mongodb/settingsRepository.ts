@@ -53,6 +53,33 @@ export const getSettings = async (userId: string) => {
   }
 };
 
+// domain_id로 Setting 목록 조회
+export const getSettingsByDomainId = async (domainId: string) => {
+  try {
+    const settings = await Setting.find({ domain_id: domainId }).lean();
+    return settings;
+  } catch (error) {
+    console.error("도메인별 알림 설정 조회 실패:", error);
+    throw new Error("알림 설정을 불러오지 못했습니다.");
+  }
+};
+
+// Message 저장
+export const saveMessage = async (settingId: string, contents: string, platform: string = 'kakao') => {
+  try {
+    const message = new Message({
+      setting_id: settingId,
+      contents,
+      sended_at: new Date(),
+      platform,
+    });
+    return await message.save();
+  } catch (error) {
+    console.error("메시지 저장 실패:", error);
+    throw new Error("메시지 저장에 실패했습니다.");
+  }
+};
+
 // 알림 설정 수정
 export const updateSetting = async (settingId: string, updateData: any) => {
   try {
