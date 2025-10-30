@@ -1,0 +1,20 @@
+@use "../../../../public/assets/style/_colors.scss" as *;
+@use "../../../../public/assets/style/_flex.scss" as *;
+@use "../../../../public/assets/style/_typography.scss" as *;
+
+
+.surface { background: #f8fafc; }
+.wrap    { padding: 64px 0; }
+
+.title {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.sub {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 18px;
+}
