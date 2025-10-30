@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./auth";
 import RequireAuth from "./routes/RequireAuth";
 import Layout from "./components/Layout";
@@ -20,6 +20,7 @@ export default function App() {
             <Route element={<RequireAuth />}>
               <Route path="/notice" element={<NoticePage />} />
               <Route path="/mypage" element={<MyPage />} />
+              <Route path="/my" element={<Navigate to="/mypage" replace />} />   {/*마이페이지 연동 시 필요*/}
             </Route>
           </Route>
         </Routes>
