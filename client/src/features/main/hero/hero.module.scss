@@ -1,0 +1,49 @@
+@use "../../../../public/assets/style/_colors.scss" as *;
+@use "../../../../public/assets/style/_flex.scss" as *;
+@use "../../../../public/assets/style/_typography.scss" as *;
+
+.wrap {
+  position: relative;
+  overflow: hidden;
+}
+.inner {
+  position: relative;
+  text-align: center;
+  padding: 20px 0 36px;
+}
+.brand {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+.title {
+  margin: 10px 0 0;
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.gradient {
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed, #f97316);
+}
+
+.sub {
+  margin: 14px auto 0;
+  max-width: 820px;
+  color: #313b4d;
+  font-size: 19px;
+  line-height: 1.8;
+}
+
+.logoText {
+  background: linear-gradient(125deg, #2b64b8 0%, #50afcf 50%, #67debccc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}

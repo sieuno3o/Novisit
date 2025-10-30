@@ -39,7 +39,7 @@ export default function NavBar() {
       <div className="navbar__auth flex-center">
         {user ? (
           <>
-            <span className="navbar__user body3">{user.name}님</span>
+            <span className="navbar__user">{user.name}님</span>
             <button className="logout-btn body3" onClick={onLogout}>
               로그아웃
             </button>
@@ -47,7 +47,7 @@ export default function NavBar() {
         ) : (
           <>
             <NavLink to="/login" className="login-btn body3">
-              로그인
+              시작하기
             </NavLink>
           </>
         )}
