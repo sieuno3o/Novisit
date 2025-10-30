@@ -1,11 +1,11 @@
-@use "../../../public/assets/style/_typography.scss"; 
+@use "../../../public/assets/style/_typography.scss";
 @use "../../../public/assets/style/_colors.scss" as *;
 
 $brand-gradient: linear-gradient(
-  125deg,
-  $main-color-blue 0%,
-  $main-color-pink 50%,
-  $main-color-yellow 100%
+  100deg,
+  #2b64b8 10%,
+  #50afcf 60%,
+  #67debccc 100%
 );
 
 //히어로 아래 가운데 정렬
@@ -17,9 +17,9 @@ $brand-gradient: linear-gradient(
 
 //버튼
 .cta {
-  @extend .button1; 
+  @extend .button1;
   font-size: 1rem;
-  font-weight: 600; 
+  font-weight: 600;
 
   padding: 14px 28px;
   border: 0;
@@ -27,11 +27,22 @@ $brand-gradient: linear-gradient(
   color: #fff;
   background: $brand-gradient;
   box-shadow: 0 18px 48px rgba(37, 99, 235, 0.12),
-              0 6px 18px rgba(16, 24, 40, 0.08);
+    0 6px 18px rgba(16, 24, 40, 0.08);
   cursor: pointer;
-  transition: transform .06s ease, box-shadow .2s ease, filter .15s ease;
+  transition: transform 0.06s ease, box-shadow 0.2s ease, filter 0.15s ease;
 }
 
-.cta:hover  { transform: translateY(-1px); box-shadow: 0 22px 56px rgba(37,99,235,.16), 0 8px 22px rgba(16,24,40,.10); }
-.cta:active { transform: translateY(0);    box-shadow: 0 14px 34px rgba(37,99,235,.14), 0 6px 18px rgba(16,24,40,.10); }
-.cta:focus  { outline: 3px solid rgba(37,99,235,.25); outline-offset: 2px; }
+.cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 56px rgba(37, 99, 235, 0.16),
+    0 8px 22px rgba(16, 24, 40, 0.1);
+}
+.cta:active {
+  transform: translateY(0);
+  box-shadow: 0 14px 34px rgba(37, 99, 235, 0.14),
+    0 6px 18px rgba(16, 24, 40, 0.1);
+}
+.cta:focus {
+  outline: 3px solid rgba(37, 99, 235, 0.25);
+  outline-offset: 2px;
+}

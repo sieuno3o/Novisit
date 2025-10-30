@@ -46,11 +46,7 @@
 
   &.active {
     color: #fff;
-    background: linear-gradient(
-      125deg,
-      $main-color-blue 0%,
-      $main-color-purple 95%
-    );
+    background: #3b76d0;
   }
 }
 
@@ -66,11 +62,7 @@
 }
 
 .login-btn {
-  background: linear-gradient(
-    125deg,
-    $main-color-blue 0%,
-    $main-color-purple 95%
-  );
+  background: #3b76d0;
   color: #fff;
   text-decoration: none;
   padding: 12px 16px;
