@@ -61,8 +61,6 @@
   color: #0f172a;
 }
 
-
-
 //알림 채널 칸
 .channel-row {
   display: flex;
@@ -85,7 +83,7 @@
 .channel-status { font-size: 15px; color:#64748b; margin-top:2px; }
 .channel-right { margin-left: auto; }
 
-/* 기존: @include type.button(); */
+//기존: @include type.button()
 .channel-action {
   font-size: 14px; font-weight: 600;
   border: 1px solid rgba(2,22,62,0.1);
@@ -113,3 +111,24 @@
     .knob { left: 22px; }
   }
 }
+
+
+.toggle-wrap {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  cursor: pointer;
+  &:focus { outline: none; }
+  &:focus-visible { outline: none; }
+}
+
+.toggle-wrap.busy { cursor: not-allowed; opacity: .7; }
+
+
+.toggle-wrap, .toggle-wrap * {
+  box-shadow: none;
+}
+
