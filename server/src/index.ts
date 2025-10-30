@@ -9,7 +9,7 @@ import settingsRoutes from "./routes/settingsRoutes";
 import userRoutes from "./routes/userRoutes";
 import cors from "cors";
 import { CrawlingService } from './services/crawlingService.js'
-import { registerCrawltestApi } from './test/crawltest.js'
+import { registerCrawltestApi } from './test/crawltest'
 
 // Load environment variables
 dotenv.config();
