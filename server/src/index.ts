@@ -9,6 +9,7 @@ import settingsRoutes from "./routes/settingsRoutes";
 import userRoutes from "./routes/userRoutes";
 import cors from "cors";
 import { CrawlingService } from './services/crawlingService.js'
+import { registerCrawltestApi } from './test/crawltest.js'
 
 // Load environment variables
 dotenv.config();
@@ -61,6 +62,9 @@ app.use("/test", testRouter);
 app.use(mainRoutes);
 app.use("/settings", settingsRoutes);
 app.use("/users", userRoutes);
+
+// 수동 크롤 트리거 API 등록
+registerCrawltestApi(app);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
