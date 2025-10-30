@@ -56,7 +56,7 @@ const processJob: JobProcessor = async (job) => {
         // 각 URL별로 크롤링
         for (const domainUrl of domain.url_list) {
           // 현재는 PKNU만 지원하므로 PKNU URL인지 확인
-          if (domainUrl.includes('pknu.ac.kr')) {
+          if (domainUrl.includes('pknu')) {
             try {
               // 2. 해당 URL에 대한 새 공지사항 크롤링
               const lastKnownNumber = await getLatestNoticeNumber('PKNU');
