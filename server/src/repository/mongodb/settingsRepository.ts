@@ -2,6 +2,16 @@ import Setting from "../../models/Setting";
 import Message from "../../models/Message";
 import { addSettingIdToDomain, removeSettingIdFromDomain } from "./domainRepository";
 
+// 날짜 포맷
+function formatKoreanDate(date?: Date) {
+  if (!date) return null;
+  return date.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
+
 // 알림 설정 생성
 export async function createSetting(settingData: any) {
   const setting = new Setting(settingData);
@@ -36,6 +46,8 @@ export const getSettings = async (userId: string) => {
           domain_id: setting.domain_id,
           url_list: setting.url_list,
           filter_keywords: setting.filter_keywords,
+          channel: setting.channel,
+          created_at: formatKoreanDate(setting.created_at),
           messages: messages.map((m) => ({
             id: m._id,
             contents: m.contents,

@@ -1,38 +1,44 @@
+// src/pages/KakaoFinishPage.tsx
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { me } from "../api/auth";
 import { useAuth } from "../auth";
 import { tokenStore } from "../api/http";
-// import axios from "axios"; // 교환식이 아니면 불필요
+
+function paramsFromHash() {
+  const raw = window.location.hash.replace(/^#/, "");
+  return new URLSearchParams(raw);
+}
 
 export default function KakaoFinishPage() {
   const [sp] = useSearchParams();
   const navigate = useNavigate();
-  const { refreshMe } = useAuth();
+  const { loginFromTokens } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        // 0) 목적지(state): 해시/쿼리/백업 순서로 탐색
-        const hashParams = new URLSearchParams(
-          window.location.hash.replace(/^#/, "")
-        );
-        const stateFromHash = hashParams.get("state");
-        const stateFromQuery = sp.get("state");
-        const stateBackup = sessionStorage.getItem("__oauth_state");
-        const redirectTo =
-          stateFromHash || stateFromQuery || stateBackup || "/";
+        // 0) redirect 목적지 복구
+        let redirectTo = "/";
+        const saved = sessionStorage.getItem("__oauth_state");
+        if (saved) {
+          try {
+            redirectTo = JSON.parse(saved)?.from || "/";
+          } catch {
+            redirectTo = "/";
+          }
+        }
 
-        // 1) (권장 플로우) 해시(#)로 토큰 전달된 경우
-        const atHash = hashParams.get("accessToken");
-        const rtHash = hashParams.get("refreshToken");
+        // 1) 해시(#)로 토큰 전달된 경우
+        const hash = paramsFromHash();
+        const atHash = hash.get("accessToken");
+        const rtHash = hash.get("refreshToken");
         if (atHash && rtHash) {
           tokenStore.setAccess(atHash);
           tokenStore.setRefresh(rtHash);
-          await refreshMe();
+          await loginFromTokens();
 
-          // URL에서 해시 제거(토큰 노출 방지)
+          // 토큰 노출 방지: 해시 제거
           window.history.replaceState(
             null,
             "",
@@ -43,40 +49,32 @@ export default function KakaoFinishPage() {
           return;
         }
 
-        // 2) (대안) 쿼리로 직접 온 경우도 지원
+        // 2) 쿼리로 토큰 전달된 경우
         const at = sp.get("accessToken");
         const rt = sp.get("refreshToken");
         if (at && rt) {
           tokenStore.setAccess(at);
           tokenStore.setRefresh(rt);
-          await refreshMe();
+          await loginFromTokens();
+
+          // (옵션) 쿼리 정리
+          const cleaned = new URL(window.location.href);
+          cleaned.searchParams.delete("accessToken");
+          cleaned.searchParams.delete("refreshToken");
+          cleaned.searchParams.delete("state");
+          window.history.replaceState(
+            null,
+            "",
+            cleaned.pathname + cleaned.search
+          );
+
           sessionStorage.removeItem("__oauth_state");
           navigate(redirectTo, { replace: true });
           return;
         }
 
-        // 3) (대안) 서버 교환식 사용한다면 여기를 살리세요
-        // const appCode = sp.get("app_code") || sp.get("code");
-        // if (appCode) {
-        //   const { data } = await axios.post(
-        //     `${import.meta.env.VITE_API_BASE_URL}/auth/kakao/exchange`,
-        //     { appCode }
-        //   );
-        //   if (data?.accessToken && data?.refreshToken) {
-        //     tokenStore.setAccess(data.accessToken);
-        //     tokenStore.setRefresh(data.refreshToken);
-        //     await refreshMe();
-        //     sessionStorage.removeItem("__oauth_state");
-        //     navigate(redirectTo, { replace: true });
-        //     return;
-        //   }
-        // }
-
-        // 4) (쿠키 전략일 때) me()로 확인 후 이동
-        await me();
-        await refreshMe();
-        sessionStorage.removeItem("__oauth_state");
-        navigate(redirectTo, { replace: true });
+        // 3) 여기까지 못 받았으면 실패
+        throw new Error("로그인 토큰을 수신하지 못했습니다.");
       } catch (e: any) {
         const msg =
           e?.response?.data?.message ||
@@ -85,7 +83,6 @@ export default function KakaoFinishPage() {
         setError(msg);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (error) return <div style={{ padding: 24 }}>{error}</div>;

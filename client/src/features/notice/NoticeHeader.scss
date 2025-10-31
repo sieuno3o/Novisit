@@ -6,3 +6,151 @@
     color: rgb(123, 123, 123);
   }
 }
+
+.notice-header-container {
+  position: relative;
+
+  .notice-header-top {
+    gap: 12px;
+  }
+}
+.notice-header-container {
+  position: relative;
+
+  .notice-header-top {
+    gap: 12px;
+  }
+}
+
+.notice-title-container {
+  align-items: center;
+}
+
+.notice-help-btn {
+  width: 25px;
+  height: 25px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9999px;
+  background: #fff;
+  cursor: pointer;
+  margin-left: 5px;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease,
+    transform 0.05s ease-in-out;
+
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  &:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  }
+  &:active {
+    transform: translateY(1px);
+  }
+  &:focus-visible {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+  }
+}
+
+/* ---------- Popover (Portal, body에 붙음) ---------- */
+.notice-popover {
+  position: absolute;
+  z-index: 9999; /* 다른 요소 위로 */
+  width: clamp(260px, 32vw, 360px);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 12px 14px;
+  color: #0f172a; /* slate-900 */
+  animation: pop-fade 0.16s ease-out;
+
+  &.top .notice-popover__arrow {
+    bottom: -6px;
+    transform: translateX(-50%) rotate(45deg);
+  }
+  &.bottom .notice-popover__arrow {
+    top: -6px;
+    transform: translateX(-50%) rotate(45deg);
+  }
+}
+
+@keyframes pop-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-2px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.notice-popover__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+
+  .strong {
+    font-weight: 600;
+  }
+}
+
+.notice-popover__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    border-color: #e2e8f0;
+    background: #f8fafc;
+  }
+  &:focus-visible {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+  }
+}
+
+.notice-popover__content {
+  p {
+    margin: 4px 0 6px;
+    line-height: 1.55;
+  }
+  ul {
+    margin: 0 0 0 18px;
+    list-style: disc;
+  }
+  li {
+    margin: 2px 0;
+  }
+}
+
+/* 작은 화살표(버튼 쪽을 가리킴) */
+.notice-popover__arrow {
+  position: absolute;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-left: 1px solid #e5e7eb;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.03);
+  pointer-events: none;
+  /* 위치는 상위 .top/.bottom에서 제어 */
+}
