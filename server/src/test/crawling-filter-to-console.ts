@@ -21,7 +21,7 @@ async function main() {
       console.log(`[도메인] ${domain.name}  (키워드: ${domain.keywords?.join(", ")})`);
       for (const url of domain.url_list) {
         if (!url.includes("pknu")) continue; // PKNU 도메인만 테스트
-        const lastKnown = await getLatestNoticeNumber('PKNU');
+        const lastKnown = await getLatestNoticeNumber(url, 'PKNU');
         const crawlResult = await crawler.crawlPKNUNotices(lastKnown);
 
         if (!crawlResult.notices || crawlResult.notices.length === 0) {

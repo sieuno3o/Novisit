@@ -32,22 +32,28 @@ RUN useradd --system --uid 1001 -g nodejs nodejs
 COPY package*.json ./
 COPY server/package*.json ./server/
 
-# Install production dependencies
+# Install dependencies (dev 모드 지원을 위해 devDependencies도 설치)
 RUN if [ -f "package-lock.json" ]; then \
-      npm ci --omit=dev --workspace=server; \
+      npm ci --workspace=server; \
     else \
-      npm install --omit=dev --workspace=server; \
+      npm install --workspace=server; \
     fi
 
 # Install Playwright browsers (chromium only for efficiency)
-RUN cd server && npx playwright install chromium
+# --with-deps 옵션으로 시스템 종속성도 함께 설치 (더 안정적)
+RUN cd server && npx playwright install chromium --with-deps
 
-# Copy built application
+# Copy application (dev 모드를 위해 소스 파일도 복사)
+COPY --chown=nodejs:nodejs server/src ./server/src
 COPY --chown=nodejs:nodejs server/dist ./server/dist
+COPY --chown=nodejs:nodejs server/tsconfig.json ./server/tsconfig.json
 COPY --chown=nodejs:nodejs client/dist ./client/dist
 
 USER nodejs
 
 EXPOSE 5000
 
-CMD ["node", "npm", "server/dist/index.js"]
+WORKDIR /app/server
+
+# NODE_ENV에 따라 dev 또는 start 실행
+CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"development\" ]; then npm run dev; else npm start; fi"]

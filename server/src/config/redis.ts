@@ -2,7 +2,7 @@ import { Queue, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { WebCrawler } from '../crawl/webCrawler.js';
 import { JobData, JobResult, JobProcessor } from '../types/crawl.js';
-import { saveNotices, getLatestNoticeNumber } from '../repository/mongodb/noticeRepository.js';
+import { saveNotices, getLatestNoticeNumber, getNoticesByUrl } from '../repository/mongodb/noticeRepository.js';
 import { findAllDomains } from '../repository/mongodb/domainRepository.js';
 import { getSettingsByDomainId, saveMessage } from '../repository/mongodb/settingsRepository.js';
 import { sendKakaoMessage } from '../services/notificationService.js';
@@ -35,127 +35,196 @@ const processJob: JobProcessor = async (job) => {
     let result: any;
     
     if (jobType === 'crawl-pknu-notices') {
-      console.log(`[Job] ${job.name} 시작: Domain 기반 크롤링 및 알림 전송`);
+      console.log(`[Job] ${job.name} 시작: 새로운 로직 - 크롤링 → 저장 → 필터링 → 메시지 전송`);
       
-      // 1. Domain 조회
+      // 크롤링 날짜 생성 (yymmdd-hh 형식)
+      const now = new Date();
+      const yy = now.getFullYear().toString().slice(-2);
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const hh = String(now.getHours()).padStart(2, '0');
+      const crawlDate = `${yy}${mm}${dd}-${hh}`;
+      
+      // ========== 1단계: 모든 도메인의 URL 리스트 중복 제거 및 크롤링 ==========
+      console.log(`[Job] 1단계: 크롤링 및 저장 시작 (${crawlDate})`);
+      
+      // Domain 조회
       const domains = await findAllDomains();
       console.log(`[Job] ${domains.length}개 Domain 발견`);
       
+      // 모든 Domain의 url_list를 중복 제거하여 하나로 합치기
+      const uniqueUrls = new Set<string>();
+      const urlToDomainMap: Map<string, string[]> = new Map(); // URL -> 해당 URL을 가진 Domain 이름들
+      
+      for (const domain of domains) {
+        if (!domain.url_list || domain.url_list.length === 0) {
+          continue;
+        }
+        
+        for (const url of domain.url_list) {
+          if (url.includes('pknu')) {
+            uniqueUrls.add(url);
+            if (!urlToDomainMap.has(url)) {
+              urlToDomainMap.set(url, []);
+            }
+            urlToDomainMap.get(url)!.push(domain.name);
+          }
+        }
+      }
+      
+      console.log(`[Job] 중복 제거된 URL: ${uniqueUrls.size}개`);
+      uniqueUrls.forEach(url => {
+        const domains = urlToDomainMap.get(url) || [];
+        console.log(`[Job] URL "${url}": ${domains.length}개 Domain에 포함 (${domains.join(', ')})`);
+      });
+      
       let totalNoticesCrawled = 0;
+      // 1단계에서 저장한 새 공지들을 추적 (key: url, value: 새로 저장한 공지 배열)
+      const newlySavedNotices: Map<string, any[]> = new Map();
+      
+      // 중복 제거된 URL 리스트로 크롤링
+      for (const url of uniqueUrls) {
+        try {
+          // URL별 마지막 번호 조회
+          const lastKnownNumber = await getLatestNoticeNumber(url, 'PKNU');
+          console.log(`[Job] URL "${url}": 마지막 번호 ${lastKnownNumber || '없음'}`);
+          
+          // 크롤링 실행
+          const crawlResult = await crawler.crawlPKNUNotices(lastKnownNumber);
+          
+          // Notice에 저장 (crawlDate, url 포함, 필터링 전 모든 공지 저장)
+          // 공지가 없어도 메타데이터는 저장됨 (이전 시간대 번호 사용)
+          const savedLatestNumber = await saveNotices(
+            crawlResult.notices || [], 
+            url, 
+            crawlDate, 
+            'PKNU'
+          );
+          
+          if (crawlResult.notices && crawlResult.notices.length > 0) {
+            totalNoticesCrawled += crawlResult.notices.length;
+            // 새로 저장한 공지들을 Map에 저장 (2단계에서 사용)
+            newlySavedNotices.set(url, crawlResult.notices);
+            console.log(`[Job] URL "${url}": ${crawlResult.notices.length}개 공지 저장 완료 | 최신번호: ${savedLatestNumber}`);
+          } else {
+            console.log(`[Job] URL "${url}": 새 공지 없음 | 최신번호: ${savedLatestNumber || '없음'}`);
+          }
+        } catch (error: any) {
+          console.error(`[Job] URL "${url}" 크롤링 실패:`, error.message);
+          // 개별 URL 실패는 전체 작업을 중단하지 않음
+          continue;
+        }
+      }
+      
+      console.log(`[Job] 1단계 완료: 총 ${totalNoticesCrawled}개 공지 저장 (${newlySavedNotices.size}개 URL)`);
+      
+      // ========== 2단계: 새로 저장한 Notice만 필터링 ==========
+      console.log(`[Job] 2단계: 새로 저장한 Notice 필터링 시작`);
+      
       let totalMessagesSent = 0;
       
       // 각 Domain별로 처리
       for (const domain of domains) {
         if (!domain.url_list || domain.url_list.length === 0) {
-          console.log(`[Job] Domain "${domain.name}"에 url_list가 없어 스킵`);
           continue;
         }
         
-        console.log(`[Job] Domain "${domain.name}" 처리 시작 (${domain.url_list.length}개 URL)`);
+        // 해당 Domain의 Settings 조회
+        const domainId = domain._id ? String(domain._id) : String(domain.id);
+        const settings = await getSettingsByDomainId(domainId);
         
-        // 각 URL별로 크롤링
+        if (settings.length === 0) {
+          console.log(`[Job] Domain "${domain.name}": Setting 없음, 스킵`);
+          continue;
+        }
+        
+        console.log(`[Job] Domain "${domain.name}": ${settings.length}개 Setting 발견`);
+        
+        // Domain의 각 URL별로 새로 저장한 공지만 필터링
         for (const domainUrl of domain.url_list) {
-          // 현재는 PKNU만 지원하므로 PKNU URL인지 확인
-          if (domainUrl.includes('pknu')) {
-            try {
-              // 2. 해당 URL에 대한 새 공지사항 크롤링
-              const lastKnownNumber = await getLatestNoticeNumber('PKNU');
-              const crawlResult = await crawler.crawlPKNUNotices(lastKnownNumber);
-              
-              if (!crawlResult.notices || crawlResult.notices.length === 0) {
-                console.log(`[Job] Domain "${domain.name}" URL "${domainUrl}": 새 공지 없음`);
-                continue;
-              }
-              
-              // 3. Domain keywords로 필터링
-              const domainFilteredNotices = crawlResult.notices.filter(notice => 
-                matchesKeywords(notice.title, domain.keywords || [])
-              );
-              
-              console.log(`[Job] Domain "${domain.name}" URL "${domainUrl}": ${crawlResult.notices.length}개 중 ${domainFilteredNotices.length}개가 Domain keywords 매칭`);
-              
-              if (domainFilteredNotices.length === 0) {
-                // Domain 필터링에서 걸러졌지만 DB에는 저장 (다른 필터로는 매칭될 수 있음)
-                await saveNotices(crawlResult.notices, 'PKNU');
-                totalNoticesCrawled += crawlResult.notices.length;
-                continue;
-              }
-              
-              // DB에 저장
-              await saveNotices(domainFilteredNotices, 'PKNU');
-              totalNoticesCrawled += domainFilteredNotices.length;
-              
-              // 4. 해당 Domain의 Settings 조회
-              const domainId = domain._id ? String(domain._id) : String(domain.id);
-              const settings = await getSettingsByDomainId(domainId);
-              console.log(`[Job] Domain "${domain.name}": ${settings.length}개 Setting 발견`);
-              
-              // 각 Setting별로 처리
-              for (const setting of settings) {
-                // 5. Setting filter_keywords로 필터링
-                const settingFilteredNotices = domainFilteredNotices.filter(notice =>
-                  matchesKeywords(notice.title, setting.filter_keywords || [])
-                );
-                
-                if (settingFilteredNotices.length === 0) {
-                  console.log(`[Job] Setting "${setting.name}": 필터링 결과 매칭 없음`);
-                  continue;
-                }
-                
-                console.log(`[Job] Setting "${setting.name}": ${settingFilteredNotices.length}개 공지 매칭`);
-                
-                // 6. 각 공지사항에 대해 메시지 전송
-                for (const notice of settingFilteredNotices) {
-                  try {
-                    // 메시지 내용 구성
-                    const messageContent = `새 공지사항\n제목: ${notice.title}\n번호: ${notice.number}\n링크: ${notice.link}`;
-                    
-                    // 7. 카카오 메시지 전송
-                    await sendKakaoMessage(setting.user_id, {
-                      object_type: 'text',
-                      text: messageContent,
-                      link: {
-                        web_url: notice.link,
-                        mobile_web_url: notice.link
-                      },
-                      button_title: '자세히 보기'
-                    });
-                    
-                    // 8. Message 저장
-                    const settingId = setting._id ? String(setting._id) : setting.id;
-                    await saveMessage(settingId, messageContent, 'kakao');
-                    
-                    totalMessagesSent++;
-                    console.log(`[Job] Setting "${setting.name}": 공지사항 #${notice.number} 메시지 전송 완료`);
-                    
-                    // 메시지 전송 간 딜레이 (API 제한 방지)
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                  } catch (error: any) {
-                    console.error(`[Job] Setting "${setting.name}" 메시지 전송 실패:`, error.message);
-                    // 개별 메시지 실패는 전체 작업을 중단하지 않음
-                  }
-                }
-              }
-            } catch (error: any) {
-              console.error(`[Job] Domain "${domain.name}" URL "${domainUrl}" 크롤링 실패:`, error.message);
-              // 개별 URL 실패는 전체 작업을 중단하지 않음
+          if (!domainUrl.includes('pknu')) {
+            continue;
+          }
+          
+          // 1단계에서 저장한 새 공지만 가져오기 (모든 공지 조회 X)
+          const newlySaved = newlySavedNotices.get(domainUrl);
+          
+          if (!newlySaved || newlySaved.length === 0) {
+            console.log(`[Job] Domain "${domain.name}" URL "${domainUrl}": 새로 저장한 공지 없음`);
+            continue;
+          }
+          
+          // Domain keywords로 1차 필터링
+          const domainFilteredNotices = newlySaved.filter(notice =>
+            matchesKeywords(notice.title, domain.keywords || [])
+          );
+          
+          console.log(`[Job] Domain "${domain.name}" URL "${domainUrl}": ${newlySaved.length}개 중 ${domainFilteredNotices.length}개가 Domain keywords 매칭`);
+          
+          if (domainFilteredNotices.length === 0) {
+            continue;
+          }
+          
+          // 각 Setting별로 2차 필터링 및 메시지 전송
+          for (const setting of settings) {
+            // Setting filter_keywords로 2차 필터링
+            const settingFilteredNotices = domainFilteredNotices.filter(notice =>
+              matchesKeywords(notice.title, setting.filter_keywords || [])
+            );
+            
+            if (settingFilteredNotices.length === 0) {
+              console.log(`[Job] Setting "${setting.name}": 필터링 결과 매칭 없음`);
               continue;
             }
-          } else {
-            console.log(`[Job] Domain "${domain.name}" URL "${domainUrl}": PKNU가 아닌 URL로 현재 미지원`);
+            
+            console.log(`[Job] Setting "${setting.name}": ${settingFilteredNotices.length}개 공지 매칭`);
+            
+            // ========== 3단계: 메시지 전송 ==========
+            for (const notice of settingFilteredNotices) {
+              try {
+                // 메시지 내용 구성
+                const messageContent = `새 공지사항\n제목: ${notice.title}\n번호: ${notice.number}\n링크: ${notice.link}`;
+                
+                // 카카오 메시지 전송
+                await sendKakaoMessage(setting.user_id, {
+                  object_type: 'text',
+                  text: messageContent,
+                  link: {
+                    web_url: notice.link,
+                    mobile_web_url: notice.link
+                  },
+                  button_title: '자세히 보기'
+                });
+                
+                // Message 저장
+                const settingId = setting._id ? String(setting._id) : setting.id;
+                await saveMessage(settingId, messageContent, 'kakao');
+                
+                totalMessagesSent++;
+                console.log(`[Job] Setting "${setting.name}": 공지사항 #${notice.number} 메시지 전송 완료`);
+                
+                // 메시지 전송 간 딜레이 (API 제한 방지)
+                await new Promise(resolve => setTimeout(resolve, 500));
+              } catch (error: any) {
+                console.error(`[Job] Setting "${setting.name}" 메시지 전송 실패:`, error.message);
+                // 개별 메시지 실패는 전체 작업을 중단하지 않음
+              }
+            }
           }
         }
       }
+      
+      console.log(`[Job] 2단계 완료: 총 ${totalMessagesSent}개 메시지 전송`);
       
       result = {
         success: true,
         executedAt: new Date(),
         totalNoticesCrawled,
         totalMessagesSent,
-        message: `크롤링: ${totalNoticesCrawled}개, 메시지 전송: ${totalMessagesSent}개`
+        message: `크롤링/저장: ${totalNoticesCrawled}개, 메시지 전송: ${totalMessagesSent}개`
       };
       
-      console.log(`[Job] ${job.name} 완료: ${totalNoticesCrawled}개 공지 크롤링, ${totalMessagesSent}개 메시지 전송`);
+      console.log(`[Job] ${job.name} 완료: ${totalNoticesCrawled}개 공지 저장, ${totalMessagesSent}개 메시지 전송`);
     } else {
       // 기본 작업
       result = { 
