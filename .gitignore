@@ -117,8 +117,6 @@ playwright/.cache/
 # Redis dump
 dump.rdb
 
-# MongoDB
-data/
 
 # SSL certificates
 ssl/
@@ -129,3 +127,4 @@ ssl/
 # Temporary files
 tmp/
 temp/
+.DS_Store

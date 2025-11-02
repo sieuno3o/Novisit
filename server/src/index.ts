@@ -9,6 +9,9 @@ import settingsRoutes from "./routes/settingsRoutes";
 import userRoutes from "./routes/userRoutes";
 import cors from "cors";
 import { CrawlingService } from './services/crawlingService.js'
+import { registerCrawltestApi } from './test/crawltest'
+import { initializeDomains } from "./repository/mongodb/domainRepository";
+import { initialDomains } from "./data/initialDomains.js";
 
 // Load environment variables
 dotenv.config();
@@ -30,8 +33,15 @@ app.use(express.urlencoded({ extended: true }));
 // MongoDB connection
 mongoose
   .connect(process.env.MONGODB_URI || "mongodb://localhost:27017/novisit")
-  .then(() => {
+  .then(async () => {
     console.log("✅ MongoDB connected successfully");
+    // 초기 도메인 데이터 생성 (도메인이 없을 경우에만)
+    try {
+      await initializeDomains(initialDomains);
+    } catch (error) {
+      console.error("❌ 초기 도메인 데이터 생성 중 오류:", error);
+      // 초기화 실패해도 서버는 계속 실행되도록 함
+    }
   })
   .catch((error) => {
     console.error("❌ MongoDB connection error:", error);
@@ -61,6 +71,9 @@ app.use("/test", testRouter);
 app.use(mainRoutes);
 app.use("/settings", settingsRoutes);
 app.use("/users", userRoutes);
+
+// 수동 크롤 트리거 API 등록
+registerCrawltestApi(app);
 
 // Health check endpoint
 app.get("/health", (req, res) => {

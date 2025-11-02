@@ -25,10 +25,10 @@ router.post('/kakao', authMiddleware, async (req, res) => {
 
   try {
     await sendKakaoMessage(userId, dummyTemplate);
-    res.status(200).json({ message: '카카오 메시지를 성공적으로 보냈습니다.' });
+    return res.status(200).json({ message: '카카오 메시지를 성공적으로 보냈습니다.' });
   } catch (error: any) {
     console.error('카카오 메시지 전송 실패:', error.response?.data || error.message);
-    res.status(500).json({
+    return res.status(500).json({
       message: '카카오 메시지 전송에 실패했습니다.',
       error: error.response?.data || error.message,
     });
