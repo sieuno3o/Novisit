@@ -3,8 +3,14 @@ import Domain from "../../models/Domain";
 // 모든 도메인 조회
 export async function findAllDomains() {
   try {
-    const domains = await Domain.find({}, { name: 1, url_list: 1, keywords: 1 });
-    return domains;
+    // .lean()을 사용하여 plain JavaScript 객체로 반환
+    // ObjectId를 문자열로 변환하여 반환
+    const domains = await Domain.find({}).select('_id name url_list keywords setting_ids').lean();
+    return domains.map(domain => ({
+      ...domain,
+      _id: domain._id.toString(),
+      setting_ids: domain.setting_ids.map((id: any) => id.toString())
+    }));
   } catch (error) {
     console.error("❌ 도메인 조회 실패:", error);
     throw error;

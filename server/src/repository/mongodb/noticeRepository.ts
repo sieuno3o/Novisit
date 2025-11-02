@@ -43,16 +43,53 @@ export async function getNoticesByUrl(url: string, source: string = 'PKNU'): Pro
  */
 export async function getPreviousLatestNumber(url: string, currentCrawlDate: string, source: string = 'PKNU'): Promise<string | null> {
   try {
-    // 현재 시간대보다 이전의 크롤링 메타데이터 조회
-    const previousMeta = await CrawlMeta.findOne({ url, source, crawlDate: { $lt: currentCrawlDate } })
+    // 현재 시간대보다 이전의 크롤링 메타데이터 조회 (latestNumber가 null이 아닌 것만)
+    const previousMeta = await CrawlMeta.findOne({ 
+      url, 
+      source, 
+      crawlDate: { $lt: currentCrawlDate },
+      latestNumber: { $ne: null }  // null이 아닌 것만 조회
+    })
       .sort({ crawlDate: -1 })
       .select('latestNumber')
       .exec();
     
-    return previousMeta ? previousMeta.latestNumber : null;
+    return previousMeta && previousMeta.latestNumber ? previousMeta.latestNumber : null;
   } catch (error) {
     console.error('[DB] 이전 최신번호 조회 오류:', error);
     return null;
+  }
+}
+
+/**
+ * 크롤링 실패 시 메타데이터만 저장
+ * @param url 크롤링할 URL
+ * @param crawlDate 크롤링 날짜 (yymmdd-hh 형식)
+ * @param source 소스 (기본값: 'PKNU')
+ */
+export async function saveCrawlMetaOnly(url: string, crawlDate: string, source: string = 'PKNU'): Promise<void> {
+  try {
+    // 이전 시간대의 latestNumber 가져오기
+    const latestNumberToSave = await getPreviousLatestNumber(url, crawlDate, source);
+    
+    // 크롤링 메타데이터 저장
+    await CrawlMeta.create({
+      crawlDate: crawlDate,
+      url: url,
+      latestNumber: latestNumberToSave,
+      noticesCount: 0,
+      source: source,
+      crawledAt: new Date(),
+    });
+    
+    if (latestNumberToSave) {
+      console.log(`[메타] ${crawlDate} URL "${url}": 크롤링 실패, 메타데이터만 저장 | 최신번호: ${latestNumberToSave}`);
+    } else {
+      console.log(`[메타] ${crawlDate} URL "${url}": 크롤링 실패, 메타데이터만 저장 | 최신번호: 없음 (처음 조사)`);
+    }
+  } catch (error) {
+    console.error('크롤링 메타데이터 저장 오류:', error);
+    throw error;
   }
 }
 
@@ -63,7 +100,7 @@ export async function getPreviousLatestNumber(url: string, currentCrawlDate: str
  * @param url 크롤링한 URL
  * @param crawlDate 크롤링 날짜 (yymmdd-hh 형식)
  * @param source 소스 (기본값: 'PKNU')
- * @returns 저장된 최신 공지번호 (공지가 없으면 null)
+ * @returns 저장된 최신 공지번호
  */
 export async function saveNotices(notices: PKNUNotice[], url: string, crawlDate: string, source: string = 'PKNU'): Promise<string | null> {
   try {
@@ -109,25 +146,27 @@ export async function saveNotices(notices: PKNUNotice[], url: string, crawlDate:
     }
 
     // 크롤링 메타데이터 저장
-    let latestNumberToSave = maxNumber;
+    let latestNumberToSave: string | null = maxNumber;
     
-    // 공지가 없으면 이전 시간대에서 가져오기
+    // 새 공지가 없으면 이전 시간대의 latestNumber 가져오기
     if (!latestNumberToSave) {
       latestNumberToSave = await getPreviousLatestNumber(url, crawlDate, source);
     }
-
+    
+    // 이전 크롤링이 없고, 현재 크롤링 공지도 없으면 null 저장 (처음 조사하고 공지가 없음)
+    await CrawlMeta.create({
+      crawlDate: crawlDate,
+      url: url,
+      latestNumber: latestNumberToSave,
+      noticesCount: insertedCount,
+      source: source,
+      crawledAt: new Date(),
+    });
+    
     if (latestNumberToSave) {
-      await CrawlMeta.create({
-        crawlDate: crawlDate,
-        url: url,
-        latestNumber: latestNumberToSave,
-        noticesCount: insertedCount,
-        source: source,
-        crawledAt: new Date(),
-      });
       console.log(`[저장] ${crawlDate} URL "${url}": 새 공지 ${insertedCount}개 | 중복 ${duplicateCount}개 | 최신번호: ${latestNumberToSave}`);
     } else {
-      console.log(`[저장] ${crawlDate} URL "${url}": 새 공지 ${insertedCount}개 | 중복 ${duplicateCount}개 | 최신번호: 없음`);
+      console.log(`[저장] ${crawlDate} URL "${url}": 새 공지 ${insertedCount}개 | 중복 ${duplicateCount}개 | 최신번호: 없음 (처음 조사)`);
     }
 
     return latestNumberToSave;

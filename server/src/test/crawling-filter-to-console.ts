@@ -22,7 +22,7 @@ async function main() {
       for (const url of domain.url_list) {
         if (!url.includes("pknu")) continue; // PKNU 도메인만 테스트
         const lastKnown = await getLatestNoticeNumber(url, 'PKNU');
-        const crawlResult = await crawler.crawlPKNUNotices(lastKnown);
+        const crawlResult = await crawler.crawlPKNUNotices(url, lastKnown);
 
         if (!crawlResult.notices || crawlResult.notices.length === 0) {
           console.log(`- URL[${url}] 새 공지 없음`);
@@ -35,7 +35,8 @@ async function main() {
 
         if (matchedDomain.length === 0) continue;
         // 세팅별로 2차 필터 및 결과 출력
-        const settings = await getSettingsByDomainId(domain._id.toString());
+        const domainId = (domain as any)._id ? String((domain as any)._id) : String((domain as any).id);
+        const settings = await getSettingsByDomainId(domainId);
         if (settings.length === 0) {
           console.log(`  (이 도메인에 연결된 알림 세팅 없음)`);
           continue;

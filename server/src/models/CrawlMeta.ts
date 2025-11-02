@@ -4,7 +4,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface ICrawlMeta extends Document {
   crawlDate: string;     // 크롤링 날짜 (yymmdd-hh 형식)
   url: string;           // 크롤링한 URL
-  latestNumber: string;  // 해당 크롤링에서 발견한 최신 공지번호
+  latestNumber: string | null;  // 해당 크롤링에서 발견한 최신 공지번호 (처음 조사이고 공지 없으면 null)
   noticesCount: number;  // 저장된 공지사항 개수
   source: string;        // 소스 (기본값: 'PKNU')
   crawledAt: Date;       // 크롤링한 시간
@@ -14,7 +14,7 @@ export interface ICrawlMeta extends Document {
 const CrawlMetaSchema = new Schema<ICrawlMeta>({
   crawlDate: { type: String, required: true },
   url: { type: String, required: true },
-  latestNumber: { type: String, required: true },
+  latestNumber: { type: String, required: false },  // 처음 조사일 때 null 허용
   noticesCount: { type: Number, required: true, default: 0 },
   source: { type: String, required: true, default: 'PKNU' },
   crawledAt: { type: Date, required: true, default: Date.now },

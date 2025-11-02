@@ -2,7 +2,7 @@ import { Queue, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { WebCrawler } from '../crawl/webCrawler.js';
 import { JobData, JobResult, JobProcessor } from '../types/crawl.js';
-import { saveNotices, getLatestNoticeNumber, getNoticesByUrl } from '../repository/mongodb/noticeRepository.js';
+import { saveNotices, getLatestNoticeNumber, getNoticesByUrl, saveCrawlMetaOnly } from '../repository/mongodb/noticeRepository.js';
 import { findAllDomains } from '../repository/mongodb/domainRepository.js';
 import { getSettingsByDomainId, saveMessage } from '../repository/mongodb/settingsRepository.js';
 import { sendKakaoMessage } from '../services/notificationService.js';
@@ -51,6 +51,17 @@ const processJob: JobProcessor = async (job) => {
       // Domain 조회
       const domains = await findAllDomains();
       console.log(`[Job] ${domains.length}개 Domain 발견`);
+      // 디버깅: 첫 번째 Domain의 구조 확인
+      if (domains.length > 0 && domains[0]) {
+        const firstDomain = domains[0];
+        console.log(`[Job] 첫 번째 Domain 디버그:`, {
+          _id: firstDomain._id,
+          id: (firstDomain as any).id,
+          name: firstDomain.name,
+          has_id_property: '_id' in firstDomain,
+          keys: Object.keys(firstDomain || {})
+        });
+      }
       
       // 모든 Domain의 url_list를 중복 제거하여 하나로 합치기
       const uniqueUrls = new Set<string>();
@@ -89,8 +100,8 @@ const processJob: JobProcessor = async (job) => {
           const lastKnownNumber = await getLatestNoticeNumber(url, 'PKNU');
           console.log(`[Job] URL "${url}": 마지막 번호 ${lastKnownNumber || '없음'}`);
           
-          // 크롤링 실행
-          const crawlResult = await crawler.crawlPKNUNotices(lastKnownNumber);
+          // 크롤링 실행 (URL 파라미터 추가)
+          const crawlResult = await crawler.crawlPKNUNotices(url, lastKnownNumber);
           
           // Notice에 저장 (crawlDate, url 포함, 필터링 전 모든 공지 저장)
           // 공지가 없어도 메타데이터는 저장됨 (이전 시간대 번호 사용)
@@ -111,6 +122,14 @@ const processJob: JobProcessor = async (job) => {
           }
         } catch (error: any) {
           console.error(`[Job] URL "${url}" 크롤링 실패:`, error.message);
+          
+          // 크롤링 실패 시에도 메타데이터 저장
+          try {
+            await saveCrawlMetaOnly(url, crawlDate, 'PKNU');
+          } catch (metaError: any) {
+            console.error(`[Job] URL "${url}" 메타데이터 저장 실패:`, metaError.message);
+          }
+          
           // 개별 URL 실패는 전체 작업을 중단하지 않음
           continue;
         }
@@ -130,8 +149,15 @@ const processJob: JobProcessor = async (job) => {
         }
         
         // 해당 Domain의 Settings 조회
-        const domainId = domain._id ? String(domain._id) : String(domain.id);
+        // findAllDomains에서 이미 _id가 문자열로 변환되어 반환됨
+        const domainId = (domain as any)._id;
+        if (!domainId) {
+          console.error(`[Job] Domain "${domain.name}": _id를 찾을 수 없음`, domain);
+          continue;
+        }
+        console.log(`[Job] Domain "${domain.name}": domainId = "${domainId}", setting_ids = ${JSON.stringify((domain as any).setting_ids || [])}`);
         const settings = await getSettingsByDomainId(domainId);
+        console.log(`[Job] Domain "${domain.name}": 조회된 Settings 개수 = ${settings.length}`);
         
         if (settings.length === 0) {
           console.log(`[Job] Domain "${domain.name}": Setting 없음, 스킵`);
@@ -197,7 +223,8 @@ const processJob: JobProcessor = async (job) => {
                 });
                 
                 // Message 저장
-                const settingId = setting._id ? String(setting._id) : setting.id;
+                // getSettingsByDomainId에서 이미 _id가 문자열로 변환되어 반환됨
+                const settingId = setting._id || setting.id;
                 await saveMessage(settingId, messageContent, 'kakao');
                 
                 totalMessagesSent++;
