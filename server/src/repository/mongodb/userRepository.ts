@@ -1,4 +1,4 @@
-import { User, IUser, IOAuthProvider } from '../../models/User';
+import { User, IUser, IOAuthProvider } from '../../models/User.js';
 
 //특정 provider와 providerId로 사용자를 찾습니다.
  

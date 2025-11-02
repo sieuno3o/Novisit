@@ -1,6 +1,6 @@
-import Setting from "../../models/Setting";
-import Message from "../../models/Message";
-import { addSettingIdToDomain, removeSettingIdFromDomain } from "./domainRepository";
+import Setting from "../../models/Setting.js";
+import Message from "../../models/Message.js";
+import { addSettingIdToDomain, removeSettingIdFromDomain } from "./domainRepository.js";
 
 // 날짜 포맷
 function formatKoreanDate(date?: Date) {

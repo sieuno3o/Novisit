@@ -1,4 +1,4 @@
-import Domain from "../../models/Domain";
+import Domain from "../../models/Domain.js";
 
 // 모든 도메인 조회
 export async function findAllDomains() {
