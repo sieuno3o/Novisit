@@ -1,6 +1,6 @@
 // jwt 인증 관련 처리 미들웨어 
 import { Request, Response, NextFunction } from 'express'
-import { verifyAccessToken, JwtPayload } from '../auth/jwt'
+import { verifyAccessToken, JwtPayload } from '../auth/jwt.js'
 
 // Request 타입 확장. req.user와 req.userId를 추가합니다.
 declare global {

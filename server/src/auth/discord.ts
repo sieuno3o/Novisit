@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { linkDiscordToUser } from '../services/authService';
+import { linkDiscordToUser } from '../services/authService.js';
 
 export async function linkDiscordAccount(code: string, userId: string) {
   // 1. Authorization Code → Access Token 교환

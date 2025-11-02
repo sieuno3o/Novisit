@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { authMiddleware } from '../middleware/authMiddleware';
-import { sendKakaoMessage } from '../services/notificationService';
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import { sendKakaoMessage } from '../services/notificationService.js';
 
 const router = Router();
 

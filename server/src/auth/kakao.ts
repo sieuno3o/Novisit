@@ -1,6 +1,6 @@
 import axios from "axios";
-import { generateTokens } from "./jwt";
-import { findOrCreateUser } from "../services/authService";
+import { generateTokens } from "./jwt.js";
+import { findOrCreateUser } from "../services/authService.js";
 
 // 카카오 로그인 콜백
 // scope는 카카오가 안 줄 수도 있으므로 optional 처리

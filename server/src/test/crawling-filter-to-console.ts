@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import { WebCrawler } from "../crawl/webCrawler";
-import { findAllDomains } from "../repository/mongodb/domainRepository";
-import { getSettingsByDomainId } from "../repository/mongodb/settingsRepository";
-import { getLatestNoticeNumber } from "../repository/mongodb/noticeRepository";
+import { WebCrawler } from "../crawl/webCrawler.js";
+import { findAllDomains } from "../repository/mongodb/domainRepository.js";
+import { getSettingsByDomainId } from "../repository/mongodb/settingsRepository.js";
+import { getLatestNoticeNumber } from "../repository/mongodb/noticeRepository.js";
 
 function matchesKeywords(text: string, keywords: string[]): boolean {
   if (!keywords || keywords.length === 0) return true;
