@@ -11,7 +11,7 @@ import cors from "cors";
 import { CrawlingService } from './services/crawlingService.js'
 import { registerCrawltestApi } from './test/crawltest'
 import { initializeDomains } from "./repository/mongodb/domainRepository";
-import { initialDomains } from "./data/initialDomains";
+import { initialDomains } from "./data/initialDomains.js";
 
 // Load environment variables
 dotenv.config();

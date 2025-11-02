@@ -26,7 +26,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
     const decoded = verifyAccessToken(token)
     req.user = decoded
     req.userId = decoded.id // JWT payload의 id를 req.userId에 할당
-    next()
+    return next()
   } catch (err: any) {
     if (err.message.includes('EXPIRED')) {
       return res.status(401).json({ message: 'AccessToken 만료' })
