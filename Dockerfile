@@ -45,9 +45,26 @@ RUN cd server && npx playwright install chromium --with-deps
 
 # Copy application (dev 모드를 위해 소스 파일도 복사)
 COPY --chown=nodejs:nodejs server/src ./server/src
-COPY --chown=nodejs:nodejs server/dist ./server/dist
 COPY --chown=nodejs:nodejs server/tsconfig.json ./server/tsconfig.json
-COPY --chown=nodejs:nodejs client/dist ./client/dist
+
+# dist 디렉토리는 선택적으로 복사 (개발 환경에서는 없을 수 있음)
+# 빈 디렉토리 먼저 생성
+RUN mkdir -p ./server/dist ./client/dist
+
+# server와 client 디렉토리를 임시 위치에 복사 (dist 포함 여부와 관계없이)
+COPY --chown=nodejs:nodejs server ./tmp/server-build/
+COPY --chown=nodejs:nodejs client ./tmp/client-build/
+
+# dist 디렉토리가 존재하면 복사, 없으면 빈 디렉토리 유지
+RUN if [ -d "./tmp/server-build/dist" ] && [ "$(ls -A ./tmp/server-build/dist 2>/dev/null)" ]; then \
+      cp -r ./tmp/server-build/dist/* ./server/dist/ && \
+      chown -R nodejs:nodejs ./server/dist; \
+    fi && \
+    if [ -d "./tmp/client-build/dist" ] && [ "$(ls -A ./tmp/client-build/dist 2>/dev/null)" ]; then \
+      cp -r ./tmp/client-build/dist/* ./client/dist/ && \
+      chown -R nodejs:nodejs ./client/dist; \
+    fi && \
+    rm -rf ./tmp
 
 USER nodejs
 
