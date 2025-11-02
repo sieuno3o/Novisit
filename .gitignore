@@ -117,8 +117,6 @@ playwright/.cache/
 # Redis dump
 dump.rdb
 
-# MongoDB
-data/
 
 # SSL certificates
 ssl/
