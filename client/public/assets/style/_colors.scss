@@ -1,15 +1,9 @@
-$main-color-blue: #462aff;
-$main-color-pink: #d8349f;
-$main-color-yellow: #ffdc4e;
-$main-color-purple: #8f2990;
+$main-color-deepblue: #2b64b8;
+$main-color-maxblue: #50afcf;
+$main-color-aqua: #67debccc;
 
 .logo-text {
-  background: linear-gradient(
-    125deg,
-    $main-color-blue 0%,
-    $main-color-pink 50%,
-    $main-color-yellow 100%
-  );
+  background: linear-gradient(125deg, #2b64b8 0%, #50afcf 50%, #67debccc 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
