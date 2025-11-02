@@ -96,6 +96,7 @@ jobs:
           cp -r server/dist deployment/server/
           cp server/package.json deployment/server/
           if [ -f "server/package-lock.json" ]; then cp server/package-lock.json deployment/server/; fi
+          if [ -f "server/tsconfig.json" ]; then cp server/tsconfig.json deployment/server/; fi
           
           # Copy root files
           cp docker-compose.yml deployment/
