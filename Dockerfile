@@ -4,7 +4,11 @@ FROM node:18 AS runner
 WORKDIR /app
 
 # Install Playwright system dependencies
-RUN apt-get update && apt-get install -y \
+# dpkg 설정을 먼저 수정하고 패키지 설치
+RUN apt-get update && \
+    (dpkg --configure -a || true) && \
+    (apt-get install -f -y || true) && \
+    apt-get install -y --no-install-recommends \
     libnss3 \
     libnspr4 \
     libatk1.0-0 \
