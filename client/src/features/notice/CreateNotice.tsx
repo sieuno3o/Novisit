@@ -11,6 +11,7 @@ import {
   Setting,
   Channel,
 } from "../../api/settingsAPI";
+import { fetchMain, type Domain } from "../../api/main"; // ★ 추가: 서버 도메인 목록 사용
 
 // 필요시 유지해도 되지만 현재는 미사용
 export type NoticeItemShape = {
@@ -30,7 +31,12 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
   const { logout } = (useAuth() as any) ?? {};
 
   const [open, setOpen] = useState(false);
+
+  // ★ 변경: 도메인 ID를 직접 입력하지 않고 선택하도록
+  const [domains, setDomains] = useState<Domain[]>([]);
+  const [domainsLoading, setDomainsLoading] = useState(false);
   const [domainId, setDomainId] = useState("");
+
   const [name, setName] = useState("");
   const [urlText, setUrlText] = useState("");
   const [keywordText, setKeywordText] = useState("");
@@ -54,6 +60,27 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // ★ 추가: 모달 열릴 때 서버에서 도메인 목록 로드
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    (async () => {
+      try {
+        setDomainsLoading(true);
+        const list = await fetchMain();
+        if (!alive) return;
+        setDomains(list);
+      } catch {
+        // 실패 시 조용히 빈 리스트 유지
+      } finally {
+        if (alive) setDomainsLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
     };
   }, [open]);
 
@@ -95,7 +122,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
       chosen.length === 1 ? chosen[0] : chosen;
 
     const payload = {
-      domain_id: domainId.trim(),
+      domain_id: domainId.trim(), // ← 드롭다운에서 선택된 id 사용
       name: name.trim(),
       url_list: parseList(urlText),
       filter_keywords: parseList(keywordText),
@@ -108,11 +135,9 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
 
       onCreated(setting);
 
-      setBanner({ type: "success", text: "알림 설정이 생성되었습니다." });
-
       // reset & close
       setDomainId("");
-      setName("공지 알림");
+      setName("");
       setUrlText("");
       setKeywordText("");
       setSelected({ kakao: true, discord: false });
@@ -179,15 +204,27 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                 )}
 
                 <form className="notice-form flex-col" onSubmit={handleSubmit}>
+                  {/* ★ 변경: 도메인 드롭다운 (ID 입력칸 제거) */}
                   <label className="form__label">
-                    도메인 ID <span className="req">*</span>
-                    <input
+                    도메인 <span className="req">*</span>
+                    <select
                       className="form__input"
-                      type="text"
                       value={domainId}
                       onChange={(e) => setDomainId(e.target.value)}
                       required
-                    />
+                      disabled={domainsLoading}
+                    >
+                      <option value="" disabled>
+                        {domainsLoading
+                          ? "도메인 불러오는 중…"
+                          : "도메인을 선택하세요"}
+                      </option>
+                      {domains.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
                   </label>
 
                   <label className="form__label">
@@ -224,7 +261,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                     </div>
                   </div>
 
-                  <label className="form__label">
+                  {/* <label className="form__label">
                     URL 목록 (줄바꿈 또는 쉼표)
                     <textarea
                       className="form__textarea"
@@ -232,7 +269,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                       value={urlText}
                       onChange={(e) => setUrlText(e.target.value)}
                     />
-                  </label>
+                  </label> */}
 
                   <label className="form__label">
                     필터 키워드 (줄바꿈 또는 쉼표)

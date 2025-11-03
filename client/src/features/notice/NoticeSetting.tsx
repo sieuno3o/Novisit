@@ -65,11 +65,17 @@ const mapSettingToItem = (s: Setting): NoticeItem => {
   const firstMsg = pickFirstMessage(s);
   const channels = toChannelsArray((s as any).channel, firstMsg);
 
+  const formatDateOnly = (v: string) => {
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? v : d.toLocaleDateString("ko-KR");
+  };
+
+  const createdRaw = (s as any).created_at;
   const dateText =
-    typeof (s as any).created_at === "string" && (s as any).created_at.trim()
-      ? (s as any).created_at
+    typeof createdRaw === "string" && createdRaw.trim()
+      ? formatDateOnly(createdRaw)
       : firstMsg?.sended_at
-      ? toKST(firstMsg.sended_at)
+      ? formatDateOnly(firstMsg.sended_at)
       : new Date().toLocaleDateString("ko-KR");
 
   return {
@@ -377,12 +383,12 @@ function NoticeCard({
             onChange={setKeywords}
           />
           <div style={{ height: 8 }} />
-          <TagEditor
+          {/* <TagEditor
             label="URL 목록"
             values={urls}
             placeholder="새 url 입력"
             onChange={setUrls}
-          />
+          /> */}
         </>
       ) : (
         <>
@@ -478,7 +484,6 @@ function NoticeSettingInner() {
     const id = getId(s);
     setSettingsMap((prev) => ({ ...prev, [id]: s }));
     setItems((prev) => [...prev, mapSettingToItem(s)]); // 맨 밑에 추가
-    // setBanner({ type: "success", text: "알림 설정이 생성되었습니다." }); // 선택
   };
 
   const empty = useMemo(
@@ -530,7 +535,6 @@ function NoticeSettingInner() {
           );
         })}
 
-      {/* ✅ 원본 Setting을 받아오는 콜백 전달 */}
       <CreateNotice onCreated={handleCreated} />
     </div>
   );
