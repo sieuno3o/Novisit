@@ -1,1 +1,15 @@
+/api/* → http://13.238.219.0:5000/api/*
+[[redirects]]
+  from = "/api/*"
+  to = "http://13.238.219.0:5000/api/:splat"
+  status = 200
+  force = true
+
+/auth/* → http://13.238.219.0:5000/auth/*
+[[redirects]]
+  from = "/auth/*"
+  to = "http://13.238.219.0:5000/auth/:splat"
+  status = 200
+  force = true
+
 /*    /index.html   200
