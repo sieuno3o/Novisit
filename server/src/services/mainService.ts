@@ -1,4 +1,4 @@
-import { findAllDomains } from "../repository/mongodb/domainRepository";
+import { findAllDomains } from "../repository/mongodb/domainRepository.js";
 
 export async function getDomains() {
   const domains = await findAllDomains();

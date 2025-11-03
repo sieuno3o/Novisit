@@ -2,15 +2,15 @@ import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { createClient } from "redis";
-import authRouter from "./routes/authRoutes";
-import testRouter from "./routes/testRoutes";
-import mainRoutes from "./routes/mainRoutes";
-import settingsRoutes from "./routes/settingsRoutes";
-import userRoutes from "./routes/userRoutes";
+import authRouter from "./routes/authRoutes.js";
+import testRouter from "./routes/testRoutes.js";
+import mainRoutes from "./routes/mainRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import cors from "cors";
 import { CrawlingService } from './services/crawlingService.js'
-import { registerCrawltestApi } from './test/crawltest'
-import { initializeDomains } from "./repository/mongodb/domainRepository";
+import { registerCrawltestApi } from './test/crawltest.js'
+import { initializeDomains } from "./repository/mongodb/domainRepository.js";
 import { initialDomains } from "./data/initialDomains.js";
 
 // Load environment variables

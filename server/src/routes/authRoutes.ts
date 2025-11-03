@@ -1,19 +1,19 @@
 import { Router, Request, Response } from "express";
-import { kakaoCallback } from "../auth/kakao";
-import { linkDiscordAccount } from "../auth/discord";
+import { kakaoCallback } from "../auth/kakao.js";
+import { linkDiscordAccount } from "../auth/discord.js";
 import {
   verifyRefreshToken,
   generateTokens,
   verifyAccessToken,
-} from "../auth/jwt";
-import { authMiddleware } from "../middleware/authMiddleware";
+} from "../auth/jwt.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 import {
   unlinkDiscord,
   // updateKakaoNotificationSetting, // 사용 안 하면 주석/삭제
   ////// hw-카카오톡
   updateKakaoNotificationSetting, 
   //////hw
-} from "../services/authService";
+} from "../services/authService.js";
 
 const router = Router();
 
