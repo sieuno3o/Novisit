@@ -9,9 +9,9 @@ export default function LoginPage() {
     const state = location.state as { from?: Location } | null;
     if (state?.from) {
       const { pathname, search, hash } = state.from as unknown as Location;
-      return `${pathname ?? "/"}${search ?? ""}${hash ?? ""}`;
+      return `${pathname ?? "/api/"}${search ?? ""}${hash ?? ""}`;
     }
-    return "/";
+    return "/api/";
   }, [location.state]);
 
   const firedRef = useRef(false);
