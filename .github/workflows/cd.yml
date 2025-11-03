@@ -257,6 +257,20 @@ jobs:
             CLIENT_URL=${{ secrets.CLIENT_URL }}
             EOF
             
+            # Verify .env file was created
+            echo "=== Verifying .env file ==="
+            if [ -f "server/.env" ]; then
+              echo "✅ server/.env file created successfully"
+              echo "File location: $(pwd)/server/.env"
+              echo "File size: $(wc -c < server/.env) bytes"
+              # Show first few lines (without sensitive values)
+              echo "First 3 lines:"
+              head -n 3 server/.env | sed 's/=.*/=***/'
+            else
+              echo "❌ server/.env file not found!"
+              exit 1
+            fi
+            
             # Stop existing services
             sudo docker-compose down || echo "No existing services to stop"
             
