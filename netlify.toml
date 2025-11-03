@@ -1,10 +1,2 @@
 [build]
-  # 로그에 "client/dist"에서 배포한다고 나왔으므로 이 부분을 설정합니다.
   publish = "client/dist"
-
-[functions]
-  # 이 부분이 핵심입니다.
-  # 함수 디렉터리를 방금 만든 'functions' 폴더로 지정합니다.
-  # 이 폴더가 비어있기 때문에, Netlify는 더 이상 
-  # 루트 디렉터리에서 설정 파일을 함수로 오인하지 않습니다.
-  directory = "functions"
