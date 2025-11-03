@@ -45,7 +45,7 @@ export async function exchangeKakao(appCode: string) {
 
 // 내 정보 조회
 export async function me() {
-  const { data } = await http.get<User>("/users");
+  const { data } = await http.get<User>("/api/users");
   return data;
 }
 
@@ -53,14 +53,14 @@ export async function updateUserChannels(
   payload: Partial<Pick<User, "kakao" | "discord">>
 ) {
   const { data } = await http.put<Pick<User, "kakao" | "discord">>(
-    "/users",
+    "/api/users",
     payload
   );
   return data;
 }
 
 export async function deleteUser() {
-  await http.delete("/users");
+  await http.delete("/api/users");
 }
 
 export async function fetchMain() {
