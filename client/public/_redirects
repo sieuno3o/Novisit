@@ -1,6 +1,6 @@
-/api/* http://13.238.219.0:5000/api/:splat    200
+/* http://13.238.219.0:5000/:splat   200
 /auth/* http://13.238.219.0:5000/auth/:splat   200
 /user/* http://13.238.219.0:5000/user/:splat   200
-/* http://13.238.219.0:5000/:splat   200
+/api/* http://13.238.219.0:5000/api/:splat    200
 
 /* /index.html                           200
