@@ -23,7 +23,7 @@ export const tokenStore = {
 
 type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
-const RAW_BASE = (import.meta.env.VITE_API_BASE_URL || "").trim();
+const RAW_BASE = (import.meta.env.VITE_API_BASE_PROXY || "").trim();
 const API_BASE = RAW_BASE.replace(/\/+$/, "");
 const REFRESH_ENDPOINT = "/auth/refresh";
 
