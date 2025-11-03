@@ -25,9 +25,7 @@ export async function beginKakaoLogin(from: string = "/") {
     "__oauth_state",
     JSON.stringify({ from, t: Date.now() })
   );
-  const url = new URL(
-    `${import.meta.env.VITE_API_BASE_PROXY}/auth/kakao/login`
-  );
+  const url = new URL(`${import.meta.env.VITE_API_BASE_URL}/auth/kakao/login`);
   url.searchParams.set("state", from);
   window.location.assign(url.toString());
 }
