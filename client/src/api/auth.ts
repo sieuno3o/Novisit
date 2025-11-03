@@ -25,11 +25,23 @@ export async function beginKakaoLogin(from: string = "/api/") {
     "__oauth_state",
     JSON.stringify({ from, t: Date.now() })
   );
-  const url = new URL(
-    `${import.meta.env.VITE_API_BASE_URL}/api/auth/kakao/login`
-  );
-  url.searchParams.set("state", from);
-  window.location.assign(url.toString());
+
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "")
+    .trim()
+    .replace(/\/+$/, "");
+  const path = "/api/auth/kakao/login";
+
+  let redirectUrl: string;
+
+  if (API_BASE) {
+    const url = new URL(path, API_BASE);
+    url.searchParams.set("state", from);
+    redirectUrl = url.toString();
+  } else {
+    redirectUrl = `${path}?state=${encodeURIComponent(from)}`;
+  }
+
+  window.location.assign(redirectUrl);
 }
 
 // (옵션) 콜백 교환 엔드포인트 사용하는 경우
