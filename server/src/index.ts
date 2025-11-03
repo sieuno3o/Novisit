@@ -9,6 +9,7 @@ import settingsRoutes from "./routes/settingsRoutes";
 import userRoutes from "./routes/userRoutes";
 import cors from "cors";
 import { CrawlingService } from './services/crawlingService.js'
+import { initDiscordBot } from "./services/discordService";
 
 // Load environment variables
 dotenv.config();
@@ -73,6 +74,11 @@ app.get("/health", (req, res) => {
     }
   })
 })
+
+// 디스코드 봇 실행
+initDiscordBot()
+  .then(() => console.log("🤖 Discord Bot initialized successfully"))
+  .catch((err) => console.error("❌ Discord Bot initialization failed:", err));
 
 // 크롤링 서비스 인스턴스
 const crawlingService = new CrawlingService()
