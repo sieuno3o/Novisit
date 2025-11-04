@@ -1,6 +1,5 @@
 import http, { tokenStore, hardLogout } from "./http";
 
-// 타입
 export type ChannelState = "disconnected" | "off" | "on";
 export type User = {
   id?: number | string;
@@ -20,7 +19,7 @@ export type Domain = {
 
 export { hardLogout } from "./http";
 
-export async function beginKakaoLogin(from: string = "/api/") {
+export async function beginKakaoLogin(from: string = "/") {
   sessionStorage.setItem(
     "__oauth_state",
     JSON.stringify({ from, t: Date.now() })
@@ -29,7 +28,7 @@ export async function beginKakaoLogin(from: string = "/api/") {
   const API_BASE = (import.meta.env.VITE_API_BASE_URL || "")
     .trim()
     .replace(/\/+$/, "");
-  const path = "/api/auth/kakao/login";
+  const path = "/auth/kakao/login";
 
   let redirectUrl: string;
 
@@ -44,7 +43,6 @@ export async function beginKakaoLogin(from: string = "/api/") {
   window.location.assign(redirectUrl);
 }
 
-// (옵션) 콜백 교환 엔드포인트 사용하는 경우
 export async function exchangeKakao(appCode: string) {
   const { data } = await http.post<{
     accessToken: string;
@@ -57,7 +55,6 @@ export async function exchangeKakao(appCode: string) {
   return data.user;
 }
 
-// 내 정보 조회
 export async function me() {
   const { data } = await http.get<User>("/api/users");
   return data;
