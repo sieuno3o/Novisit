@@ -78,7 +78,7 @@ export async function deleteUser() {
 }
 
 export async function fetchMain() {
-  const { data } = await http.get<{ domains: Domain[] }>("/main");
+  const { data } = await http.get<{ domains: Domain[] }>("/api/main");
   return data;
 }
 
