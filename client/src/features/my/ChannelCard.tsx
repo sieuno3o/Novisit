@@ -26,12 +26,13 @@ export default function ChannelCard({
 }: Props) {
   const [on, setOn] = useState(!!defaultOn);
   const [busy, setBusy] = useState(false);
-  const [asSwitch, setAsSwitch] = useState<boolean>(!!toggleable || !!defaultOn);
+  const [asSwitch, setAsSwitch] = useState<boolean>(
+    brand === "discord" || !!toggleable || !!defaultOn );
 
   useEffect(() => {
     setOn(!!defaultOn);
-    setAsSwitch(!!toggleable || !!defaultOn); // 버튼 → 스위치 전환도 함께 반영
-  }, [defaultOn, toggleable]);
+    setAsSwitch(brand === "discord" || !!toggleable || !!defaultOn); 
+  }, [brand, defaultOn, toggleable]);
 
   async function startDiscordLink() {
     try {
