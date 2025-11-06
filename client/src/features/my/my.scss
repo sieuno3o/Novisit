@@ -56,9 +56,10 @@
 }
 
 .info-value {
-  font-size: 16px;
-  line-height: 1.6;
-  color: #0f172a;
+  min-width: 0;              /* grid/flex 자식 오버플로우 방지 */
+  overflow-wrap: anywhere;   /* 너무 긴 단어 강제 줄바꿈 */
+  word-break: break-word;
+  white-space: normal;
 }
 
 //알림 채널 칸

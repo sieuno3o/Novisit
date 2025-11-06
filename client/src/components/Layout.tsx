@@ -21,9 +21,9 @@ import Footer from "./Footer";
 // }
 
 
-//hw-푸터 로그인 상태에 따라 렌더링 기능 추가
+//hw-푸터 로그인 상태에 따라 렌더링 기능 추가, 반응형
 export default function Layout() {
-  const { user, logout, loading } = useAuth(); // user와 loading 추가(푸터)
+  const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -38,8 +38,11 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      {/* 로그인 상태일 때만 푸터 렌더링 */}
-      {!loading && user && <Footer />}
+      {!loading && user && (
+        <div className="app-footer">
+          <Footer />
+        </div>
+      )}
     </div>
   );
 }
