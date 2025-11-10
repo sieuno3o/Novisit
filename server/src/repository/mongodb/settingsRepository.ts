@@ -45,7 +45,6 @@ export const getSettings = async (userId: string) => {
           name: setting.name,
           domain_id: setting.domain_id,
           url_list: setting.url_list,
-          filter_keywords: setting.filter_keywords,
           channel: setting.channel,
           created_at: formatKoreanDate(setting.created_at),
           messages: messages.map((m) => ({

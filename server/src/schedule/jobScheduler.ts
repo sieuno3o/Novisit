@@ -63,11 +63,12 @@ export class JobScheduler {
           for (const crawlJob of crawlJobs) {
             const domainName = this.extractDomainName(crawlJob.url);
             const jobName = `${domainName}-crawl-${dateStr}-${hour}h`;
+            const jobType = `crawl-${domainName}-notices`;
             
             await scheduledJobsQueue.add(
               jobName,
               {
-                jobType: 'crawl-pknu-notices' as const, // TODO: 동적 jobType으로 변경 필요 시 수정
+                jobType,
                 url: crawlJob.url,
                 scheduledTime: hour,
                 timezone: 'Asia/Seoul',

@@ -3,7 +3,7 @@ import { createSetting, getSettings, updateSetting, deleteSetting } from "../rep
 
 // 알림 설정 생성
 export async function createUserSetting(userId: string, data: any) {
-  const { domain_id, name, filter_keywords, url_list, channel } = data;
+  const { domain_id, name, url_list, channel } = data;
 
   // 필수 값 확인
   if (!domain_id || !name || !channel ) {
@@ -16,7 +16,6 @@ export async function createUserSetting(userId: string, data: any) {
     domain_id,
     name,
     url_list: url_list || [],
-    filter_keywords: filter_keywords || [],
     channel,
     messages: [],
   };

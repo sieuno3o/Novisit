@@ -1,6 +1,6 @@
 import { Job } from 'bullmq';
 
-// 부경대학교 공지사항 데이터
+// 공지사항 데이터
 export interface Notice {
   number: string;
   title: string;
@@ -9,7 +9,7 @@ export interface Notice {
   crawledAt: Date;      // 크롤링한 시간
 }
 
-// 부경대학교 공지사항 크롤링 결과
+// 공지사항 크롤링 결과
 export interface NoticeResult {
   url: string;
   title: string;
@@ -21,11 +21,14 @@ export interface NoticeResult {
     source: string;
     totalCount: number;
   };
+  // 키워드 필터링 정보
+  keyword?: string;
+  domain_id?: string;
 }
 
 // BullMQ 작업 데이터
 export interface JobData {
-  jobType?: 'crawl-pknu-notices' | 'default';
+  jobType?: string; // 동적 jobType: 'crawl-{domainName}-notices' 형식
   url?: string;
   scheduledTime?: number | Date;
   timezone?: string;
