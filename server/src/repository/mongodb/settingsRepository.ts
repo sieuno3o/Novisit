@@ -75,6 +75,20 @@ export const getSettingsByDomainId = async (domainId: string) => {
   }
 };
 
+// setting_ids 배열로 Setting 목록 조회
+export const getSettingsByIds = async (settingIds: string[]) => {
+  try {
+    if (!settingIds || settingIds.length === 0) {
+      return [];
+    }
+    const settings = await Setting.find({ _id: { $in: settingIds } }).lean();
+    return settings;
+  } catch (error) {
+    console.error("설정 ID별 알림 설정 조회 실패:", error);
+    throw new Error("알림 설정을 불러오지 못했습니다.");
+  }
+};
+
 // Message 저장
 export const saveMessage = async (settingId: string, contents: string, platform: string = 'kakao') => {
   try {
