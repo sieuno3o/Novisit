@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { authMiddleware } from '../middleware/authMiddleware';
-import { getUserInfo, updateUserName, deleteUser } from '../services/userService';
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import { getUserInfo, updateUserName, deleteUser } from '../services/userService.js';
 
 const router = Router();
 
@@ -25,9 +25,9 @@ router.patch('/', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: '이름을 입력해주세요.' });
     }
     const updatedUser = await updateUserName(userId, name);
-    res.status(200).json(updatedUser);
+    return res.status(200).json(updatedUser);
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 });
 

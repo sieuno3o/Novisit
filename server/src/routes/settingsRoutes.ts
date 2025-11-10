@@ -1,14 +1,14 @@
 import { Router } from "express";
-import { authMiddleware } from "../middleware/authMiddleware";
-import { createUserSetting } from "../services/settingsService";
-import { getUserSettings } from "../services/settingsService";
-import { updateUserSetting } from "../services/settingsService";
-import { deleteUserSetting } from "../services/settingsService";
+import { authMiddleware } from "../middleware/authMiddleware.js";
+import { createUserSetting } from "../services/settingsService.js";
+import { getUserSettings } from "../services/settingsService.js";
+import { updateUserSetting } from "../services/settingsService.js";
+import { deleteUserSetting } from "../services/settingsService.js";
 
 const router = Router();
 
 // POST - 알림 설정 생성
-router.post("/settings", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
   try {
     const userId = req.userId as string;
     const settings = await createUserSetting(userId, req.body);

@@ -1,4 +1,4 @@
-import { User, IUser, IOAuthProvider } from '../../models/User';
+import { User, IUser, IOAuthProvider } from '../../models/User.js';
 
 //특정 provider와 providerId로 사용자를 찾습니다.
  
@@ -13,6 +13,13 @@ export const findUserByProvider = (providerName: string, providerId: string): Pr
 // ID로 사용자를 찾습니다.
 export const findUserById = (id: string): Promise<IUser | null> => {
   return User.findById(id).exec();
+};
+
+// ID로 사용자를 찾습니다 (문자열 _id 지원용)
+// 크롤링/필터링 로직에서 사용자가 문자열 _id를 사용하는 경우를 위해 별도 함수 생성
+export const findUserByIdString = (id: string): Promise<IUser | null> => {
+  // _id가 문자열로 저장된 경우를 고려하여 findOne 사용
+  return User.findOne({ _id: id }).exec();
 };
 
 //새로운 사용자를 생성합니다.

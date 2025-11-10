@@ -22,8 +22,15 @@ export class JobScheduler {
       
       cron.schedule(cronExpression, async () => {
         try {
+          // 현재 날짜를 yymmdd 형식으로 가져오기
+          const now = new Date();
+          const yy = now.getFullYear().toString().slice(-2);
+          const mm = String(now.getMonth() + 1).padStart(2, '0');
+          const dd = String(now.getDate()).padStart(2, '0');
+          const dateStr = `${yy}${mm}${dd}`;
+          
           await scheduledJobsQueue.add(
-            `pknu-crawl-${hour}h`,
+            `pknu-crawl-${dateStr}-${hour}h`,
             {
               jobType: 'crawl-pknu-notices' as const,
               url: this.PKNU_URL,

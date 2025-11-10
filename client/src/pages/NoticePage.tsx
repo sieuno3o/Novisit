@@ -10,7 +10,7 @@ const NoticePage = () => {
         <div className="flex-left">
           <NoticeHeader />
         </div>
-        <div className="flex-row-left">
+        <div className="flex-row-left" style={{ alignItems: "flex-start" }}>
           <NoticeSetting />
           <RecentNotice />
         </div>

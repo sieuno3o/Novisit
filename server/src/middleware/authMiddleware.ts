@@ -1,6 +1,6 @@
 // jwt 인증 관련 처리 미들웨어 
 import { Request, Response, NextFunction } from 'express'
-import { verifyAccessToken, JwtPayload } from '../auth/jwt'
+import { verifyAccessToken, JwtPayload } from '../auth/jwt.js'
 
 // Request 타입 확장. req.user와 req.userId를 추가합니다.
 declare global {
@@ -26,7 +26,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
     const decoded = verifyAccessToken(token)
     req.user = decoded
     req.userId = decoded.id // JWT payload의 id를 req.userId에 할당
-    next()
+    return next()
   } catch (err: any) {
     if (err.message.includes('EXPIRED')) {
       return res.status(401).json({ message: 'AccessToken 만료' })

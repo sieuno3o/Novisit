@@ -1,6 +1,6 @@
-import { IUser, IOAuthProvider } from '../models/User';
-import * as userRepository from '../repository/mongodb/userRepository';
-import * as tokenRepository from '../repository/redis/tokenRepository';
+import { IUser, IOAuthProvider } from '../models/User.js';
+import * as userRepository from '../repository/mongodb/userRepository.js';
+import * as tokenRepository from '../repository/redis/tokenRepository.js';
 
 type ProviderName = 'kakao' | 'discord';
 

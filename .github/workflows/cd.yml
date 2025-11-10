@@ -96,6 +96,7 @@ jobs:
           cp -r server/dist deployment/server/
           cp server/package.json deployment/server/
           if [ -f "server/package-lock.json" ]; then cp server/package-lock.json deployment/server/; fi
+          if [ -f "server/tsconfig.json" ]; then cp server/tsconfig.json deployment/server/; fi
           
           # Copy root files
           cp docker-compose.yml deployment/
@@ -243,10 +244,40 @@ jobs:
             PORT=5000
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             REDIS_URL=${{ secrets.REDIS_URL }}
+            KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+            KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+            KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }}
+            DISCORD_CLIENT_ID=${{ secrets.DISCORD_CLIENT_ID }}
+            DISCORD_CLIENT_SECRET=${{ secrets.DISCORD_CLIENT_SECRET }}
+            DISCORD_REDIRECT_URI=${{ secrets.DISCORD_REDIRECT_URI }}
+            JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
+            JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
+            FRONTEND_BASE_URL=${{ secrets.FRONTEND_BASE_URL }}
+            CLIENT_URL=${{ secrets.CLIENT_URL }}
             EOF
             
-            # Start services with Docker Compose
-            sudo docker-compose up -d --build
+            # Verify .env file was created
+            echo "=== Verifying .env file ==="
+            if [ -f "server/.env" ]; then
+              echo "✅ server/.env file created successfully"
+              echo "File location: $(pwd)/server/.env"
+              echo "File size: $(wc -c < server/.env) bytes"
+              # Show first few lines (without sensitive values)
+              echo "First 3 lines:"
+              head -n 3 server/.env | sed 's/=.*/=***/'
+            else
+              echo "❌ server/.env file not found!"
+              exit 1
+            fi
+            
+            # Stop existing services
+            sudo docker-compose down || echo "No existing services to stop"
+            
+            # Build images without cache to ensure latest code
+            sudo docker-compose build --no-cache
+            
+            # Start services with force recreate to ensure new containers
+            sudo docker-compose up -d --force-recreate
             
             # Wait for services to be ready
             sleep 30

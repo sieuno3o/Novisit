@@ -1,4 +1,4 @@
-import { redisClient } from '../../index';
+import { redisClient } from '../../index.js';
 
 type ProviderName = 'kakao' | 'discord';
 
