@@ -30,6 +30,7 @@ export interface JobData {
   scheduledTime?: number | Date;
   timezone?: string;
   message?: string;
+  keywordDomainPairs?: KeywordDomainPair[];
 }
 
 export interface QueueStatus {

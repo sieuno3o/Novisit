@@ -6,12 +6,37 @@ import { IDomain } from '../models/Domain.js';
 
 export class JobScheduler {
   private readonly CRAWL_TIMES = [9, 12, 15, 18]; // 한국시간 기준
-  private readonly PKNU_URL = 'https://www.pknu.ac.kr/main/163';
 
   // 한국시간을 UTC cron 표현식으로 변환
   private getCronExpression(koreanHour: number): string {
     const utcHour = (koreanHour - 9 + 24) % 24;
     return `0 ${utcHour} * * *`;
+  }
+
+  // URL에서 도메인 이름 추출 (예: www.pknu.ac.kr -> pknu, www.naver.com -> naver)
+  private extractDomainName(url: string): string {
+    try {
+      // URL에서 호스트명 추출
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname;
+      
+      // 호스트명을 .으로 분리
+      const parts = hostname.split('.');
+      
+      // www.로 시작하면 두 번째 부분, 아니면 첫 번째 부분
+      if (parts.length >= 2 && parts[0] === 'www' && parts[1]) {
+        return parts[1];
+      } else if (parts.length >= 1 && parts[0]) {
+        return parts[0];
+      }
+      
+      // 기본값: 호스트명 전체
+      return hostname || 'unknown';
+    } catch (error) {
+      // URL 파싱 실패 시 호스트명에서 직접 추출 시도
+      const match = url.match(/\/\/(?:www\.)?([^./]+)/);
+      return match && match[1] ? match[1] : 'unknown';
+    }
   }
 
   // 크롤링 스케줄 시작 -> 서버 시작하면 바로 실행됨
@@ -24,27 +49,39 @@ export class JobScheduler {
       
       cron.schedule(cronExpression, async () => {
         try {
+          // 크롤링 작업객체 생성
+          const crawlJobs = await this.createCrawlJobs();
+          
           // 현재 날짜를 yymmdd 형식으로 가져오기
           const now = new Date();
           const yy = now.getFullYear().toString().slice(-2);
           const mm = String(now.getMonth() + 1).padStart(2, '0');
           const dd = String(now.getDate()).padStart(2, '0');
           const dateStr = `${yy}${mm}${dd}`;
-          //큐에 작업예약
-          await scheduledJobsQueue.add(
-            `pknu-crawl-${dateStr}-${hour}h`,
-            {
-              jobType: 'crawl-pknu-notices' as const,
-              url: this.PKNU_URL,
-              scheduledTime: hour,
-              timezone: 'Asia/Seoul',
-              message: '부경대학교 공지사항 크롤링'
-            },
-            {
-              removeOnComplete: 10,
-              removeOnFail: 5,
-            }
-          );
+          
+          // 각 크롤링 작업객체에 대해 큐에 작업 예약
+          for (const crawlJob of crawlJobs) {
+            const domainName = this.extractDomainName(crawlJob.url);
+            const jobName = `${domainName}-crawl-${dateStr}-${hour}h`;
+            
+            await scheduledJobsQueue.add(
+              jobName,
+              {
+                jobType: 'crawl-pknu-notices' as const, // TODO: 동적 jobType으로 변경 필요 시 수정
+                url: crawlJob.url,
+                scheduledTime: hour,
+                timezone: 'Asia/Seoul',
+                message: `${domainName} 공지사항 크롤링`,
+                keywordDomainPairs: crawlJob.keywordDomainPairs // 크롤링 작업객체 정보 포함
+              },
+              {
+                removeOnComplete: 10,
+                removeOnFail: 5,
+              }
+            );
+            
+            console.log(`[스케줄] 큐에 작업 추가: ${jobName} (${crawlJob.url})`);
+          }
         } catch (error) {
           console.error(`[스케줄] 크롤링 작업 추가 실패 (${hour}시):`, error);
         }
