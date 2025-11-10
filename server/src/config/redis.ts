@@ -6,6 +6,7 @@ import { saveNotices, getLatestNoticeNumber } from '../repository/mongodb/notice
 import { findDomainById } from '../repository/mongodb/domainRepository.js';
 import { getSettingsByIds, saveMessage } from '../repository/mongodb/settingsRepository.js';
 import { sendKakaoMessage } from '../services/notificationService.js';
+import { getSourceFromUrl } from '../utils/urlUtils.js';
 
 // Redis 연결 설정
 const connection = new IORedis({
@@ -24,31 +25,6 @@ function matchesKeywords(text: string, keywords: string[]): boolean {
   return keywords.some(keyword => text.includes(keyword));
 }
 
-// URL에서 도메인 이름 추출 (예: www.pknu.ac.kr -> pknu)
-function extractDomainName(url: string): string {
-  try {
-    const urlObj = new URL(url);
-    const hostname = urlObj.hostname;
-    const parts = hostname.split('.');
-    
-    if (parts.length >= 2 && parts[0] === 'www' && parts[1]) {
-      return parts[1];
-    } else if (parts.length >= 1 && parts[0]) {
-      return parts[0];
-    }
-    
-    return hostname || 'unknown';
-  } catch (error) {
-    const match = url.match(/\/\/(?:www\.)?([^./]+)/);
-    return match && match[1] ? match[1] : 'unknown';
-  }
-}
-
-// URL에서 소스 이름 추출 (PKNU, NAVER 등)
-function getSourceFromUrl(url: string): string {
-  const domainName = extractDomainName(url);
-  return domainName.toUpperCase();
-}
 
 /**
  * 1. 하나의 URL에 대해 공지사항 목록 크롤링 후 키워드 매칭, 상세 페이지 크롤링 및 알림 전송

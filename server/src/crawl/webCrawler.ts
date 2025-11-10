@@ -1,5 +1,6 @@
 import { NoticeResult } from '../types/crawl.js';
 import { PKNUCrawler } from './pknuCrawler.js';
+import { extractDomainName } from '../utils/urlUtils.js';
 
 // 크롤러 인터페이스
 interface SiteCrawler {
@@ -20,13 +21,21 @@ export class WebCrawler {
 
     let crawler: SiteCrawler;
 
-    // URL에 따라 크롤러 선택
-    if (url.includes('pknu')) {
-      crawler = new PKNUCrawler();
-    } else {
-      // 기본값: PKNU (현재는 PKNU만 지원)
-      console.warn(`[WebCrawler] 지원하지 않는 URL: ${url}, PKNU 크롤러 사용`);
-      crawler = new PKNUCrawler();
+    // 도메인 이름으로 크롤러 선택
+    const domainName = extractDomainName(url);
+    
+    switch (domainName.toLowerCase()) {
+      case 'pknu':
+        crawler = new PKNUCrawler();
+        break;
+      // 향후 다른 사이트 추가 시 여기에 추가
+      // case 'naver':
+      //   crawler = new NaverCrawler();
+      //   break;
+      default:
+        // 기본값: PKNU (현재는 PKNU만 지원)
+        console.warn(`[WebCrawler] 지원하지 않는 도메인: ${domainName} (${url}), PKNU 크롤러 사용`);
+        crawler = new PKNUCrawler();
     }
 
     this.crawlerMap.set(url, crawler);

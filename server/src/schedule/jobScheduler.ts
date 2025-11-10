@@ -3,6 +3,7 @@ import { scheduledJobsQueue } from '../config/redis.js';
 import { QueueStatus, CrawlJob, KeywordDomainPair } from '../types/crawl.js';
 import { findAllDomains } from '../repository/mongodb/domainRepository.js';
 import { IDomain } from '../models/Domain.js';
+import { extractDomainName } from '../utils/urlUtils.js';
 
 export class JobScheduler {
   private readonly CRAWL_TIMES = [9, 12, 15, 18]; // 한국시간 기준
@@ -13,31 +14,6 @@ export class JobScheduler {
     return `0 ${utcHour} * * *`;
   }
 
-  // URL에서 도메인 이름 추출 (예: www.pknu.ac.kr -> pknu, www.naver.com -> naver)
-  private extractDomainName(url: string): string {
-    try {
-      // URL에서 호스트명 추출
-      const urlObj = new URL(url);
-      const hostname = urlObj.hostname;
-      
-      // 호스트명을 .으로 분리
-      const parts = hostname.split('.');
-      
-      // www.로 시작하면 두 번째 부분, 아니면 첫 번째 부분
-      if (parts.length >= 2 && parts[0] === 'www' && parts[1]) {
-        return parts[1];
-      } else if (parts.length >= 1 && parts[0]) {
-        return parts[0];
-      }
-      
-      // 기본값: 호스트명 전체
-      return hostname || 'unknown';
-    } catch (error) {
-      // URL 파싱 실패 시 호스트명에서 직접 추출 시도
-      const match = url.match(/\/\/(?:www\.)?([^./]+)/);
-      return match && match[1] ? match[1] : 'unknown';
-    }
-  }
 
   // 크롤링 스케줄 시작 -> 서버 시작하면 바로 실행됨
   start(): void {
