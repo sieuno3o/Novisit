@@ -1,7 +1,7 @@
-import Domain from "../../models/Domain";
+import Domain, { IDomain } from "../../models/Domain";
 
 // 모든 도메인 조회
-export async function findAllDomains() {
+export async function findAllDomains(): Promise<IDomain[]> {
   try {
     const domains = await Domain.find({}, { name: 1, url_list: 1, keywords: 1 });
     return domains;

@@ -1,7 +1,7 @@
 import { Job } from 'bullmq';
 
 // 부경대학교 공지사항 데이터
-export interface PKNUNotice {
+export interface Notice {
   number: string;
   title: string;
   link: string;
@@ -10,12 +10,12 @@ export interface PKNUNotice {
 }
 
 // 부경대학교 공지사항 크롤링 결과
-export interface PKNUNoticeResult {
+export interface NoticeResult {
   url: string;
   title: string;
   timestamp: string;
   totalNotices: number;
-  notices: PKNUNotice[];
+  notices: Notice[];
   summary: {
     extractedAt: string;
     source: string;
@@ -47,4 +47,16 @@ export interface JobResult {
 }
 
 export type JobProcessor = (job: Job<JobData>) => Promise<JobResult>;
+
+// 키워드와 도메인 ID 쌍
+export interface KeywordDomainPair {
+  keyword: string;
+  domain_id: string;
+}
+
+// 크롤링 작업객체
+export interface CrawlJob {
+  url: string;
+  keywordDomainPairs: KeywordDomainPair[];
+}
 

@@ -1,6 +1,8 @@
 import * as cron from 'node-cron';
 import { scheduledJobsQueue } from '../config/redis.js';
-import { QueueStatus } from '../types/crawl.js';
+import { QueueStatus, CrawlJob, KeywordDomainPair } from '../types/crawl.js';
+import { findAllDomains } from '../repository/mongodb/domainRepository.js';
+import { IDomain } from '../models/Domain.js';
 
 export class JobScheduler {
   private readonly CRAWL_TIMES = [9, 12, 15, 18]; // 한국시간 기준
@@ -12,9 +14,9 @@ export class JobScheduler {
     return `0 ${utcHour} * * *`;
   }
 
-  // 부경대학교 공지사항 크롤링 스케줄 시작
+  // 크롤링 스케줄 시작 -> 서버 시작하면 바로 실행됨
   start(): void {
-    console.log('🔄 부경대학교 공지사항 크롤링 스케줄 시작');
+    console.log('🔄 공지사항 크롤링 스케줄 시작');
     console.log(`📅 한국시간: ${this.CRAWL_TIMES.join('시, ')}시`);
 
     this.CRAWL_TIMES.forEach(hour => {
@@ -28,7 +30,7 @@ export class JobScheduler {
           const mm = String(now.getMonth() + 1).padStart(2, '0');
           const dd = String(now.getDate()).padStart(2, '0');
           const dateStr = `${yy}${mm}${dd}`;
-          
+          //큐에 작업예약
           await scheduledJobsQueue.add(
             `pknu-crawl-${dateStr}-${hour}h`,
             {
@@ -53,6 +55,57 @@ export class JobScheduler {
     });
 
     console.log('✅ 크롤링 스케줄 등록 완료');
+  }
+
+  // 여러 Domain의 url_list를 모아서 중복 제거 후 크롤링 작업객체 생성
+  async createCrawlJobs(): Promise<CrawlJob[]> {
+    try {
+      // 모든 Domain 조회
+      const domains = await findAllDomains();
+      
+      // URL을 키로 하고, keyword와 domain_id 쌍 배열을 값으로 하는 Map
+      const urlMap = new Map<string, KeywordDomainPair[]>();
+      
+      // 각 Domain의 url_list를 순회하면서 Map에 추가
+      for (const domain of domains) {
+        const domainId = domain.id;
+        
+        // 각 Domain의 url_list를 순회
+        for (const url of domain.url_list) {
+          // 해당 url에 대한 keywordDomainPairs 배열이 없으면 생성
+          if (!urlMap.has(url)) {
+            urlMap.set(url, []);
+          }
+          
+          // 각 keyword에 대해 keywordDomainPair 추가
+          for (const keyword of domain.keywords) {
+            const pairs = urlMap.get(url)!;
+            // 중복 체크: 같은 keyword와 domain_id 쌍이 이미 있는지 확인
+            const exists = pairs.some(
+              pair => pair.keyword === keyword && pair.domain_id === domainId
+            );
+            
+            if (!exists) {
+              pairs.push({
+                keyword,
+                domain_id: domainId
+              });
+            }
+          }
+        }
+      }
+      
+      // Map을 CrawlJob 배열로 변환
+      const crawlJobs: CrawlJob[] = Array.from(urlMap.entries()).map(([url, keywordDomainPairs]) => ({
+        url,
+        keywordDomainPairs
+      }));
+      
+      return crawlJobs;
+    } catch (error) {
+      console.error('❌ 크롤링 작업객체 생성 실패:', error);
+      throw error;
+    }
   }
 
   // 큐 상태 확인
