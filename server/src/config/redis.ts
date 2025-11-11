@@ -149,7 +149,7 @@ async function crawlAndFilterByKeywords(
               
               // Message 저장
               const settingId = setting._id ? String(setting._id) : setting.id;
-              await saveMessage(settingId, messageContent, 'kakao');
+              await saveMessage(settingId, messageContent, 'kakao', notice.link, notice.title);
               
               totalProcessed++;
               console.log(`[알림] Setting "${setting.name}" (user_id: ${setting.user_id}): 공지사항 #${notice.number} 알림 전송 완료`);

@@ -55,6 +55,8 @@ export const getSettings = async (userId: string) => {
             contents: m.contents,
             sended_at: m.sended_at,
             platform: m.platform,
+            link: m.link,
+            title: m.title,
           })),
         };
       })
@@ -99,13 +101,15 @@ export const getSettingsByIds = async (settingIds: string[]) => {
 };
 
 // Message 저장
-export const saveMessage = async (settingId: string, contents: string, platform: string = 'kakao') => {
+export const saveMessage = async (settingId: string, contents: string, platform: string = 'kakao', link: string, title: string) => {
   try {
     const message = new Message({
       setting_id: settingId,
       contents,
       sended_at: new Date(),
       platform,
+      link,
+      title,
     });
     return await message.save();
   } catch (error) {
