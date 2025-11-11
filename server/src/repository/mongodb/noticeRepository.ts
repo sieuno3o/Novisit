@@ -5,7 +5,7 @@ import { NoticePreview } from '../../types/crawl.js';
 /**
  * 가장 최신 공지사항 번호 조회 (URL별)
  */
-export async function getLatestNoticeNumber(url: string, source: string = 'PKNU'): Promise<string | null> {
+export async function getLatestNoticeNumber(url: string, source: string): Promise<string | null> {
   try {
     const latest = await Notice.findOne({ url, source })
       .sort({ number: -1 })
@@ -22,7 +22,7 @@ export async function getLatestNoticeNumber(url: string, source: string = 'PKNU'
 /**
  * 특정 URL의 모든 공지사항 조회 (최신순)
  */
-export async function getNoticesByUrl(url: string, source: string = 'PKNU'): Promise<INotice[]> {
+export async function getNoticesByUrl(url: string, source: string): Promise<INotice[]> {
   try {
     const notices = await Notice.find({ url, source })
       .sort({ number: -1 })
@@ -39,9 +39,9 @@ export async function getNoticesByUrl(url: string, source: string = 'PKNU'): Pro
  * 이전 시간대의 최신 번호 조회
  * @param url 크롤링할 URL
  * @param currentCrawlDate 현재 크롤링 날짜 (yymmdd-hh)
- * @param source 소스 (기본값: 'PKNU')
+ * @param source 소스
  */
-export async function getPreviousLatestNumber(url: string, currentCrawlDate: string, source: string = 'PKNU'): Promise<string | null> {
+export async function getPreviousLatestNumber(url: string, currentCrawlDate: string, source: string): Promise<string | null> {
   try {
     // 현재 시간대보다 이전의 크롤링 메타데이터 조회 (latestNumber가 null이 아닌 것만)
     const previousMeta = await CrawlMeta.findOne({ 
@@ -65,9 +65,9 @@ export async function getPreviousLatestNumber(url: string, currentCrawlDate: str
  * 크롤링 실패 시 메타데이터만 저장
  * @param url 크롤링할 URL
  * @param crawlDate 크롤링 날짜 (yymmdd-hh 형식)
- * @param source 소스 (기본값: 'PKNU')
+ * @param source 소스
  */
-export async function saveCrawlMetaOnly(url: string, crawlDate: string, source: string = 'PKNU'): Promise<void> {
+export async function saveCrawlMetaOnly(url: string, crawlDate: string, source: string): Promise<void> {
   try {
     // 이전 시간대의 latestNumber 가져오기
     const latestNumberToSave = await getPreviousLatestNumber(url, crawlDate, source);
@@ -99,10 +99,10 @@ export async function saveCrawlMetaOnly(url: string, crawlDate: string, source: 
  * @param notices 공지사항 배열
  * @param url 크롤링한 URL
  * @param crawlDate 크롤링 날짜 (yymmdd-hh 형식)
- * @param source 소스 (기본값: 'PKNU')
+ * @param source 소스
  * @returns 저장된 최신 공지번호
  */
-export async function saveNotices(notices: NoticePreview[], url: string, crawlDate: string, source: string = 'PKNU'): Promise<string | null> {
+export async function saveNotices(notices: NoticePreview[], url: string, crawlDate: string, source: string): Promise<string | null> {
   try {
     let insertedCount = 0;
     let duplicateCount = 0;

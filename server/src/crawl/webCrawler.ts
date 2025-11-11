@@ -33,7 +33,6 @@ export class WebCrawler {
       //   crawler = new NaverCrawler();
       //   break;
       default:
-        // 기본값: PKNU (현재는 PKNU만 지원)
         console.warn(`[WebCrawler] 지원하지 않는 도메인: ${domainName} (${url}), PKNU 크롤러 사용`);
         crawler = new PKNUCrawler();
     }
