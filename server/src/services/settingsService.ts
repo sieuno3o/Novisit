@@ -1,4 +1,4 @@
-import { createSetting, getSettings, updateSetting, deleteSetting } from "../repository/mongodb/settingsRepository";
+import { createSetting, getSettings, updateSetting, deleteSetting } from "../repository/mongodb/settingsRepository.js";
 
 
 // 알림 설정 생성

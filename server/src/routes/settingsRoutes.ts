@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { authMiddleware } from "../middleware/authMiddleware";
-import { createUserSetting } from "../services/settingsService";
-import { getUserSettings } from "../services/settingsService";
-import { updateUserSetting } from "../services/settingsService";
-import { deleteUserSetting } from "../services/settingsService";
+import { authMiddleware } from "../middleware/authMiddleware.js";
+import { createUserSetting } from "../services/settingsService.js";
+import { getUserSettings } from "../services/settingsService.js";
+import { updateUserSetting } from "../services/settingsService.js";
+import { deleteUserSetting } from "../services/settingsService.js";
 
 const router = Router();
 

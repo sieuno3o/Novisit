@@ -4,7 +4,11 @@ FROM node:18 AS runner
 WORKDIR /app
 
 # Install Playwright system dependencies
-RUN apt-get update && apt-get install -y \
+# dpkg 설정을 먼저 수정하고 패키지 설치
+RUN apt-get update && \
+    (dpkg --configure -a || true) && \
+    (apt-get install -f -y || true) && \
+    apt-get install -y --no-install-recommends \
     libnss3 \
     libnspr4 \
     libatk1.0-0 \
@@ -32,22 +36,33 @@ RUN useradd --system --uid 1001 -g nodejs nodejs
 COPY package*.json ./
 COPY server/package*.json ./server/
 
-# Install production dependencies
+# Install dependencies (dev 모드 지원을 위해 devDependencies도 설치)
 RUN if [ -f "package-lock.json" ]; then \
-      npm ci --omit=dev --workspace=server; \
+      npm ci --workspace=server; \
     else \
-      npm install --omit=dev --workspace=server; \
+      npm install --workspace=server; \
     fi
 
 # Install Playwright browsers (chromium only for efficiency)
-RUN cd server && npx playwright install chromium
+# --with-deps 옵션으로 시스템 종속성도 함께 설치 (더 안정적)
+RUN cd server && npx playwright install chromium --with-deps
 
-# Copy built application
+# Copy built application files
+# 프로덕션 환경에서는 빌드된 dist 파일만 필요
+RUN mkdir -p ./server/dist ./client/dist
+
+# 배포 패키지에서 빌드된 dist 파일 복사
 COPY --chown=nodejs:nodejs server/dist ./server/dist
 COPY --chown=nodejs:nodejs client/dist ./client/dist
+
+# tsconfig.json도 복사 (배포 패키지에 포함됨)
+COPY --chown=nodejs:nodejs server/tsconfig.json ./server/tsconfig.json
 
 USER nodejs
 
 EXPOSE 5000
 
-CMD ["node", "npm", "server/dist/index.js"]
+WORKDIR /app/server
+
+# NODE_ENV에 따라 dev 또는 start 실행
+CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"development\" ]; then npm run dev; else npm start; fi"]

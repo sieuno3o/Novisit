@@ -1,6 +1,6 @@
-import * as userRepository from '../repository/mongodb/userRepository';
-import { getProviderTokens, storeProviderTokens } from '../repository/redis/tokenRepository';
-import * as KakaoAPI from './kakaoAPIClient';
+import * as userRepository from '../repository/mongodb/userRepository.js';
+import { getProviderTokens, storeProviderTokens } from '../repository/redis/tokenRepository.js';
+import * as KakaoAPI from './kakaoAPIClient.js';
 
 // 사용자에게 카카오톡 메시지. BullMQ 워커에서 호출되는 것을 전제로 한 비즈니스 로직.
 export async function sendKakaoMessage(
@@ -8,7 +8,8 @@ export async function sendKakaoMessage(
   templateObject: any
 ): Promise<any> {
   // 0. 사용자 정보 조회 및 알림 설정 확인
-  const user = await userRepository.findUserById(userId);
+  // 크롤링/필터링 로직에서 사용하는 userId는 문자열 _id일 수 있으므로 findUserByIdString 사용
+  const user = await userRepository.findUserByIdString(userId);
   if (!user) {
     throw new Error(`사용자를 찾을 수 없습니다. ${userId}`);
   }

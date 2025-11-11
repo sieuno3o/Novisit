@@ -1,7 +1,7 @@
-import { findUserById, updateUserName as updateUserNameRepo, deleteUser as deleteUserRepo } from '../repository/mongodb/userRepository';
-import { IUser } from '../models/User';
-import { unlinkKakaoUser, logoutKakaoUser } from './kakaoAPIClient';
-import { getProviderTokens, deleteProviderTokens } from '../repository/redis/tokenRepository';
+import { findUserById, updateUserName as updateUserNameRepo, deleteUser as deleteUserRepo } from '../repository/mongodb/userRepository.js';
+import { IUser } from '../models/User.js';
+import { unlinkKakaoUser, logoutKakaoUser } from './kakaoAPIClient.js';
+import { getProviderTokens, deleteProviderTokens } from '../repository/redis/tokenRepository.js';
 
 // 사용자 정보 조회
 export const getUserInfo = async (userId: string) => {

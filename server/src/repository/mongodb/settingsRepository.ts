@@ -1,6 +1,6 @@
-import Setting from "../../models/Setting";
-import Message from "../../models/Message";
-import { addSettingIdToDomain, removeSettingIdFromDomain } from "./domainRepository";
+import Setting from "../../models/Setting.js";
+import Message from "../../models/Message.js";
+import { addSettingIdToDomain, removeSettingIdFromDomain } from "./domainRepository.js";
 
 // 날짜 포맷
 function formatKoreanDate(date?: Date) {
@@ -19,7 +19,8 @@ export async function createSetting(settingData: any) {
   
   // Domain의 setting_ids에 추가
   try {
-    const settingId = savedSetting._id ? String(savedSetting._id) : savedSetting.id;
+    // ObjectId를 그대로 사용 (문자열 변환하지 않음)
+    const settingId = savedSetting._id ? savedSetting._id.toString() : savedSetting.id;
     await addSettingIdToDomain(settingData.domain_id, settingId);
   } catch (error) {
     console.error("❌ Domain 업데이트 실패 (생성):", error);
@@ -38,17 +39,19 @@ export const getSettings = async (userId: string) => {
     // 각 Setting마다 연결된 Message 조회
     const result = await Promise.all(
       settings.map(async (setting) => {
-        const messages = await Message.find({ setting_id: setting._id }).lean();
+        // ObjectId를 문자열로 변환
+        const settingId = setting._id.toString();
+        const messages = await Message.find({ setting_id: settingId }).lean();
 
         return {
-          id: setting._id,
+          id: settingId,
           name: setting.name,
-          domain_id: setting.domain_id,
+          domain_id: setting.domain_id.toString(),
           url_list: setting.url_list,
           channel: setting.channel,
           created_at: formatKoreanDate(setting.created_at),
           messages: messages.map((m) => ({
-            id: m._id,
+            id: m._id.toString(),
             contents: m.contents,
             sended_at: m.sended_at,
             platform: m.platform,
@@ -68,7 +71,13 @@ export const getSettings = async (userId: string) => {
 export const getSettingsByDomainId = async (domainId: string) => {
   try {
     const settings = await Setting.find({ domain_id: domainId }).lean();
-    return settings;
+    // ObjectId를 문자열로 변환하여 반환
+    return settings.map(setting => ({
+      ...setting,
+      _id: setting._id.toString(),
+      domain_id: setting.domain_id.toString(),
+      user_id: setting.user_id.toString()
+    }));
   } catch (error) {
     console.error("도메인별 알림 설정 조회 실패:", error);
     throw new Error("알림 설정을 불러오지 못했습니다.");

@@ -1,19 +1,19 @@
 import { Router, Request, Response } from "express";
-import { kakaoCallback } from "../auth/kakao";
-import { linkDiscordAccount } from "../auth/discord";
+import { kakaoCallback } from "../auth/kakao.js";
+import { linkDiscordAccount } from "../auth/discord.js";
 import {
   verifyRefreshToken,
   generateTokens,
   verifyAccessToken,
-} from "../auth/jwt";
-import { authMiddleware } from "../middleware/authMiddleware";
+} from "../auth/jwt.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 import {
   unlinkDiscord,
   // updateKakaoNotificationSetting, // 사용 안 하면 주석/삭제
   ////// hw-카카오톡
   updateKakaoNotificationSetting, 
   //////hw
-} from "../services/authService";
+} from "../services/authService.js";
 
 const router = Router();
 
@@ -184,7 +184,7 @@ router.post("/refresh", (req, res) => {
   try {
     const payload = verifyRefreshToken(refreshToken);
     const tokens = generateTokens(payload);
-    res.json(tokens);
+    return res.json(tokens);
   } catch (err: any) {
     if (err.message.includes("EXPIRED"))
       return res.status(401).json({ message: "RefreshToken 만료" });
@@ -204,12 +204,12 @@ router.delete("/discord", authMiddleware, async (req, res) => {
         .json({ message: "사용자를 찾을 수 없거나 업데이트할 수 없습니다." });
     }
 
-    res
+    return res
       .status(200)
       .json({ message: "디스코드 연동이 성공적으로 해제되었습니다." });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "디스코드 연동 해제 실패" });
+    return res.status(500).json({ error: "디스코드 연동 해제 실패" });
   }
 });
 

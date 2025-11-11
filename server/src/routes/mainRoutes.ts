@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getDomains } from "../services/mainService";
+import { getDomains } from "../services/mainService.js";
 
 const router = Router();
 
