@@ -55,7 +55,7 @@ async function crawlAndFilterByKeywords(
       return totalProcessed;
     }
     
-    // DB에 저장 (모든 공지사항 저장)
+    // DB에 저장 (모든 공지사항 저장) Notice객체를 뺄지 고민중.. -> 어차피 message에 저장하니깐
     await saveNotices(crawlResult.notices, source);
     
     // 각 공지사항에 대해 처리
