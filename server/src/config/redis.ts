@@ -111,19 +111,22 @@ async function crawlAndFilterByKeywords(
           // 각 Setting의 user_id로 알림 전송 및 Message 저장
           for (const setting of settings) {
             try {
+              // 카카오 메시지 전송 (피드 템플릿 사용)
+                // notice.description이 있으면 사용, 없으면 기본값 생성
+                const description = notice.description || `번호: ${notice.number}\n링크: ${notice.link}`;
+                // notice.imageUrl이 있으면 사용, 없으면 기본 이미지 사용
+                const imageUrl = notice.imageUrl || 'https://t1.daumcdn.net/cafeattach/1YmK3/560c6415d44b9ae3c5225a255541c3c2c1568643';
               // 메시지 내용 구성 (제목 + 상세 내용)
               const messageContent = `새 공지사항\n제목: ${notice.title}\n번호: ${notice.number}\n\n${detailContent.substring(0, 500)}${detailContent.length > 500 ? '...' : ''}\n\n링크: ${notice.link}`;
               
               // 카카오 메시지 전송
-              await sendKakaoMessage(setting.user_id, {
-                object_type: 'text',
-                text: messageContent,
-                link: {
-                  web_url: notice.link,
-                  mobile_web_url: notice.link
-                },
-                button_title: '자세히 보기'
-              });
+              await sendKakaoMessage(
+                setting.user_id,
+                notice.title,
+                description,
+                imageUrl,
+                notice.link
+              );
               
               // Message 저장
               const settingId = setting._id ? String(setting._id) : setting.id;
