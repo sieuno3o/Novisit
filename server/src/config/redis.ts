@@ -44,8 +44,16 @@ async function crawlAndFilterByKeywords(
     // URL에서 소스 이름 추출 (PKNU, NAVER 등)
     const source = getSourceFromUrl(url);
     
+    // 크롤링 날짜 생성 (yymmdd-hh 형식)
+    const now = new Date();
+    const yy = now.getFullYear().toString().slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const crawlDate = `${yy}${mm}${dd}-${hh}`;
+    
     // 크롤링은 한 번만 수행 (같은 URL이므로)
-    const lastKnownNumber = await getLatestNoticeNumber(source);
+    const lastKnownNumber = await getLatestNoticeNumber(url, source);
     
     // 공지사항 목록 크롤링 (URL에 따라 분기 - webCrawler에서 처리)
     const crawlResult = await crawler.crawlNoticesList(url, lastKnownNumber);
@@ -56,7 +64,7 @@ async function crawlAndFilterByKeywords(
     }
     
     // DB에 저장 (모든 공지사항 저장) Notice객체를 뺄지 고민중.. -> 어차피 message에 저장하니깐
-    await saveNotices(crawlResult.notices, source);
+    await saveNotices(crawlResult.notices, url, crawlDate, source);
     
     // 각 공지사항에 대해 처리
     for (const notice of crawlResult.notices) {
@@ -73,12 +81,23 @@ async function crawlAndFilterByKeywords(
       
       // 상세 페이지 크롤링 (URL에 따라 분기)
       let detailContent = '';
+      let imageUrl: string | undefined = undefined;
       try {
-        detailContent = await crawler.crawlNoticeDetail(url, notice.link);
+        const detailResult = await crawler.crawlNoticeDetail(url, notice.link);
+        detailContent = detailResult.content;
+        imageUrl = detailResult.imageUrl;
         console.log(`[크롤링] 공지사항 #${notice.number} 상세 페이지 크롤링 완료 (${detailContent.length}자)`);
+        if (imageUrl) {
+          console.log(`[크롤링] 공지사항 #${notice.number} 이미지 URL 추출: ${imageUrl}`);
+        }
       } catch (error: any) {
         console.error(`[크롤링] 공지사항 #${notice.number} 상세 페이지 크롤링 실패:`, error.message);
         continue; // 상세 페이지 크롤링 실패 시 스킵
+      }
+      
+      // NoticeResult에 이미지 URL 저장 (첫 번째 이미지만 저장)
+      if (imageUrl && !crawlResult.imageUrl) {
+        crawlResult.imageUrl = imageUrl;
       }
       
       // 각 매칭된 키워드-도메인ID 쌍에 대해 처리
@@ -112,10 +131,10 @@ async function crawlAndFilterByKeywords(
           for (const setting of settings) {
             try {
               // 카카오 메시지 전송 (피드 템플릿 사용)
-                // notice.description이 있으면 사용, 없으면 기본값 생성
-                const description = notice.description || `번호: ${notice.number}\n링크: ${notice.link}`;
-                // notice.imageUrl이 있으면 사용, 없으면 기본 이미지 사용
-                const imageUrl = notice.imageUrl || 'https://t1.daumcdn.net/cafeattach/1YmK3/560c6415d44b9ae3c5225a255541c3c2c1568643';
+                // 기본 설명 생성
+                const description = `번호: ${notice.number}\n링크: ${notice.link}`;
+                // 크롤링한 이미지 URL이 있으면 사용, 없으면 기본 이미지 사용
+                const imageUrlForMessage = imageUrl || crawlResult.imageUrl || 'https://t1.daumcdn.net/cafeattach/1YmK3/560c6415d44b9ae3c5225a255541c3c2c1568643';
               // 메시지 내용 구성 (제목 + 상세 내용)
               const messageContent = `새 공지사항\n제목: ${notice.title}\n번호: ${notice.number}\n\n${detailContent.substring(0, 500)}${detailContent.length > 500 ? '...' : ''}\n\n링크: ${notice.link}`;
               
@@ -124,7 +143,7 @@ async function crawlAndFilterByKeywords(
                 setting.user_id,
                 notice.title,
                 description,
-                imageUrl,
+                imageUrlForMessage,
                 notice.link
               );
               

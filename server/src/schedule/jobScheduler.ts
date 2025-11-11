@@ -37,7 +37,7 @@ export class JobScheduler {
           
           // 각 크롤링 작업객체에 대해 큐에 작업 예약
           for (const crawlJob of crawlJobs) {
-            const domainName = this.extractDomainName(crawlJob.url);
+            const domainName = extractDomainName(crawlJob.url);
             const jobName = `${domainName}-crawl-${dateStr}-${hour}h`;
             const jobType = `crawl-${domainName}-notices`;
             

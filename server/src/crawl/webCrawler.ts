@@ -2,10 +2,16 @@ import { NoticeResult } from '../types/crawl.js';
 import { PKNUCrawler } from './pknuCrawler.js';
 import { extractDomainName } from '../utils/urlUtils.js';
 
+// 상세 페이지 크롤링 결과
+export interface NoticeDetailResult {
+  content: string;
+  imageUrl?: string;
+}
+
 // 크롤러 인터페이스
 interface SiteCrawler {
   crawlNoticesList(lastKnownNumber: string | null): Promise<NoticeResult>;
-  crawlNoticeDetail(noticeLink: string): Promise<string>;
+  crawlNoticeDetail(noticeLink: string): Promise<NoticeDetailResult>;
   close(): Promise<void>;
 }
 
@@ -65,7 +71,7 @@ export class WebCrawler {
   }
 
   // 공지사항 상세 페이지 크롤링 (URL에 따라 분기)
-  async crawlNoticeDetail(url: string, noticeLink: string): Promise<string> {
+  async crawlNoticeDetail(url: string, noticeLink: string): Promise<NoticeDetailResult> {
     const crawler = this.getCrawler(url);
     return await crawler.crawlNoticeDetail(noticeLink);
   }

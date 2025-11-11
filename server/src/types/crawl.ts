@@ -24,6 +24,8 @@ export interface NoticeResult {
   // 키워드 필터링 정보
   keyword?: string;
   domain_id?: string;
+  // 상세 페이지 첫 번째 이미지 URL
+  imageUrl?: string;
 }
 
 // BullMQ 작업 데이터

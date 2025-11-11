@@ -1,5 +1,6 @@
 import { chromium, Browser } from 'playwright';
 import { NoticeResult, NoticePreview } from '../types/crawl.js';
+import { NoticeDetailResult } from './webCrawler.js';
 
 export class PKNUCrawler {
   private browser: Browser | null = null;
@@ -157,8 +158,8 @@ export class PKNUCrawler {
     }
   }
 
-  // 공지사항 상세 페이지 텍스트 크롤링
-  async crawlNoticeDetail(noticeLink: string): Promise<string> {
+  // 공지사항 상세 페이지 텍스트 및 이미지 크롤링
+  async crawlNoticeDetail(noticeLink: string): Promise<NoticeDetailResult> {
     const browser = await this.initBrowser();
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -173,26 +174,52 @@ export class PKNUCrawler {
         timeout: 30000
       });
       
-      // 공지사항 본문 텍스트 추출 (PKNU 공지사항 페이지 구조)
-      const content = await page.evaluate(() => {
+      // 공지사항 본문 텍스트 및 첫 번째 이미지 URL 추출
+      const result = await page.evaluate(() => {
         // 본문 영역 선택자 (PKNU 공지사항 페이지 구조에 맞게 조정)
         const contentElement = document.querySelector('.board-view-content') || 
                               document.querySelector('.view-content') ||
                               document.querySelector('article') ||
                               document.body;
         
-        if (!contentElement) return '';
+        if (!contentElement) {
+          return { content: '', imageUrl: undefined };
+        }
         
         // 텍스트만 추출 (스크립트, 스타일 제거)
         const clone = contentElement.cloneNode(true) as HTMLElement;
         const scripts = clone.querySelectorAll('script, style');
         scripts.forEach(el => el.remove());
         
-        return clone.textContent?.trim() || '';
+        const content = clone.textContent?.trim() || '';
+        
+        // 첫 번째 이미지 URL 추출
+        let imageUrl: string | undefined = undefined;
+        const firstImg = contentElement.querySelector('img');
+        if (firstImg) {
+          // src 속성 확인
+          const src = firstImg.getAttribute('src');
+          if (src) {
+            // 상대 경로인 경우 절대 경로로 변환
+            if (src.startsWith('http')) {
+              imageUrl = src;
+            } else if (src.startsWith('//')) {
+              imageUrl = `https:${src}`;
+            } else if (src.startsWith('/')) {
+              imageUrl = `https://www.pknu.ac.kr${src}`;
+            } else {
+              // 상대 경로인 경우
+              const baseUrl = window.location.origin;
+              imageUrl = new URL(src, baseUrl).href;
+            }
+          }
+        }
+        
+        return { content, imageUrl };
       });
       
       await context.close();
-      return content;
+      return result;
       
     } catch (error) {
       await context.close();
