@@ -136,3 +136,35 @@
   box-shadow: none;
 }
 
+
+//디스코드 알림 ON 배지
+.channel-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notify-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px; // "알림" 텍스트와 토글 간격
+}
+
+.notify-label {
+  font-size: 15px;
+  color: #6b7280; // 중간 회색
+}
+
+.notify-pill {
+  display: inline-flex;
+  padding: 6px 15px;
+  border-radius: 9999px;
+  background: transparent;
+  border: 1px solid #d1d5db; // 연한 배경
+  color: #6b7280; // 중간 회색
+  font-weight: 380;
+  font-size: 15px;
+  letter-spacing: 0.5px; // 알림·ON 사이 여백 효과
+  gap: 7px; // 실제 단어 사이 여백
+  user-select: none;
+}
