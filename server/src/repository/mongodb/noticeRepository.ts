@@ -1,6 +1,6 @@
 import { Notice, INotice } from '../../models/Notice.js';
 import CrawlMeta from '../../models/CrawlMeta.js';
-import { PKNUNotice } from '../../types/crawl.js';
+import { NoticePreview } from '../../types/crawl.js';
 
 /**
  * 가장 최신 공지사항 번호 조회 (URL별)
@@ -102,7 +102,7 @@ export async function saveCrawlMetaOnly(url: string, crawlDate: string, source: 
  * @param source 소스 (기본값: 'PKNU')
  * @returns 저장된 최신 공지번호
  */
-export async function saveNotices(notices: PKNUNotice[], url: string, crawlDate: string, source: string = 'PKNU'): Promise<string | null> {
+export async function saveNotices(notices: NoticePreview[], url: string, crawlDate: string, source: string = 'PKNU'): Promise<string | null> {
   try {
     let insertedCount = 0;
     let duplicateCount = 0;

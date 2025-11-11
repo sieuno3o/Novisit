@@ -1,7 +1,7 @@
 import { Job } from 'bullmq';
 
-// 공지사항 데이터
-export interface Notice {
+// 공지사항 미리보기 데이터 (목록에서 제목과 함께 보이는 정보)
+export interface NoticePreview {
   number: string;
   title: string;
   link: string;
@@ -15,7 +15,7 @@ export interface NoticeResult {
   title: string;
   timestamp: string;
   totalNotices: number;
-  notices: Notice[];
+  notices: NoticePreview[];
   summary: {
     extractedAt: string;
     source: string;

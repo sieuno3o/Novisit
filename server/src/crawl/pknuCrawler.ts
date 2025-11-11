@@ -1,5 +1,5 @@
 import { chromium, Browser } from 'playwright';
-import { NoticeResult, Notice } from '../types/crawl.js';
+import { NoticeResult, NoticePreview } from '../types/crawl.js';
 
 export class PKNUCrawler {
   private browser: Browser | null = null;
@@ -21,7 +21,7 @@ export class PKNUCrawler {
   }
 
   // 한 페이지의 공지사항 크롤링
-  private async crawlPage(pageIndex: number, lastKnownNumber: string | null): Promise<{ notices: Notice[], shouldContinue: boolean }> {
+  private async crawlPage(pageIndex: number, lastKnownNumber: string | null): Promise<{ notices: NoticePreview[], shouldContinue: boolean }> {
     const url = pageIndex === 1 
       ? this.PKNU_BASE_URL 
       : `${this.PKNU_BASE_URL}?pageIndex=${pageIndex}`;
@@ -108,7 +108,7 @@ export class PKNUCrawler {
   // 공지사항 목록 크롤링
   async crawlNoticesList(lastKnownNumber: string | null = null): Promise<NoticeResult> {
     try {
-      const allNewNotices: Notice[] = [];
+      const allNewNotices: NoticePreview[] = [];
       let pageIndex = 1;
       let shouldContinue = true;
       
