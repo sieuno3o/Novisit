@@ -51,18 +51,20 @@ export class PKNUCrawler {
         rows.forEach((row: Element) => {
           const tr = row as HTMLTableRowElement;
 
-          // 고정 공지 제외: tr 혹은 번호 셀에 noti 클래스가 있는 경우 스킵
+          // 고정 공지 제외: tr에 noti 클래스가 있는 경우 스킵
+          // (일반 공지사항도 td.bdlNum에 noti 클래스가 있을 수 있으므로, tr의 noti만 확인)
           if (tr.classList.contains('noti')) return;
 
           const numberCell = tr.querySelector('td.bdlNum') as HTMLElement | null;
-          if (numberCell && numberCell.classList.contains('noti')) return;
-
           const cells = tr.querySelectorAll('td');
           if (cells.length < 2) return;
 
           // 번호 텍스트 정제 (숫자만 추출)
           const rawNumber = numberCell?.textContent?.trim() || '';
           const number = rawNumber.replace(/[^0-9]/g, '');
+          
+          // 번호가 없거나 "NOTICE" 같은 텍스트인 경우 스킵
+          if (!number || number.length === 0) return;
 
           const titleCell = tr.querySelector('td.bdlTitle a') as HTMLAnchorElement | null;
           const title = titleCell?.textContent?.trim() || '';
@@ -177,7 +179,11 @@ export class PKNUCrawler {
       // 공지사항 본문 텍스트 및 첫 번째 이미지 URL 추출
       const result = await page.evaluate(() => {
         // 본문 영역 선택자 (PKNU 공지사항 페이지 구조에 맞게 조정)
-        const contentElement = document.querySelector('.board-view-content') || 
+        // .bdCont: 대부분의 공지사항 상세 페이지에서 사용되는 본문 영역
+        // .bdvExcel: 일부 페이지(Excel 형태)에서 사용되는 본문 영역
+        const contentElement = document.querySelector('.bdCont') ||
+                              document.querySelector('.bdvExcel') || 
+                              document.querySelector('.board-view-content') || 
                               document.querySelector('.view-content') ||
                               document.querySelector('article') ||
                               document.body;
@@ -191,15 +197,21 @@ export class PKNUCrawler {
         const scripts = clone.querySelectorAll('script, style');
         scripts.forEach(el => el.remove());
         
+        // 네비게이션, 헤더, 푸터 등 불필요한 요소 제거
+        const navs = clone.querySelectorAll('nav, header, footer, .gnb, .skip, .skiptranslate');
+        navs.forEach(el => el.remove());
+        
         const content = clone.textContent?.trim() || '';
         
-        // 첫 번째 이미지 URL 추출
+        // 첫 번째 이미지 URL 추출 (본문 내 이미지만, 아이콘 제외)
         let imageUrl: string | undefined = undefined;
-        const firstImg = contentElement.querySelector('img');
-        if (firstImg) {
-          // src 속성 확인
-          const src = firstImg.getAttribute('src');
-          if (src) {
+        // 아이콘이 아닌 실제 이미지 찾기 (board_ico, icon 등이 포함되지 않은 이미지)
+        const images = contentElement.querySelectorAll('img');
+        for (const img of Array.from(images)) {
+          const src = img.getAttribute('src') || '';
+          // 아이콘이 아닌 실제 이미지만 선택
+          if (src && !src.includes('board_ico') && !src.includes('icon') && 
+              !src.includes('googlelogo') && !src.includes('translate')) {
             // 상대 경로인 경우 절대 경로로 변환
             if (src.startsWith('http')) {
               imageUrl = src;
@@ -212,14 +224,19 @@ export class PKNUCrawler {
               const baseUrl = window.location.origin;
               imageUrl = new URL(src, baseUrl).href;
             }
+            break;
           }
         }
         
-        return { content, imageUrl };
+        return { content, imageUrl: imageUrl || undefined };
       });
       
       await context.close();
-      return result;
+      // imageUrl이 없으면 속성 제거
+      const finalResult: NoticeDetailResult = result.imageUrl 
+        ? { content: result.content, imageUrl: result.imageUrl }
+        : { content: result.content };
+      return finalResult;
       
     } catch (error) {
       await context.close();
