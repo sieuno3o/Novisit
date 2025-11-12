@@ -2,6 +2,8 @@ import express from 'express';
 import { WebCrawler } from '../crawl/webCrawler.js';
 import { getLatestNoticeNumber, saveNotices } from '../repository/mongodb/noticeRepository.js';
 import { getSourceFromUrl } from '../utils/urlUtils.js';
+import { filterAndSendNotifications } from '../config/redis.js';
+import { KeywordDomainPair } from '../types/crawl.js';
 
 export function registerCrawltestApi(app: express.Application) {
   // 즉시 수동 크롤링 테스트 엔드포인트 (POST /crawltest)
@@ -12,8 +14,13 @@ export function registerCrawltestApi(app: express.Application) {
     try {
       // 요청에서 URL 가져오기 (기본값: 부경대학교 공지사항)
       const url = req.body?.url || 'https://www.pknu.ac.kr/main/163';
+      // 요청에서 키워드-도메인 쌍 가져오기 (선택사항)
+      const keywordDomainPairs: KeywordDomainPair[] = req.body?.keywordDomainPairs || [];
       
       console.log(`[크롤링 테스트] 시작: ${url}`);
+      if (keywordDomainPairs.length > 0) {
+        console.log(`[크롤링 테스트] 키워드-도메인 쌍: ${keywordDomainPairs.length}개`);
+      }
       
       // URL에서 소스 이름 추출 (PKNU, NAVER 등)
       const source = getSourceFromUrl(url);
@@ -58,6 +65,27 @@ export function registerCrawltestApi(app: express.Application) {
       
       console.log(`[크롤링 테스트] 저장 완료: 최신 번호 ${latestNumber}`);
       
+      // 키워드 필터링 및 알림 전송 (키워드-도메인 쌍이 있는 경우)
+      let notificationsSent = 0;
+      if (keywordDomainPairs.length > 0) {
+        console.log(`[크롤링 테스트] 키워드 필터링 및 알림 전송 시작`);
+        try {
+          notificationsSent = await filterAndSendNotifications(
+            crawlResult.notices,
+            keywordDomainPairs,
+            crawler,
+            url,
+            crawlResult
+          );
+          console.log(`[크롤링 테스트] 알림 전송 완료: ${notificationsSent}개`);
+        } catch (error: any) {
+          console.error(`[크롤링 테스트] 알림 전송 중 오류:`, error.message);
+          // 알림 전송 실패해도 크롤링은 성공으로 처리
+        }
+      } else {
+        console.log(`[크롤링 테스트] 키워드-도메인 쌍이 없어 알림 전송 스킵`);
+      }
+      
       // 크롤러 정리
       await crawler.close();
       
@@ -65,7 +93,9 @@ export function registerCrawltestApi(app: express.Application) {
       return res.status(200).json({
         ok: true,
         success: true,
-        message: '크롤링 및 저장 완료',
+        message: keywordDomainPairs.length > 0 
+          ? `크롤링, 저장 및 알림 전송 완료 (${notificationsSent}개 알림)`
+          : '크롤링 및 저장 완료',
         url,
         source,
         crawlDate,
@@ -73,6 +103,7 @@ export function registerCrawltestApi(app: express.Application) {
         totalNotices: crawlResult.totalNotices,
         newNotices: crawlResult.notices.length,
         latestNumber,
+        notificationsSent,
         notices: crawlResult.notices.map(notice => ({
           number: notice.number,
           title: notice.title,
