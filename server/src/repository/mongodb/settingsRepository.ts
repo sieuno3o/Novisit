@@ -101,7 +101,7 @@ export const getSettingsByIds = async (settingIds: string[]) => {
 };
 
 // Message 저장
-export const saveMessage = async (settingId: string, contents: string, platform: string = 'kakao', link: string, title: string) => {
+export const saveMessage = async (settingId: string, contents: string, platform: string = 'kakao', link: string, title: string, imageUrl?: string) => {
   try {
     const message = new Message({
       setting_id: settingId,
@@ -110,6 +110,7 @@ export const saveMessage = async (settingId: string, contents: string, platform:
       platform,
       link,
       title,
+      imageUrl,
     });
     return await message.save();
   } catch (error) {

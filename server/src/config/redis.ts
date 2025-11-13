@@ -105,14 +105,24 @@ export async function filterAndSendNotifications(
     return totalProcessed;
   }
   
+  // 디버깅: 키워드-도메인 쌍 정보 출력
+  console.log(`[디버깅] 필터링 시작: ${notices.length}개 공지사항, ${keywordDomainPairs.length}개 키워드-도메인 쌍`);
+  console.log(`[디버깅] 키워드-도메인 쌍:`, JSON.stringify(keywordDomainPairs, null, 2));
+  
   // 각 공지사항에 대해 처리
   for (const notice of notices) {
+    // 디버깅: 각 공지사항 제목 출력
+    console.log(`[디버깅] 공지사항 체크: #${notice.number} "${notice.title}"`);
+    
     // 공지사항 제목을 키워드와 비교
-    const matchedPairs = keywordDomainPairs.filter(pair =>
-      matchesKeywords(notice.title, [pair.keyword])
-    );
+    const matchedPairs = keywordDomainPairs.filter(pair => {
+      const matched = matchesKeywords(notice.title, [pair.keyword]);
+      console.log(`[디버깅] 키워드 "${pair.keyword}" 매칭 결과: ${matched} (제목: "${notice.title}")`);
+      return matched;
+    });
     
     if (matchedPairs.length === 0) {
+      console.log(`[디버깅] 공지사항 #${notice.number} 매칭 없음`);
       continue; // 키워드 매칭 없음
     }
     
@@ -174,6 +184,7 @@ export async function filterAndSendNotifications(
             const description = `번호: ${notice.number}\n링크: ${notice.link}`;
             // 크롤링한 이미지 URL이 있으면 사용, 없으면 기본 이미지 사용
             const imageUrlForMessage = imageUrl || crawlResult.imageUrl || 'https://t1.daumcdn.net/cafeattach/1YmK3/560c6415d44b9ae3c5225a255541c3c2c1568643';
+            console.log(`[알림] 공지사항 #${notice.number} "${notice.title}" - 전송할 이미지 URL: ${imageUrlForMessage}`);
             // 메시지 내용 구성 (제목 + 상세 내용)
             const messageContent = `새 공지사항\n제목: ${notice.title}\n번호: ${notice.number}\n\n${detailContent.substring(0, 500)}${detailContent.length > 500 ? '...' : ''}\n\n링크: ${notice.link}`;
             
@@ -188,7 +199,7 @@ export async function filterAndSendNotifications(
             
             // Message 저장
             const settingId = setting._id ? String(setting._id) : setting.id;
-            await saveMessage(settingId, messageContent, 'kakao', notice.link, notice.title);
+            await saveMessage(settingId, messageContent, 'kakao', notice.link, notice.title, imageUrlForMessage);
             
             totalProcessed++;
             console.log(`[알림] Setting "${setting.name}" (user_id: ${setting.user_id}): 공지사항 #${notice.number} 알림 전송 완료`);
@@ -228,6 +239,14 @@ const processJob: JobProcessor = async (job) => {
       if (!url) {
         throw new Error('URL이 제공되지 않았습니다.');
       }
+      
+      // 디버깅: 작업 데이터 확인
+      console.log(`[디버깅] 작업 데이터:`, {
+        jobName: job.name,
+        url,
+        keywordDomainPairs: keywordDomainPairs ? JSON.stringify(keywordDomainPairs, null, 2) : '없음',
+        keywordDomainPairsLength: keywordDomainPairs?.length || 0
+      });
       
       if (!keywordDomainPairs || keywordDomainPairs.length === 0) {
         console.log(`[Job] ${job.name}: keywordDomainPairs가 없어 스킵`);

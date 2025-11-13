@@ -10,6 +10,9 @@ export async function sendKakaoMessage(
   imageUrl: string,
   linkUrl: string
 ): Promise<any> {
+  // 이미지 링크 콘솔 출력
+  console.log(`[알림] 카카오톡 메시지 전송 - 이미지 URL: ${imageUrl}`);
+  
   // 0. 사용자 정보 조회 및 알림 설정 확인
   // 크롤링/필터링 로직에서 사용하는 userId는 문자열 _id일 수 있으므로 findUserByIdString 사용
   const user = await userRepository.findUserByIdString(userId);
