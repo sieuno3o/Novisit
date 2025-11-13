@@ -208,24 +208,24 @@ const processJob: JobProcessor = async (job) => {
             // ========== 3단계: 메시지 전송 ==========
             for (const notice of settingFilteredNotices) {
               try {
-                // 메시지 내용 구성
-                const messageContent = `새 공지사항\n제목: ${notice.title}\n번호: ${notice.number}\n링크: ${notice.link}`;
+                // 카카오 메시지 전송 (피드 템플릿 사용)
+                // notice.description이 있으면 사용, 없으면 기본값 생성
+                const description = notice.description || `번호: ${notice.number}\n링크: ${notice.link}`;
+                // notice.imageUrl이 있으면 사용, 없으면 기본 이미지 사용
+                const imageUrl = notice.imageUrl || 'https://t1.daumcdn.net/cafeattach/1YmK3/560c6415d44b9ae3c5225a255541c3c2c1568643';
                 
-                // 카카오 메시지 전송
-                await sendKakaoMessage(setting.user_id, {
-                  object_type: 'text',
-                  text: messageContent,
-                  link: {
-                    web_url: notice.link,
-                    mobile_web_url: notice.link
-                  },
-                  button_title: '자세히 보기'
-                });
+                await sendKakaoMessage(
+                  setting.user_id,
+                  notice.title,
+                  description,
+                  imageUrl,
+                  notice.link
+                );
                 
-                // Message 저장
-                // getSettingsByDomainId에서 이미 _id가 문자열로 변환되어 반환됨
+                // Message 저장 (제목과 설명을 내용으로 저장)
+                const messageToSave = `[공지] ${notice.title}\n${description}`;
                 const settingId = setting._id || setting.id;
-                await saveMessage(settingId, messageContent, 'kakao');
+                await saveMessage(settingId, messageToSave, 'kakao');
                 
                 totalMessagesSent++;
                 console.log(`[Job] Setting "${setting.name}": 공지사항 #${notice.number} 메시지 전송 완료`);
