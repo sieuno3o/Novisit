@@ -178,53 +178,83 @@ export class PKNUCrawler {
       
       // 공지사항 본문 텍스트 및 첫 번째 이미지 URL 추출
       const result = await page.evaluate(() => {
-        // 본문 영역 선택자 (PKNU 공지사항 페이지 구조에 맞게 조정)
-        // .bdCont: 대부분의 공지사항 상세 페이지에서 사용되는 본문 영역
-        // .bdvExcel: 일부 페이지(Excel 형태)에서 사용되는 본문 영역
-        const contentElement = document.querySelector('.bdCont') ||
-                              document.querySelector('.bdvExcel') || 
-                              document.querySelector('.board-view-content') || 
-                              document.querySelector('.view-content') ||
-                              document.querySelector('article') ||
-                              document.body;
+        // div.bdvTxt 영역만 크롤링
+        const contentElement = document.querySelector('div.bdvTxt');
         
         if (!contentElement) {
           return { content: '', imageUrl: undefined };
         }
         
-        // 텍스트만 추출 (스크립트, 스타일 제거)
-        const clone = contentElement.cloneNode(true) as HTMLElement;
-        const scripts = clone.querySelectorAll('script, style');
-        scripts.forEach(el => el.remove());
-        
-        // 네비게이션, 헤더, 푸터 등 불필요한 요소 제거
-        const navs = clone.querySelectorAll('nav, header, footer, .gnb, .skip, .skiptranslate');
-        navs.forEach(el => el.remove());
-        
-        const content = clone.textContent?.trim() || '';
-        
-        // 첫 번째 이미지 URL 추출 (본문 내 이미지만, 아이콘 제외)
+        // p 태그들을 순서대로 처리
+        const paragraphs = contentElement.querySelectorAll('p');
+        const textParts: string[] = [];
         let imageUrl: string | undefined = undefined;
-        // 아이콘이 아닌 실제 이미지 찾기 (board_ico, icon 등이 포함되지 않은 이미지)
-        const images = contentElement.querySelectorAll('img');
-        for (const img of Array.from(images)) {
-          const src = img.getAttribute('src') || '';
-          // 아이콘이 아닌 실제 이미지만 선택
-          if (src && !src.includes('board_ico') && !src.includes('icon') && 
-              !src.includes('googlelogo') && !src.includes('translate')) {
-            // 상대 경로인 경우 절대 경로로 변환
-            if (src.startsWith('http')) {
-              imageUrl = src;
-            } else if (src.startsWith('//')) {
-              imageUrl = `https:${src}`;
-            } else if (src.startsWith('/')) {
-              imageUrl = `https://www.pknu.ac.kr${src}`;
-            } else {
-              // 상대 경로인 경우
-              const baseUrl = window.location.origin;
-              imageUrl = new URL(src, baseUrl).href;
+        
+        // 각 p 태그를 순회하면서 텍스트와 이미지 추출
+        for (const p of Array.from(paragraphs)) {
+          // p 태그 내부의 텍스트 추출 (스크립트, 스타일 제거)
+          const clone = p.cloneNode(true) as HTMLElement;
+          const scripts = clone.querySelectorAll('script, style');
+          scripts.forEach(el => el.remove());
+          
+          const text = clone.textContent?.trim() || '';
+          if (text) {
+            textParts.push(text);
+          }
+          
+          // 첫 번째 이미지를 아직 찾지 못했다면 p 태그 내부에서 이미지 찾기
+          if (!imageUrl) {
+            const img = p.querySelector('img');
+            if (img) {
+              const src = img.getAttribute('src') || '';
+              if (src) {
+                // 상대 경로인 경우 절대 경로로 변환
+                if (src.startsWith('http')) {
+                  imageUrl = src;
+                } else if (src.startsWith('//')) {
+                  imageUrl = `https:${src}`;
+                } else if (src.startsWith('/')) {
+                  imageUrl = `https://www.pknu.ac.kr${src}`;
+                } else {
+                  // 상대 경로인 경우
+                  const baseUrl = window.location.origin;
+                  imageUrl = new URL(src, baseUrl).href;
+                }
+              }
             }
-            break;
+          }
+        }
+        
+        // p 태그가 없는 경우 전체 텍스트 추출 (fallback)
+        const content = textParts.length > 0 
+          ? textParts.join('\n\n')
+          : (() => {
+              const clone = contentElement.cloneNode(true) as HTMLElement;
+              const scripts = clone.querySelectorAll('script, style');
+              scripts.forEach(el => el.remove());
+              return clone.textContent?.trim() || '';
+            })();
+        
+        // p 태그에서 이미지를 찾지 못한 경우 전체에서 찾기 (fallback)
+        if (!imageUrl) {
+          const images = contentElement.querySelectorAll('img');
+          for (const img of Array.from(images)) {
+            const src = img.getAttribute('src') || '';
+            if (src) {
+              // 상대 경로인 경우 절대 경로로 변환
+              if (src.startsWith('http')) {
+                imageUrl = src;
+              } else if (src.startsWith('//')) {
+                imageUrl = `https:${src}`;
+              } else if (src.startsWith('/')) {
+                imageUrl = `https://www.pknu.ac.kr${src}`;
+              } else {
+                // 상대 경로인 경우
+                const baseUrl = window.location.origin;
+                imageUrl = new URL(src, baseUrl).href;
+              }
+              break;
+            }
           }
         }
         

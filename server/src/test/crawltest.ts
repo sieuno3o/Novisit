@@ -4,6 +4,7 @@ import { getLatestNoticeNumber, saveNotices } from '../repository/mongodb/notice
 import { getSourceFromUrl } from '../utils/urlUtils.js';
 import { filterAndSendNotifications } from '../config/redis.js';
 import { KeywordDomainPair } from '../types/crawl.js';
+import { JobScheduler } from '../schedule/jobScheduler.js';
 
 export function registerCrawltestApi(app: express.Application) {
   // 즉시 수동 크롤링 테스트 엔드포인트 (POST /crawltest)
@@ -15,7 +16,23 @@ export function registerCrawltestApi(app: express.Application) {
       // 요청에서 URL 가져오기 (기본값: 부경대학교 공지사항)
       const url = req.body?.url || 'https://www.pknu.ac.kr/main/163';
       // 요청에서 키워드-도메인 쌍 가져오기 (선택사항)
-      const keywordDomainPairs: KeywordDomainPair[] = req.body?.keywordDomainPairs || [];
+      let keywordDomainPairs: KeywordDomainPair[] = req.body?.keywordDomainPairs || [];
+      
+      // 키워드-도메인 쌍이 없으면 jobScheduler의 createCrawlJobs 로직 사용
+      if (keywordDomainPairs.length === 0) {
+        console.log(`[크롤링 테스트] 키워드-도메인 쌍이 없어 jobScheduler 로직으로 생성 시도`);
+        const jobScheduler = new JobScheduler();
+        const crawlJobs = await jobScheduler.createCrawlJobs();
+        
+        // 해당 URL에 해당하는 CrawlJob 찾기
+        const matchedJob = crawlJobs.find(job => job.url === url);
+        if (matchedJob) {
+          keywordDomainPairs = matchedJob.keywordDomainPairs;
+          console.log(`[크롤링 테스트] URL "${url}"에 해당하는 키워드-도메인 쌍 ${keywordDomainPairs.length}개 발견:`, keywordDomainPairs);
+        } else {
+          console.log(`[크롤링 테스트] URL "${url}"에 해당하는 키워드-도메인 쌍을 찾을 수 없음`);
+        }
+      }
       
       console.log(`[크롤링 테스트] 시작: ${url}`);
       if (keywordDomainPairs.length > 0) {
