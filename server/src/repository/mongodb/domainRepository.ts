@@ -1,7 +1,7 @@
-import Domain from "../../models/Domain.js";
+import Domain, { IDomain } from "../../models/Domain";
 
 // 모든 도메인 조회
-export async function findAllDomains() {
+export async function findAllDomains(): Promise<IDomain[]> {
   try {
     // .lean()을 사용하여 plain JavaScript 객체로 반환
     // ObjectId를 문자열로 변환하여 반환
