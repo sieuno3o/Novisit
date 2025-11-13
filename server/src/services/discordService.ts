@@ -7,17 +7,30 @@ const client = new Client({
 });
 
 // 봇 로그인
+let isBotInitialized = false;
+
 export async function initDiscordBot() {
+  if (isBotInitialized) return;
+
   try {
     await client.login(process.env.DISCORD_TOKEN);
     console.log(`🤖 Discord Bot logged in as ${client.user?.tag}`);
+
+    isBotInitialized = true;
   } catch (error) {
     console.error("❌ Discord Bot 로그인 실패:", error);
   }
 }
 
-// 사용자에게 디스코드 DM 발송 (BullMQ 워커 전제)
+// 사용자에게 디스코드 DM 발송 (크롤링/큐 워커에서 호출 가능)
 export async function sendDiscordMessage(userId: string, message: string): Promise<void> {
+
+  if (!client.isReady()) {
+    await new Promise<void>(resolve => {
+      client.once("ready", () => resolve());
+    });
+  }
+
   // 0. 사용자 정보 조회 및 알림 설정 확인
   const user = await userRepository.findUserById(userId);
   if (!user) {

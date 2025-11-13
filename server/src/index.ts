@@ -13,9 +13,12 @@ import { initDiscordBot } from "./services/discordService";
 import { registerCrawltestApi } from './test/crawltest.js'
 import { initializeDomains } from "./repository/mongodb/domainRepository.js";
 import { initialDomains } from "./data/initialDomains.js";
+import discordMessageTestRouter from "./test/discordMessageTest.js";
 
 // Load environment variables
 dotenv.config();
+
+console.log("🔥 ENV DISCORD_REDIRECT_URI =", process.env.DISCORD_REDIRECT_URI);
 
 const app = express();
 
@@ -72,6 +75,7 @@ app.use("/test", testRouter);
 app.use(mainRoutes);
 app.use("/settings", settingsRoutes);
 app.use("/users", userRoutes);
+app.use("/test", discordMessageTestRouter);
 
 // 수동 크롤 트리거 API 등록
 registerCrawltestApi(app);
