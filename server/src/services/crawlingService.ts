@@ -19,7 +19,6 @@ export class CrawlingService {
       this.scheduler.start();
       
       console.log('✅ 크롤링 스케줄러가 성공적으로 시작되었습니다!');
-      console.log('📅 정기 스케줄: 한국시간 9시, 12시, 15시, 18시에 자동 크롤링');
       
       // 큐 상태 모니터링 시작
       this.startMonitoring();
@@ -30,7 +29,7 @@ export class CrawlingService {
     }
   }
 
-  // 큐 상태 모니터링 시작 (5분마다)
+  // 큐 상태 모니터링 시작 (10분마다)
   private startMonitoring(): void {
     this.monitoringInterval = setInterval(async () => {
       if (this.scheduler) {
@@ -39,7 +38,7 @@ export class CrawlingService {
           console.log(`📊 큐 상태 - 대기: ${status.waiting}, 실행중: ${status.active}, 완료: ${status.completed}, 실패: ${status.failed}`);
         }
       }
-    }, 5 * 60 * 1000);
+    }, 10 * 60 * 1000);
   }
 
   // 스케줄러 종료

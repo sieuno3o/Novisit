@@ -5,6 +5,7 @@ import { getSourceFromUrl } from '../utils/urlUtils.js';
 import { filterAndSendNotifications } from '../services/noticeFilterService.js';
 import { KeywordDomainPair } from '../types/job.js';
 import { JobScheduler } from '../schedule/jobScheduler.js';
+import { formatCrawlDate } from '../utils/dateUtils.js';
 
 export function registerCrawltestApi(app: express.Application) {
   // 즉시 수동 크롤링 테스트 엔드포인트 (POST /crawltest)
@@ -43,12 +44,7 @@ export function registerCrawltestApi(app: express.Application) {
       const source = getSourceFromUrl(url);
       
       // 크롤링 날짜 생성 (yymmdd-hh 형식)
-      const now = new Date();
-      const yy = now.getFullYear().toString().slice(-2);
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      const dd = String(now.getDate()).padStart(2, '0');
-      const hh = String(now.getHours()).padStart(2, '0');
-      const crawlDate = `${yy}${mm}${dd}-${hh}`;
+      const crawlDate = formatCrawlDate();
       
       // 최신 공지번호 조회 (기존 로직 사용)
       const lastKnownNumber = await getLatestNoticeNumber(url, source);

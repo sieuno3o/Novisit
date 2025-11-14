@@ -6,6 +6,7 @@ import { findDomainById } from '../repository/mongodb/domainRepository.js';
 import { getSettingsByIds, saveMessage } from '../repository/mongodb/settingsRepository.js';
 import { sendKakaoMessage } from './notificationService.js';
 import { getSourceFromUrl } from '../utils/urlUtils.js';
+import { formatCrawlDate } from '../utils/dateUtils.js';
 
 // 키워드 필터링 함수
 export function matchesKeywords(text: string, keywords: string[]): boolean {
@@ -32,12 +33,7 @@ export async function crawlAndFilterByKeywords(
     const source = getSourceFromUrl(url);
     
     // 크롤링 날짜 생성 (yymmdd-hh 형식)
-    const now = new Date();
-    const yy = now.getFullYear().toString().slice(-2);
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
-    const hh = String(now.getHours()).padStart(2, '0');
-    const crawlDate = `${yy}${mm}${dd}-${hh}`;
+    const crawlDate = formatCrawlDate();
     
     // 크롤링은 한 번만 수행 (같은 URL이므로)
     const lastKnownNumber = await getLatestNoticeNumber(url, source);

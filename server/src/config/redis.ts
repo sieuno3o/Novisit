@@ -1,7 +1,7 @@
 import { Queue, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { JobData } from '../types/job.js';
-import { processJob } from '../services/jobProcessor.js';
+import { processJob } from '../schedule/jobProcessor.js';
 
 // Redis 연결 설정
 const connection = new IORedis({

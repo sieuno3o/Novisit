@@ -1,7 +1,7 @@
 import { Job } from 'bullmq';
 import { WebCrawler } from '../crawl/webCrawler.js';
 import { JobData, JobResult, JobProcessor } from '../types/job.js';
-import { crawlAndFilterByKeywords } from './noticeFilterService.js';
+import { crawlAndFilterByKeywords } from '../services/noticeFilterService.js';
 
 /**
  * BullMQ 작업 프로세서
@@ -29,7 +29,6 @@ export const processJob: JobProcessor = async (job) => {
         jobName: job.name,
         url,
         keywordDomainPairs: keywordDomainPairs ? JSON.stringify(keywordDomainPairs, null, 2) : '없음',
-        keywordDomainPairsLength: keywordDomainPairs?.length || 0
       });
       
       if (!keywordDomainPairs || keywordDomainPairs.length === 0) {

@@ -4,6 +4,7 @@ import { QueueStatus, CrawlJob, KeywordDomainPair } from '../types/job.js';
 import { findAllDomains } from '../repository/mongodb/domainRepository.js';
 import { IDomain } from '../models/Domain.js';
 import { extractDomainName } from '../utils/urlUtils.js';
+import { formatDate } from '../utils/dateUtils.js';
 
 export class JobScheduler {
   private readonly CRAWL_TIMES = [9, 12, 15, 18]; // 한국시간 기준
@@ -29,11 +30,7 @@ export class JobScheduler {
           const crawlJobs = await this.createCrawlJobs();
           
           // 현재 날짜를 yymmdd 형식으로 가져오기
-          const now = new Date();
-          const yy = now.getFullYear().toString().slice(-2);
-          const mm = String(now.getMonth() + 1).padStart(2, '0');
-          const dd = String(now.getDate()).padStart(2, '0');
-          const dateStr = `${yy}${mm}${dd}`;
+          const dateStr = formatDate();
           
           // 각 크롤링 작업객체에 대해 큐에 작업 예약
           for (const crawlJob of crawlJobs) {
