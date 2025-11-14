@@ -1,5 +1,5 @@
 import { chromium, Browser } from 'playwright';
-import { NoticeResult, NoticePreview } from '../types/crawl.js';
+import { NoticeResult, NoticePreview } from '../types/notice.js';
 import { NoticeDetailResult } from './webCrawler.js';
 
 export class PKNUCrawler {

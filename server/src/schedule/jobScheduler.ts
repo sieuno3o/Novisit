@@ -1,6 +1,6 @@
 import * as cron from 'node-cron';
 import { scheduledJobsQueue } from '../config/redis.js';
-import { QueueStatus, CrawlJob, KeywordDomainPair } from '../types/crawl.js';
+import { QueueStatus, CrawlJob, KeywordDomainPair } from '../types/job.js';
 import { findAllDomains } from '../repository/mongodb/domainRepository.js';
 import { IDomain } from '../models/Domain.js';
 import { extractDomainName } from '../utils/urlUtils.js';

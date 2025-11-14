@@ -1,7 +1,8 @@
 import { Queue, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { WebCrawler } from '../crawl/webCrawler.js';
-import { JobData, JobResult, JobProcessor, KeywordDomainPair, NoticePreview, NoticeResult } from '../types/crawl.js';
+import { JobData, JobResult, JobProcessor, KeywordDomainPair } from '../types/job.js';
+import { NoticePreview, NoticeResult } from '../types/notice.js';
 import { saveNotices, getLatestNoticeNumber } from '../repository/mongodb/noticeRepository.js';
 import { findDomainById } from '../repository/mongodb/domainRepository.js';
 import { getSettingsByIds, saveMessage } from '../repository/mongodb/settingsRepository.js';

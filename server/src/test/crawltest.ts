@@ -3,7 +3,7 @@ import { WebCrawler } from '../crawl/webCrawler.js';
 import { getLatestNoticeNumber, saveNotices } from '../repository/mongodb/noticeRepository.js';
 import { getSourceFromUrl } from '../utils/urlUtils.js';
 import { filterAndSendNotifications } from '../config/redis.js';
-import { KeywordDomainPair } from '../types/crawl.js';
+import { KeywordDomainPair } from '../types/job.js';
 import { JobScheduler } from '../schedule/jobScheduler.js';
 
 export function registerCrawltestApi(app: express.Application) {
