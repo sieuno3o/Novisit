@@ -1,6 +1,6 @@
 import { Notice, INotice } from '../../models/Notice.js';
 import CrawlMeta from '../../models/CrawlMeta.js';
-import { NoticePreview } from '../../types/crawl.js';
+import { NoticePreview } from '../../types/notice.js';
 
 /**
  * 가장 최신 공지사항 번호 조회 (URL별)

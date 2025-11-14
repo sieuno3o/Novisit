@@ -1,4 +1,4 @@
-import { NoticeResult } from '../types/crawl.js';
+import { NoticeResult } from '../types/notice.js';
 import { PKNUCrawler } from './pknuCrawler.js';
 import { extractDomainName } from '../utils/urlUtils.js';
 

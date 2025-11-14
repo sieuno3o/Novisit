@@ -1,9 +1,10 @@
 import * as cron from 'node-cron';
 import { scheduledJobsQueue } from '../config/redis.js';
-import { QueueStatus, CrawlJob, KeywordDomainPair } from '../types/crawl.js';
+import { QueueStatus, CrawlJob, KeywordDomainPair } from '../types/job.js';
 import { findAllDomains } from '../repository/mongodb/domainRepository.js';
 import { IDomain } from '../models/Domain.js';
 import { extractDomainName } from '../utils/urlUtils.js';
+import { formatDate } from '../utils/dateUtils.js';
 
 export class JobScheduler {
   private readonly CRAWL_TIMES = [9, 12, 15, 18]; // 한국시간 기준
@@ -29,17 +30,20 @@ export class JobScheduler {
           const crawlJobs = await this.createCrawlJobs();
           
           // 현재 날짜를 yymmdd 형식으로 가져오기
-          const now = new Date();
-          const yy = now.getFullYear().toString().slice(-2);
-          const mm = String(now.getMonth() + 1).padStart(2, '0');
-          const dd = String(now.getDate()).padStart(2, '0');
-          const dateStr = `${yy}${mm}${dd}`;
+          const dateStr = formatDate();
           
           // 각 크롤링 작업객체에 대해 큐에 작업 예약
           for (const crawlJob of crawlJobs) {
             const domainName = extractDomainName(crawlJob.url);
             const jobName = `${domainName}-crawl-${dateStr}-${hour}h`;
             const jobType = `crawl-${domainName}-notices`;
+            
+            // 디버깅: 큐에 추가되는 작업 데이터 확인
+            console.log(`[디버깅] 큐에 추가할 작업:`, {
+              jobName,
+              url: crawlJob.url,
+              keywordDomainPairs: crawlJob.keywordDomainPairs
+            });
             
             await scheduledJobsQueue.add(
               jobName,
@@ -57,7 +61,7 @@ export class JobScheduler {
               }
             );
             
-            console.log(`[스케줄] 큐에 작업 추가: ${jobName} (${crawlJob.url})`);
+            console.log(`[스케줄] 큐에 작업 추가: ${jobName} (${crawlJob.url}), 키워드-도메인 쌍: ${crawlJob.keywordDomainPairs.length}개`);
           }
         } catch (error) {
           console.error(`[스케줄] 크롤링 작업 추가 실패 (${hour}시):`, error);
@@ -77,12 +81,18 @@ export class JobScheduler {
       // 모든 Domain 조회
       const domains = await findAllDomains();
       
+      // 디버깅: 조회된 도메인 정보 출력
+      console.log(`[디버깅] 조회된 도메인 수: ${domains.length}`);
+      domains.forEach(domain => {
+        console.log(`[디버깅] 도메인: _id=${domain._id}, name=${domain.name}, keywords=`, domain.keywords, `url_list=`, domain.url_list);
+      });
+      
       // URL을 키로 하고, keyword와 domain_id 쌍 배열을 값으로 하는 Map
       const urlMap = new Map<string, KeywordDomainPair[]>();
       
       // 각 Domain의 url_list를 순회하면서 Map에 추가
       for (const domain of domains) {
-        const domainId = domain.id;
+        const domainId = String(domain._id);
         
         // 각 Domain의 url_list를 순회
         for (const url of domain.url_list) {
@@ -114,6 +124,12 @@ export class JobScheduler {
         url,
         keywordDomainPairs
       }));
+      
+      // 디버깅: 생성된 키워드-도메인 쌍 로그 출력
+      console.log(`[디버깅] 생성된 크롤링 작업: ${crawlJobs.length}개`);
+      crawlJobs.forEach(job => {
+        console.log(`[디버깅] URL: ${job.url}, 키워드-도메인 쌍:`, JSON.stringify(job.keywordDomainPairs, null, 2));
+      });
       
       return crawlJobs;
     } catch (error) {
