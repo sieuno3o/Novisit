@@ -2,7 +2,7 @@ import express from 'express';
 import { WebCrawler } from '../crawl/webCrawler.js';
 import { getLatestNoticeNumber, saveNotices } from '../repository/mongodb/noticeRepository.js';
 import { getSourceFromUrl } from '../utils/urlUtils.js';
-import { filterAndSendNotifications } from '../config/redis.js';
+import { filterAndSendNotifications } from '../services/noticeFilterService.js';
 import { KeywordDomainPair } from '../types/job.js';
 import { JobScheduler } from '../schedule/jobScheduler.js';
 
