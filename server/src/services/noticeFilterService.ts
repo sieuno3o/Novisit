@@ -196,15 +196,17 @@ export async function sendNotifications(
         // 각 Setting의 user_id로 알림 전송 및 Message 저장
         for (const setting of settings) {
           try {
-            // 카카오 메시지 전송 (피드 템플릿 사용)
-            // 기본 설명 생성
-            const description = `번호: ${notice.number}\n링크: ${notice.link}`;
             // 크롤링한 이미지 URL이 있으면 사용, 없으면 기본 이미지 사용
             const imageUrlForMessage = imageUrl || crawlResult.imageUrl || 'https://t1.daumcdn.net/cafeattach/1YmK3/560c6415d44b9ae3c5225a255541c3c2c1568643';
             console.log(`[알림] 공지사항 #${notice.number} "${notice.title}"`);
             console.log(`[알림] - 현재 공지사항 이미지 URL: ${imageUrl || '없음'}`);
             console.log(`[알림] - 전체 결과 이미지 URL: ${crawlResult.imageUrl || '없음'}`);
             console.log(`[알림] - 최종 사용할 이미지 URL: ${imageUrlForMessage}`);
+            
+            // 상세 내용을 description에 포함 (500자 제한)
+            const truncatedContent = detailContent.substring(0, 500);
+            const description = `${truncatedContent}${detailContent.length > 500 ? '...' : ''}`;
+            
             // 메시지 내용 구성 (제목 + 상세 내용)
             const messageContent = `${detailContent.substring(0, 500)}${detailContent.length > 500 ? '...' : ''}`;
             
