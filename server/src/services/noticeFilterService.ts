@@ -46,17 +46,18 @@ export async function crawlAndFilterByKeywords(
       return totalProcessed;
     }
     
-    // DB에 저장 (모든 공지사항 저장) Notice객체를 뺄지 고민중.. -> 어차피 message에 저장하니깐
+    // DB에 저장 (모든 공지사항 저장) Notice객체
     await saveNotices(crawlResult.notices, url, crawlDate, source);
     
     // 키워드 필터링 및 알림 전송
-    totalProcessed = await filterAndSendNotifications(
+    const filteredNotices = await filterNotices(
       crawlResult.notices,
       keywordDomainPairs,
       crawler,
       url,
       crawlResult
     );
+    totalProcessed = await sendNotifications(filteredNotices, crawlResult);
     
     return totalProcessed;
   } catch (error: any) {
@@ -65,27 +66,35 @@ export async function crawlAndFilterByKeywords(
   }
 }
 
+// 필터링된 공지사항 정보
+interface FilteredNotice {
+  notice: NoticePreview;
+  matchedPairs: KeywordDomainPair[];
+  detailContent: string;
+  imageUrl: string | undefined;
+}
+
 /**
- * 공지사항 목록에 대해 키워드 필터링 및 알림 전송
+ * 공지사항 목록에 대해 키워드 필터링 및 상세 페이지 크롤링
  * @param notices 공지사항 목록
  * @param keywordDomainPairs 키워드와 도메인ID 쌍 배열
  * @param crawler WebCrawler 인스턴스
  * @param url 크롤링한 URL
  * @param crawlResult 크롤링 결과 (이미지 URL 등 포함)
- * @returns 처리된 알림 수
+ * @returns 필터링된 공지사항 목록
  */
-export async function filterAndSendNotifications(
+export async function filterNotices(
   notices: NoticePreview[],
   keywordDomainPairs: KeywordDomainPair[],
   crawler: WebCrawler,
   url: string,
   crawlResult: NoticeResult
-): Promise<number> {
-  let totalProcessed = 0;
+): Promise<FilteredNotice[]> {
+  const filteredNotices: FilteredNotice[] = [];
   
   if (!keywordDomainPairs || keywordDomainPairs.length === 0) {
-    console.log(`[필터링] 키워드-도메인 쌍이 없어 알림 전송 스킵`);
-    return totalProcessed;
+    console.log(`[필터링] 키워드-도메인 쌍이 없어 필터링 스킵`);
+    return filteredNotices;
   }
   
   // 디버깅: 키워드-도메인 쌍 정보 출력
@@ -129,6 +138,33 @@ export async function filterAndSendNotifications(
     if (imageUrl && !crawlResult.imageUrl) {
       crawlResult.imageUrl = imageUrl;
     }
+    
+    filteredNotices.push({
+      notice,
+      matchedPairs,
+      detailContent,
+      imageUrl
+    });
+  }
+  
+  return filteredNotices;
+}
+
+/**
+ * 필터링된 공지사항에 대해 알림 전송
+ * @param filteredNotices 필터링된 공지사항 목록
+ * @param crawlResult 크롤링 결과 (이미지 URL 등 포함)
+ * @returns 처리된 알림 수
+ */
+export async function sendNotifications(
+  filteredNotices: FilteredNotice[],
+  crawlResult: NoticeResult
+): Promise<number> {
+  let totalProcessed = 0;
+  
+  // 각 필터링된 공지사항에 대해 처리
+  for (const filtered of filteredNotices) {
+    const { notice, matchedPairs, detailContent, imageUrl } = filtered;
     
     // 각 매칭된 키워드-도메인ID 쌍에 대해 처리
     for (const pair of matchedPairs) {
@@ -204,4 +240,5 @@ export async function filterAndSendNotifications(
   
   return totalProcessed;
 }
+
 

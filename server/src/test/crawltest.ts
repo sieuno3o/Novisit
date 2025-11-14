@@ -2,7 +2,7 @@ import express from 'express';
 import { WebCrawler } from '../crawl/webCrawler.js';
 import { getLatestNoticeNumber, saveNotices } from '../repository/mongodb/noticeRepository.js';
 import { getSourceFromUrl } from '../utils/urlUtils.js';
-import { filterAndSendNotifications } from '../services/noticeFilterService.js';
+import { filterNotices, sendNotifications } from '../services/noticeFilterService.js';
 import { KeywordDomainPair } from '../types/job.js';
 import { JobScheduler } from '../schedule/jobScheduler.js';
 import { formatCrawlDate } from '../utils/dateUtils.js';
@@ -83,13 +83,14 @@ export function registerCrawltestApi(app: express.Application) {
       if (keywordDomainPairs.length > 0) {
         console.log(`[크롤링 테스트] 키워드 필터링 및 알림 전송 시작`);
         try {
-          notificationsSent = await filterAndSendNotifications(
+          const filteredNotices = await filterNotices(
             crawlResult.notices,
             keywordDomainPairs,
             crawler,
             url,
             crawlResult
           );
+          notificationsSent = await sendNotifications(filteredNotices, crawlResult);
           console.log(`[크롤링 테스트] 알림 전송 완료: ${notificationsSent}개`);
         } catch (error: any) {
           console.error(`[크롤링 테스트] 알림 전송 중 오류:`, error.message);
