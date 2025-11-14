@@ -1,14 +1,25 @@
 import Domain, { IDomain } from "../../models/Domain";
 
+// Plain object 타입 (lean() 결과용)
+export interface DomainPlain {
+  _id: string;
+  name: string;
+  url_list: string[];
+  keywords: string[];
+  setting_ids: string[];
+}
+
 // 모든 도메인 조회
-export async function findAllDomains(): Promise<IDomain[]> {
+export async function findAllDomains(): Promise<DomainPlain[]> {
   try {
     // .lean()을 사용하여 plain JavaScript 객체로 반환
     // ObjectId를 문자열로 변환하여 반환
     const domains = await Domain.find({}).select('_id name url_list keywords setting_ids').lean();
     return domains.map(domain => ({
-      ...domain,
       _id: domain._id.toString(),
+      name: domain.name,
+      url_list: domain.url_list,
+      keywords: domain.keywords,
       setting_ids: domain.setting_ids.map((id: any) => id.toString())
     }));
   } catch (error) {
@@ -18,7 +29,7 @@ export async function findAllDomains(): Promise<IDomain[]> {
 }
 
 // domain_id로 도메인 조회
-export async function findDomainById(domainId: string) {
+export async function findDomainById(domainId: string): Promise<IDomain | null> {
   try {
     const domain = await Domain.findById(domainId);
     return domain;
