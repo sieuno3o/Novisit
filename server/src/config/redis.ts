@@ -127,7 +127,6 @@ export async function filterAndSendNotifications(
     }
     
     console.log(`[크롤링] 공지사항 #${notice.number} "${notice.title}": ${matchedPairs.length}개 키워드 매칭`);
-    console.log(`[크롤링] 공지사항 #${notice.number} 사용할 링크: ${notice.link}`);
     
     // 상세 페이지 크롤링 (URL에 따라 분기)
     let detailContent = '';
@@ -188,7 +187,7 @@ export async function filterAndSendNotifications(
             console.log(`[알림] - 전체 결과 이미지 URL: ${crawlResult.imageUrl || '없음'}`);
             console.log(`[알림] - 최종 사용할 이미지 URL: ${imageUrlForMessage}`);
             // 메시지 내용 구성 (제목 + 상세 내용)
-            const messageContent = `새 공지사항\n제목: ${notice.title}\n번호: ${notice.number}\n\n${detailContent.substring(0, 500)}${detailContent.length > 500 ? '...' : ''}\n\n링크: ${notice.link}`;
+            const messageContent = `${detailContent.substring(0, 500)}${detailContent.length > 500 ? '...' : ''}`;
             
             // 카카오 메시지 전송
             await sendKakaoMessage(
