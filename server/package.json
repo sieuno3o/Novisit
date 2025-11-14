@@ -8,8 +8,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "install-playwright": "playwright install chromium --with-deps",
-    "test:pknu-image": "tsx src/test/pknuImageExtractTest.ts"
+    "install-playwright": "playwright install chromium --with-deps"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",

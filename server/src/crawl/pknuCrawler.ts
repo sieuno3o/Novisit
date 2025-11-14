@@ -69,7 +69,15 @@ export class PKNUCrawler {
           const titleCell = tr.querySelector('td.bdlTitle a') as HTMLAnchorElement | null;
           const title = titleCell?.textContent?.trim() || '';
           const link = titleCell?.getAttribute('href') || '';
-          const fullLink = link.startsWith('http') ? link : `https://www.pknu.ac.kr${link}`;
+          // href가 ?로 시작하는 경우 (쿼리 파라미터만 있는 경우) /main/163 경로 추가
+          let fullLink: string;
+          if (link.startsWith('http')) {
+            fullLink = link;
+          } else if (link.startsWith('?')) {
+            fullLink = `https://www.pknu.ac.kr/main/163${link}`;
+          } else {
+            fullLink = `https://www.pknu.ac.kr${link}`;
+          }
 
           if (number && title) {
             notices.push({

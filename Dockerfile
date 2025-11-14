@@ -45,11 +45,23 @@ RUN if [ -f "package-lock.json" ]; then \
 
 # Copy built application files
 # 프로덕션 환경에서는 빌드된 dist 파일만 필요
+# dist 디렉토리가 없어도 빌드가 진행되도록 처리
 RUN mkdir -p ./server/dist ./client/dist
 
 # 배포 패키지에서 빌드된 dist 파일 복사
-COPY --chown=nodejs:nodejs server/dist ./server/dist
-COPY --chown=nodejs:nodejs client/dist ./client/dist
+# dist 디렉토리가 없을 경우를 대비해 빌드 인자 사용
+# 빌드 시 dist 디렉토리가 있으면 복사, 없으면 빈 디렉토리 유지
+# COPY 명령은 소스가 없으면 실패하므로, 먼저 server와 client 디렉토리를 임시로 복사
+# .dockerignore를 사용하여 불필요한 파일 제외 후 복사
+COPY --chown=nodejs:nodejs server ./server-tmp/
+COPY --chown=nodejs:nodejs client ./client-tmp/
+RUN if [ -d "./server-tmp/dist" ] && [ "$(ls -A ./server-tmp/dist 2>/dev/null)" ]; then \
+      cp -r ./server-tmp/dist/* ./server/dist/ 2>/dev/null || true; \
+    fi && \
+    if [ -d "./client-tmp/dist" ] && [ "$(ls -A ./client-tmp/dist 2>/dev/null)" ]; then \
+      cp -r ./client-tmp/dist/* ./client/dist/ 2>/dev/null || true; \
+    fi && \
+    rm -rf ./server-tmp ./client-tmp
 
 # tsconfig.json도 복사 (배포 패키지에 포함됨)
 COPY --chown=nodejs:nodejs server/tsconfig.json ./server/tsconfig.json

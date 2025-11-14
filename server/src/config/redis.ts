@@ -127,6 +127,7 @@ export async function filterAndSendNotifications(
     }
     
     console.log(`[크롤링] 공지사항 #${notice.number} "${notice.title}": ${matchedPairs.length}개 키워드 매칭`);
+    console.log(`[크롤링] 공지사항 #${notice.number} 사용할 링크: ${notice.link}`);
     
     // 상세 페이지 크롤링 (URL에 따라 분기)
     let detailContent = '';
@@ -136,9 +137,7 @@ export async function filterAndSendNotifications(
       detailContent = detailResult.content;
       imageUrl = detailResult.imageUrl;
       console.log(`[크롤링] 공지사항 #${notice.number} 상세 페이지 크롤링 완료 (${detailContent.length}자)`);
-      if (imageUrl) {
-        console.log(`[크롤링] 공지사항 #${notice.number} 이미지 URL 추출: ${imageUrl}`);
-      }
+      console.log(`[크롤링] 공지사항 #${notice.number} 이미지 URL: ${imageUrl || '없음'}`);
     } catch (error: any) {
       console.error(`[크롤링] 공지사항 #${notice.number} 상세 페이지 크롤링 실패:`, error.message);
       continue; // 상세 페이지 크롤링 실패 시 스킵
@@ -184,7 +183,10 @@ export async function filterAndSendNotifications(
             const description = `번호: ${notice.number}\n링크: ${notice.link}`;
             // 크롤링한 이미지 URL이 있으면 사용, 없으면 기본 이미지 사용
             const imageUrlForMessage = imageUrl || crawlResult.imageUrl || 'https://t1.daumcdn.net/cafeattach/1YmK3/560c6415d44b9ae3c5225a255541c3c2c1568643';
-            console.log(`[알림] 공지사항 #${notice.number} "${notice.title}" - 전송할 이미지 URL: ${imageUrlForMessage}`);
+            console.log(`[알림] 공지사항 #${notice.number} "${notice.title}"`);
+            console.log(`[알림] - 현재 공지사항 이미지 URL: ${imageUrl || '없음'}`);
+            console.log(`[알림] - 전체 결과 이미지 URL: ${crawlResult.imageUrl || '없음'}`);
+            console.log(`[알림] - 최종 사용할 이미지 URL: ${imageUrlForMessage}`);
             // 메시지 내용 구성 (제목 + 상세 내용)
             const messageContent = `새 공지사항\n제목: ${notice.title}\n번호: ${notice.number}\n\n${detailContent.substring(0, 500)}${detailContent.length > 500 ? '...' : ''}\n\n링크: ${notice.link}`;
             
