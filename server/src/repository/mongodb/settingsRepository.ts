@@ -47,8 +47,6 @@ export const getSettings = async (userId: string) => {
           id: settingId,
           name: setting.name,
           domain_id: setting.domain_id.toString(),
-          url_list: setting.url_list,
-          filter_keywords: setting.filter_keywords,
           channel: setting.channel,
           created_at: formatKoreanDate(setting.created_at),
           messages: messages.map((m) => ({
@@ -56,6 +54,8 @@ export const getSettings = async (userId: string) => {
             contents: m.contents,
             sended_at: m.sended_at,
             platform: m.platform,
+            link: m.link,
+            title: m.title,
           })),
         };
       })
@@ -85,14 +85,31 @@ export const getSettingsByDomainId = async (domainId: string) => {
   }
 };
 
+// setting_ids 배열로 Setting 목록 조회
+export const getSettingsByIds = async (settingIds: string[]) => {
+  try {
+    if (!settingIds || settingIds.length === 0) {
+      return [];
+    }
+    const settings = await Setting.find({ _id: { $in: settingIds } }).lean();
+    return settings;
+  } catch (error) {
+    console.error("설정 ID별 알림 설정 조회 실패:", error);
+    throw new Error("알림 설정을 불러오지 못했습니다.");
+  }
+};
+
 // Message 저장
-export const saveMessage = async (settingId: string, contents: string, platform: string = 'kakao') => {
+export const saveMessage = async (settingId: string, contents: string, platform: string = 'kakao', link: string, title: string, imageUrl?: string) => {
   try {
     const message = new Message({
       setting_id: settingId,
       contents,
       sended_at: new Date(),
       platform,
+      link,
+      title,
+      imageUrl,
     });
     return await message.save();
   } catch (error) {
