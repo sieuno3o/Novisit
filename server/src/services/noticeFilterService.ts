@@ -5,6 +5,7 @@ import { saveNotices, getLatestNoticeNumber } from '../repository/mongodb/notice
 import { findDomainById } from '../repository/mongodb/domainRepository.js';
 import { getSettingsByIds, saveMessage } from '../repository/mongodb/settingsRepository.js';
 import { sendKakaoMessage } from './notificationService.js';
+import { getSummaryFromText } from './openAIService.js';
 import { getSourceFromUrl } from '../utils/urlUtils.js';
 import { formatCrawlDate } from '../utils/dateUtils.js';
 
@@ -203,12 +204,20 @@ export async function sendNotifications(
             console.log(`[알림] - 전체 결과 이미지 URL: ${crawlResult.imageUrl || '없음'}`);
             console.log(`[알림] - 최종 사용할 이미지 URL: ${imageUrlForMessage}`);
             
-            // 상세 내용을 description에 포함 (500자 제한)
-            const truncatedContent = detailContent.substring(0, 500);
-            const description = `${truncatedContent}${detailContent.length > 500 ? '...' : ''}`;
-            
-            // 메시지 내용 구성 (제목 + 상세 내용)
-            const messageContent = `${detailContent.substring(0, 500)}${detailContent.length > 500 ? '...' : ''}`;
+            let summary = '';
+            try {
+              console.log(`[OpenAI] 공지사항 #${notice.number} 요약 시도...`);
+              summary = await getSummaryFromText(detailContent);
+              console.log(`[OpenAI] 공지사항 #${notice.number} 요약 완료`);
+            } catch (summaryError: any) {
+              console.error(`[OpenAI] 공지사항 #${notice.number} 요약 실패:`, summaryError.message);
+              // 요약 실패 시, 기존의 잘라내기 방식으로 대체
+              const truncatedContent = detailContent.substring(0, 500);
+              summary = `${truncatedContent}${detailContent.length > 500 ? '...' : ''}`;
+            }
+
+            const description = summary;
+            const messageContent = summary;
             
             // 카카오 메시지 전송
             await sendKakaoMessage(
