@@ -4,10 +4,9 @@ FROM node:18 AS runner
 WORKDIR /app
 
 # Install Playwright system dependencies
-# dpkg 설정을 먼저 수정하고 패키지 설치
+# DEBIAN_FRONTEND를 noninteractive로 설정하여 대화형 프롬프트 방지
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
-    (dpkg --configure -a || true) && \
-    (apt-get install -f -y || true) && \
     apt-get install -y --no-install-recommends \
     libnss3 \
     libnspr4 \
@@ -26,6 +25,9 @@ RUN apt-get update && \
     libasound2 \
     libpango-1.0-0 \
     libcairo2 \
+    fonts-liberation \
+    libappindicator3-1 \
+    xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
