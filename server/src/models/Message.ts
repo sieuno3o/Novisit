@@ -6,6 +6,9 @@ export interface IMessage extends Document {
   contents: string;
   sended_at: Date;
   platform: string;
+  link: string;  // 공지사항 상세페이지 링크
+  title: string;   // 공지사항 제목
+  imageUrl?: string;  // 공지사항 이미지 URL
 }
 
 // Message 스키마
@@ -14,6 +17,9 @@ const MessageSchema = new Schema<IMessage>({
   contents: { type: String, required: true },
   sended_at: { type: Date, default: Date.now },
   platform: { type: String, required: true },
+  link: { type: String, required: true },
+  title: { type: String, required: true },
+  imageUrl: { type: String, required: false },
 });
 
 // messages 모델
