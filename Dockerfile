@@ -43,10 +43,6 @@ RUN if [ -f "package-lock.json" ]; then \
       npm install --workspace=server; \
     fi
 
-# Install Playwright browsers (chromium only for efficiency)
-# --with-deps 옵션으로 시스템 종속성도 함께 설치 (더 안정적)
-RUN cd server && npx playwright install chromium --with-deps
-
 # Copy built application files
 # 프로덕션 환경에서는 빌드된 dist 파일만 필요
 RUN mkdir -p ./server/dist ./client/dist
@@ -58,7 +54,15 @@ COPY --chown=nodejs:nodejs client/dist ./client/dist
 # tsconfig.json도 복사 (배포 패키지에 포함됨)
 COPY --chown=nodejs:nodejs server/tsconfig.json ./server/tsconfig.json
 
+# nodejs 사용자로 전환하여 Playwright 브라우저 설치
+# 시스템 종속성은 이미 root로 설치했으므로, 브라우저만 nodejs 사용자로 설치
 USER nodejs
+
+# Install Playwright browsers (chromium only for efficiency)
+# PLAYWRIGHT_BROWSERS_PATH를 명시하여 nodejs 사용자 홈 디렉토리에 설치
+# --with-deps는 제외 (시스템 종속성은 이미 설치됨)
+ENV PLAYWRIGHT_BROWSERS_PATH=/home/nodejs/.cache/ms-playwright
+RUN cd server && npx playwright install chromium
 
 EXPOSE 5000
 
