@@ -1,6 +1,6 @@
 # Production image for pre-built application
 # Using regular node image instead of alpine for Playwright support
-FROM node:18 AS runner
+FROM node:20 AS runner
 WORKDIR /app
 
 # Install Playwright system dependencies
