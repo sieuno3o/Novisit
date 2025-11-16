@@ -1,4 +1,4 @@
-import Domain, { IDomain } from "../../models/Domain";
+import Domain, { IDomain } from "../../models/Domain.js";
 
 // Plain object 타입 (lean() 결과용)
 export interface DomainPlain {
