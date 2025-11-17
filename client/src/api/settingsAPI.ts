@@ -85,7 +85,7 @@ export async function createSetting(
   try {
     const body = { ...payload, channel: ensureChannelArray(payload.channel) };
 
-    const { data } = await http.post("/settings", body, {
+    const { data } = await http.post("/api/settings", body, {
       headers: { "Content-Type": "application/json" },
     });
 
@@ -126,7 +126,7 @@ export async function createSetting(
 /** 목록 조회: GET /settings — { settings: [...] } */
 export async function fetchSettings(): Promise<Setting[]> {
   try {
-    const { data } = await http.get("/settings");
+    const { data } = await http.get("/api/settings");
     const list: any[] = Array.isArray(data?.settings) ? data.settings : [];
 
     return list.map((it) => ({
@@ -209,7 +209,7 @@ export async function updateSetting(
 
 export async function deleteSetting(id: string): Promise<void> {
   try {
-    await http.delete(`/settings/${id}`);
+    await http.delete(`/api/settings/${id}`);
   } catch (e: any) {
     const status = e?.response?.status ?? 0;
     const msg =

@@ -11,6 +11,7 @@ import {
   Setting,
   Channel,
 } from "../../api/settingsAPI";
+
 import { fetchMain, type Domain } from "../../api/main";
 
 export type NoticeItemShape = {
@@ -31,7 +32,6 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
 
   const [open, setOpen] = useState(false);
 
-  // 서버 도메인 목록 사용
   const [domains, setDomains] = useState<Domain[]>([]);
   const [domainsLoading, setDomainsLoading] = useState(false);
   const [domainId, setDomainId] = useState("");
@@ -64,7 +64,6 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
     };
   }, [open]);
 
-  // 모달 열릴 때 서버에서 도메인 목록 로드
   useEffect(() => {
     if (!open) return;
     let alive = true;
@@ -112,7 +111,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
     }
 
     const payload = {
-      domain_id: domainId.trim(),
+      domain_id: domainId.trim(), // ← 드롭다운에서 선택된 id 사용
       name: name.trim(),
       url_list: parseList(urlText),
       filter_keywords: parseList(keywordText),
@@ -193,6 +192,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                 )}
 
                 <form className="notice-form flex-col" onSubmit={handleSubmit}>
+                  {/* ★ 변경: 도메인 드롭다운 (ID 입력칸 제거) */}
                   <label className="form__label">
                     도메인 <span className="req">*</span>
                     <select
@@ -250,7 +250,6 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                     </div>
                   </div>
 
-                  {/* 필요 시 URL 입력 사용 */}
                   {/* <label className="form__label">
                     URL 목록 (줄바꿈 또는 쉼표)
                     <textarea
