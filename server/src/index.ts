@@ -9,9 +9,11 @@ import settingsRoutes from "./routes/settingsRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import cors from "cors";
 import { CrawlingService } from './services/crawlingService.js'
+import { initDiscordBot } from "./services/discordService";
 import { registerCrawltestApi } from './test/crawltest.js'
 import { initializeDomains } from "./repository/mongodb/domainRepository.js";
 import { initialDomains } from "./data/initialDomains.js";
+import discordMessageTestRouter from "./test/discordMessageTest.js";
 
 // Load environment variables
 dotenv.config();
@@ -72,6 +74,7 @@ app.use("/auth", authRouter);
 app.use(mainRoutes);
 app.use("/settings", settingsRoutes);
 app.use("/users", userRoutes);
+app.use("/test", discordMessageTestRouter);
 
 // 수동 크롤 트리거 API 등록
 registerCrawltestApi(app);
@@ -87,6 +90,11 @@ app.get("/health", (req, res) => {
     }
   })
 })
+
+// 디스코드 봇 실행
+initDiscordBot()
+  .then(() => console.log("🤖 Discord Bot initialized successfully"))
+  .catch((err) => console.error("❌ Discord Bot initialization failed:", err));
 
 // 크롤링 서비스 인스턴스
 const crawlingService = new CrawlingService()
