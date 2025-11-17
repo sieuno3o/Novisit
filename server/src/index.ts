@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { createClient } from "redis";
 import authRouter from "./routes/authRoutes.js";
-import testRouter from "./routes/testRoutes.js";
+import testRouter from "./test/kakaoMessageTest.js";
 import mainRoutes from "./routes/mainRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_BASE_URL || process.env.CLIENT_URL || "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
   })

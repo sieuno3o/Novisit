@@ -1,4 +1,4 @@
-import React, { useState, FormEvent, useEffect } from "react";
+import React, { useState, FormEvent, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import "../../../public/assets/style/_flex.scss";
 import "../../../public/assets/style/_typography.scss";
@@ -11,13 +11,13 @@ import {
   Setting,
   Channel,
 } from "../../api/settingsAPI";
+import { fetchMain, type Domain } from "../../api/main";
 
-// 필요시 유지해도 되지만 현재는 미사용
 export type NoticeItemShape = {
   id: string;
   title: string;
   tags: { label: string }[];
-  channels: Channel[]; // ★ 다중
+  channels: Channel[];
   date: string;
   link?: string;
 };
@@ -30,12 +30,19 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
   const { logout } = (useAuth() as any) ?? {};
 
   const [open, setOpen] = useState(false);
+
+  // 서버 도메인 목록 사용
+  const [domains, setDomains] = useState<Domain[]>([]);
+  const [domainsLoading, setDomainsLoading] = useState(false);
   const [domainId, setDomainId] = useState("");
+
   const [name, setName] = useState("");
   const [urlText, setUrlText] = useState("");
   const [keywordText, setKeywordText] = useState("");
+
+  // ✅ 채널은 배열만 허용하므로 단순 토글 상태만 유지
   const [selected, setSelected] = useState<Record<Channel, boolean>>({
-    kakao: false,
+    kakao: true, // 기본값 원하면 false로 변경 가능
     discord: false,
   });
 
@@ -57,24 +64,40 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
     };
   }, [open]);
 
+  // 모달 열릴 때 서버에서 도메인 목록 로드
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    (async () => {
+      try {
+        setDomainsLoading(true);
+        const list = await fetchMain();
+        if (!alive) return;
+        setDomains(list);
+      } catch {
+        // 실패 시 조용히 빈 리스트 유지
+      } finally {
+        if (alive) setDomainsLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [open]);
+
   const parseList = (text: string) =>
     text
       .split(/[\n,]/g)
       .map((s) => s.trim())
       .filter(Boolean);
 
-  const toChannelsArray = (ch?: string | Channel | Channel[]): Channel[] => {
-    if (!ch) return [];
-    if (Array.isArray(ch)) {
-      return ch.filter((v): v is Channel => v === "kakao" || v === "discord");
-    }
-    return String(ch)
-      .split(",")
-      .map((s) => s.trim().toLowerCase())
-      .filter((v): v is Channel => v === "kakao" || v === "discord");
-  };
+  const chosenChannels = useMemo(
+    () => (["kakao", "discord"] as Channel[]).filter((c) => selected[c]),
+    [selected]
+  );
 
-  const canSubmit = !!domainId.trim() && !!name.trim() && !loading;
+  const canSubmit =
+    !!domainId.trim() && !!name.trim() && chosenChannels.length > 0 && !loading;
 
   const toggle = (key: Channel) =>
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -83,39 +106,30 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
     e.preventDefault();
     setBanner(null);
 
-    const chosen = (["kakao", "discord"] as Channel[]).filter(
-      (c) => selected[c]
-    );
-    if (chosen.length === 0) {
+    if (chosenChannels.length === 0) {
       setBanner({ type: "error", text: "채널을 최소 1개 이상 선택해 주세요." });
       return;
     }
-
-    const channelPayload: Channel | Channel[] =
-      chosen.length === 1 ? chosen[0] : chosen;
 
     const payload = {
       domain_id: domainId.trim(),
       name: name.trim(),
       url_list: parseList(urlText),
       filter_keywords: parseList(keywordText),
-      channel: channelPayload, // ★ 단일 or 배열
+      channel: chosenChannels,
     };
 
     try {
       setLoading(true);
       const setting = await createSetting(payload);
-
       onCreated(setting);
-
-      setBanner({ type: "success", text: "알림 설정이 생성되었습니다." });
 
       // reset & close
       setDomainId("");
-      setName("공지 알림");
+      setName("");
       setUrlText("");
       setKeywordText("");
-      setSelected({ kakao: true, discord: false });
+      setSelected({ kakao: false, discord: false });
       setOpen(false);
     } catch (err: any) {
       const msg =
@@ -180,14 +194,25 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
 
                 <form className="notice-form flex-col" onSubmit={handleSubmit}>
                   <label className="form__label">
-                    도메인 ID <span className="req">*</span>
-                    <input
+                    도메인 <span className="req">*</span>
+                    <select
                       className="form__input"
-                      type="text"
                       value={domainId}
                       onChange={(e) => setDomainId(e.target.value)}
                       required
-                    />
+                      disabled={domainsLoading}
+                    >
+                      <option value="" disabled>
+                        {domainsLoading
+                          ? "도메인 불러오는 중…"
+                          : "도메인을 선택하세요"}
+                      </option>
+                      {domains.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
                   </label>
 
                   <label className="form__label">
@@ -200,6 +225,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                       required
                     />
                   </label>
+
                   <div className="flex-row form__group">
                     <div className="channel-label">채널</div>
                     <div className="channel-toggle-row">
@@ -224,7 +250,8 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                     </div>
                   </div>
 
-                  <label className="form__label">
+                  {/* 필요 시 URL 입력 사용 */}
+                  {/* <label className="form__label">
                     URL 목록 (줄바꿈 또는 쉼표)
                     <textarea
                       className="form__textarea"
@@ -232,7 +259,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                       value={urlText}
                       onChange={(e) => setUrlText(e.target.value)}
                     />
-                  </label>
+                  </label> */}
 
                   <label className="form__label">
                     필터 키워드 (줄바꿈 또는 쉼표)
