@@ -1,5 +1,5 @@
 import * as userRepository from "../repository/mongodb/userRepository";
-import { Client, GatewayIntentBits, Partials, User } from "discord.js";
+import { Client, GatewayIntentBits, Partials, User, EmbedBuilder } from "discord.js";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages],
@@ -23,7 +23,7 @@ export async function initDiscordBot() {
 }
 
 // 사용자에게 디스코드 DM 발송 (크롤링/큐 워커에서 호출 가능)
-export async function sendDiscordMessage(userId: string, message: string): Promise<void> {
+export async function sendDiscordMessage(userId: string, title: string,  description: string,  linkUrl: string,  imageUrl?: string): Promise<void> {
 
   if (!client.isReady()) {
     await new Promise<void>(resolve => {
@@ -56,7 +56,21 @@ export async function sendDiscordMessage(userId: string, message: string): Promi
   // 2. 메시지 전송 시도
   try {
     const userObj: User = await client.users.fetch(discordUserId);
-    await userObj.send(message);
+    
+    const embed = new EmbedBuilder()
+      .setColor("#5865F2")
+      .setTitle(title)
+      .setDescription(description)
+      .setURL(linkUrl)
+      .setTimestamp()
+      .setFooter({ text: "Novisit 디스코드 알림 서비스" });
+
+    if (imageUrl) {
+      embed.setImage(imageUrl);
+    }
+
+    await userObj.send({ embeds: [embed] });
+
     console.log(`✅ 디스코드 DM 전송 성공: ${userId} (${discordUserId})`);
   } catch (error: any) {
     // 3. 디스코드에서 발생할 수 있는 에러 처리

@@ -16,11 +16,21 @@ router.post("/discord", async (req, res) => {
     return res.status(400).json({ message: "userId가 요청 본문에 없습니다." });
   }
 
-  // 테스트용 메시지 (원하면 수정 가능)
-  const testMessage = "📢 [테스트] 디스코드 알림 메시지가 정상적으로 도착했습니다.";
+  // 테스트용 임베드 메시지 구성
+  const testTitle = "[테스트] 디스코드 알림 테스트";
+  const testDescription = "임베드 메시지 테스트입니다.";
+  const testLinkUrl = "https://www.pknu.ac.kr";
+  const testImageUrl =
+    "https://upload.wikimedia.org/wikipedia/commons/2/29/Discord_logo.png";
 
   try {
-    await notifyDiscord(userId, testMessage);
+    await notifyDiscord(
+      userId,
+      testTitle,
+      testDescription,
+      testLinkUrl,
+      testImageUrl
+    );
 
     return res.status(200).json({
       message: "디스코드 메시지를 성공적으로 보냈습니다.",
