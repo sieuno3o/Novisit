@@ -5,8 +5,14 @@ import * as KakaoAPI from './kakaoAPIClient.js';
 // 사용자에게 카카오톡 메시지. BullMQ 워커에서 호출되는 것을 전제로 한 비즈니스 로직.
 export async function sendKakaoMessage(
   userId: string,
-  templateObject: any
+  title: string,
+  description: string,
+  imageUrl: string,
+  linkUrl: string
 ): Promise<any> {
+  // 이미지 링크 콘솔 출력
+  console.log(`[알림] 카카오톡 메시지 전송 - 이미지 URL: ${imageUrl}`);
+  
   // 0. 사용자 정보 조회 및 알림 설정 확인
   // 크롤링/필터링 로직에서 사용하는 userId는 문자열 _id일 수 있으므로 findUserByIdString 사용
   const user = await userRepository.findUserByIdString(userId);
@@ -54,6 +60,27 @@ export async function sendKakaoMessage(
 
   try {
     // 3. 유효하거나 갱신된 accessToken으로 메시지 전송을 시도.
+    const templateObject = {
+      object_type: 'feed',
+      content: {
+        title: title,
+        description: description,
+        image_url: imageUrl,
+        link: {
+          web_url: linkUrl,
+          mobile_web_url: linkUrl
+        }
+      },
+      buttons: [
+        {
+          title: '자세히 보기',
+          link: {
+            web_url: linkUrl,
+            mobile_web_url: linkUrl
+          }
+        }
+      ]
+    };
     return await KakaoAPI.sendMemo(accessToken, templateObject);
   } catch (error: any) {
     // 4. 시도가 실패했을 경우 (예: 갱신 후에도 토큰이 유효하지 않거나 다른 이유)
@@ -78,6 +105,27 @@ export async function sendKakaoMessage(
       console.log(`토큰 재갱신 완료 (user: ${userId}), 메시지 전송을 재시도합니다.`);
       
       // 새로 발급받은 토큰으로 메시지 전송을 재시도.
+      const templateObject = {
+        object_type: 'feed',
+        content: {
+          title: title,
+          description: description,
+          image_url: imageUrl,
+          link: {
+            web_url: linkUrl,
+            mobile_web_url: linkUrl
+          }
+        },
+        buttons: [
+          {
+            title: '자세히 보기',
+            link: {
+              web_url: linkUrl,
+              mobile_web_url: linkUrl
+            }
+          }
+        ]
+      };
       return await KakaoAPI.sendMemo(newAccessToken, templateObject);
     }
 

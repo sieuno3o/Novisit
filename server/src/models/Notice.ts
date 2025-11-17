@@ -19,7 +19,7 @@ const NoticeSchema = new Schema<INotice>({
   link: { type: String, required: true },
   url: { type: String, required: true },
   crawlDate: { type: String, required: true },  // yymmdd-hh 형식
-  source: { type: String, required: true, default: 'PKNU' },
+  source: { type: String, required: true },
   postedAt: { type: String, required: true },
   crawledAt: { type: Date, required: true },
 });
