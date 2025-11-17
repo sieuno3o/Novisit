@@ -153,7 +153,7 @@ export async function updateSetting(
         ? {
             ...payload,
             channel: serializeChannelForServer(payload.channel as any),
-          } // ★ 여기
+          } 
         : payload;
 
     const { data } = await http.put(`/settings/${id}`, body, {
