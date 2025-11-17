@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { createClient } from "redis";
 import authRouter from "./routes/authRoutes.js";
-import testRouter from "./test/kakaoMessageTest.js";
+
 import mainRoutes from "./routes/mainRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -18,7 +18,6 @@ import discordMessageTestRouter from "./test/discordMessageTest.js";
 // Load environment variables
 dotenv.config();
 
-console.log("🔥 ENV DISCORD_REDIRECT_URI =", process.env.DISCORD_REDIRECT_URI);
 
 const app = express();
 
@@ -71,7 +70,7 @@ app.get("/api", (req, res) => {
 });
 
 app.use("/auth", authRouter);
-app.use("/test", testRouter);
+
 app.use(mainRoutes);
 app.use("/settings", settingsRoutes);
 app.use("/users", userRoutes);
