@@ -11,9 +11,11 @@
     "install-playwright": "playwright install chromium --with-deps"
   },
   "dependencies": {
+    "@types/cheerio": "^0.22.35",
     "@types/cors": "^2.8.19",
-    "axios": "^1.12.2",
+    "axios": "^1.13.2",
     "bullmq": "^4.15.4",
+    "cheerio": "^1.1.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
@@ -21,6 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.3",
     "node-cron": "^3.0.3",
+    "openai": "^6.8.1",
     "playwright": "^1.40.0",
     "redis": "^4.6.10"
   },
