@@ -1,0 +1,63 @@
+.site-footer {
+  background-color: #f5f6f7; 
+  color: #000;
+  border-top: none;
+  padding: 30px 0;
+  font-size: 14px;
+
+
+  .site-footer__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px;
+    background: none !important;
+    text-align: center;
+  }
+
+  .site-footer__cols {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+    gap: 32px;
+    align-items: start;
+    justify-items: center;
+  }
+
+  .site-footer__col {
+    border: none;
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .site-footer__title {
+    font-weight: 600;
+    font-size: 16px !important;
+    color: #000;
+    margin-bottom: 7px;
+  }
+
+  .site-footer__col div:not(.site-footer__title) {
+    color: #6b7280; /* 회색 (gray-500톤) */
+    font-weight: 400;
+    line-height: 1.8;
+  }
+
+
+  .site-footer__col a {
+    color: #6b7280;
+    text-decoration: none;
+    pointer-events: auto;
+    transition: color 0.25s ease;
+
+    &:hover {
+      color: #1c67ca; 
+    }
+  }
+
+  hr,
+  &::before,
+  &::after {
+    display: none !important;
+    border: 0 !important;
+    content: none !important;
+  }
+}

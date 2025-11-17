@@ -56,9 +56,10 @@
 }
 
 .info-value {
-  font-size: 16px;
-  line-height: 1.6;
-  color: #0f172a;
+  min-width: 0;              /* grid/flex 자식 오버플로우 방지 */
+  overflow-wrap: anywhere;   /* 너무 긴 단어 강제 줄바꿈 */
+  word-break: break-word;
+  white-space: normal;
 }
 
 //알림 채널 칸
@@ -74,8 +75,11 @@
 
 .channel-icon {
   width: 28px; height: 28px; border-radius: 6px; flex: 0 0 28px;
-  &.kakao  { background: #fee500; border:1px solid #e6cf00; }
-  &.discord{ background: #5865F2; }
+  background-size: cover;     
+  background-position: center; 
+  background-repeat: no-repeat;
+  &.kakao  { background-image: url("/assets/img/kakaologo.png");}
+  &.discord{ background-image: url("/assets/img/discordlogo.png");}
 }
 
 .channel-info { flex: 1 1 auto; }
@@ -132,3 +136,35 @@
   box-shadow: none;
 }
 
+
+//디스코드 알림 ON 배지
+.channel-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notify-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px; // "알림" 텍스트와 토글 간격
+}
+
+.notify-label {
+  font-size: 15px;
+  color: #6b7280; // 중간 회색
+}
+
+.notify-pill {
+  display: inline-flex;
+  padding: 6px 15px;
+  border-radius: 9999px;
+  background: transparent;
+  border: 1px solid #d1d5db; // 연한 배경
+  color: #6b7280; // 중간 회색
+  font-weight: 380;
+  font-size: 15px;
+  letter-spacing: 0.5px; // 알림·ON 사이 여백 효과
+  gap: 7px; // 실제 단어 사이 여백
+  user-select: none;
+}
