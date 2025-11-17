@@ -1,4 +1,4 @@
-import React, { useState, FormEvent, useEffect } from "react";
+import React, { useState, FormEvent, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import "../../../public/assets/style/_flex.scss";
 import "../../../public/assets/style/_typography.scss";
@@ -11,14 +11,14 @@ import {
   Setting,
   Channel,
 } from "../../api/settingsAPI";
-import { fetchMain, type Domain } from "../../api/main"; // ★ 추가: 서버 도메인 목록 사용
 
-// 필요시 유지해도 되지만 현재는 미사용
+import { fetchMain, type Domain } from "../../api/main";
+
 export type NoticeItemShape = {
   id: string;
   title: string;
   tags: { label: string }[];
-  channels: Channel[]; // ★ 다중
+  channels: Channel[];
   date: string;
   link?: string;
 };
@@ -32,7 +32,6 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
 
   const [open, setOpen] = useState(false);
 
-  // ★ 변경: 도메인 ID를 직접 입력하지 않고 선택하도록
   const [domains, setDomains] = useState<Domain[]>([]);
   const [domainsLoading, setDomainsLoading] = useState(false);
   const [domainId, setDomainId] = useState("");
@@ -40,8 +39,10 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
   const [name, setName] = useState("");
   const [urlText, setUrlText] = useState("");
   const [keywordText, setKeywordText] = useState("");
+
+  // ✅ 채널은 배열만 허용하므로 단순 토글 상태만 유지
   const [selected, setSelected] = useState<Record<Channel, boolean>>({
-    kakao: false,
+    kakao: true, // 기본값 원하면 false로 변경 가능
     discord: false,
   });
 
@@ -63,7 +64,6 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
     };
   }, [open]);
 
-  // ★ 추가: 모달 열릴 때 서버에서 도메인 목록 로드
   useEffect(() => {
     if (!open) return;
     let alive = true;
@@ -90,18 +90,13 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
       .map((s) => s.trim())
       .filter(Boolean);
 
-  const toChannelsArray = (ch?: string | Channel | Channel[]): Channel[] => {
-    if (!ch) return [];
-    if (Array.isArray(ch)) {
-      return ch.filter((v): v is Channel => v === "kakao" || v === "discord");
-    }
-    return String(ch)
-      .split(",")
-      .map((s) => s.trim().toLowerCase())
-      .filter((v): v is Channel => v === "kakao" || v === "discord");
-  };
+  const chosenChannels = useMemo(
+    () => (["kakao", "discord"] as Channel[]).filter((c) => selected[c]),
+    [selected]
+  );
 
-  const canSubmit = !!domainId.trim() && !!name.trim() && !loading;
+  const canSubmit =
+    !!domainId.trim() && !!name.trim() && chosenChannels.length > 0 && !loading;
 
   const toggle = (key: Channel) =>
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -110,29 +105,22 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
     e.preventDefault();
     setBanner(null);
 
-    const chosen = (["kakao", "discord"] as Channel[]).filter(
-      (c) => selected[c]
-    );
-    if (chosen.length === 0) {
+    if (chosenChannels.length === 0) {
       setBanner({ type: "error", text: "채널을 최소 1개 이상 선택해 주세요." });
       return;
     }
-
-    const channelPayload: Channel | Channel[] =
-      chosen.length === 1 ? chosen[0] : chosen;
 
     const payload = {
       domain_id: domainId.trim(), // ← 드롭다운에서 선택된 id 사용
       name: name.trim(),
       url_list: parseList(urlText),
       filter_keywords: parseList(keywordText),
-      channel: channelPayload, // ★ 단일 or 배열
+      channel: chosenChannels,
     };
 
     try {
       setLoading(true);
       const setting = await createSetting(payload);
-
       onCreated(setting);
 
       // reset & close
@@ -140,7 +128,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
       setName("");
       setUrlText("");
       setKeywordText("");
-      setSelected({ kakao: true, discord: false });
+      setSelected({ kakao: false, discord: false });
       setOpen(false);
     } catch (err: any) {
       const msg =
@@ -237,6 +225,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                       required
                     />
                   </label>
+
                   <div className="flex-row form__group">
                     <div className="channel-label">채널</div>
                     <div className="channel-toggle-row">
