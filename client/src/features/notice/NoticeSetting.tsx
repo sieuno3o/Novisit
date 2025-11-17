@@ -44,32 +44,31 @@ const toKST = (iso: string) =>
     minute: "2-digit",
   });
 
-const toChannelsArray = (ch?: any, fallbackMsg?: Message): Channel[] => {
-  let arr: string[] = [];
-  if (Array.isArray(ch)) arr = ch;
-  else if (typeof ch === "string") arr = ch.split(","); // ★ CSV 지원
-  else if (ch === "kakao" || ch === "discord") arr = [ch];
-
-  let ret = arr
-    .map((v) => String(v).trim().toLowerCase())
-    .filter((v) => v === "kakao" || v === "discord") as Channel[];
-
-  if (ret.length === 0 && fallbackMsg?.platform) {
-    const p = String(fallbackMsg.platform).toLowerCase();
-    if (p === "kakao" || p === "discord") ret = [p as Channel];
-  }
-  return Array.from(new Set(ret));
+const ensureChannels = (v?: unknown): Channel[] => {
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((x) => String(x).trim().toLowerCase())
+    .filter((x) => x === "kakao" || x === "discord") as Channel[];
 };
 
 const mapSettingToItem = (s: Setting): NoticeItem => {
   const firstMsg = pickFirstMessage(s);
-  const channels = toChannelsArray((s as any).channel, firstMsg);
 
+  const primary = ensureChannels(s.channel);
+  const channels =
+    primary.length > 0 ? primary : ensureChannels(firstMsg?.platform);
+
+  const formatDateOnly = (v: string) => {
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? v : d.toLocaleDateString("ko-KR");
+  };
+
+  const createdRaw = (s as any).created_at;
   const dateText =
-    typeof (s as any).created_at === "string" && (s as any).created_at.trim()
-      ? (s as any).created_at
+    typeof createdRaw === "string" && createdRaw.trim()
+      ? formatDateOnly(createdRaw)
       : firstMsg?.sended_at
-      ? toKST(firstMsg.sended_at)
+      ? formatDateOnly(firstMsg.sended_at)
       : new Date().toLocaleDateString("ko-KR");
 
   return {
@@ -82,7 +81,6 @@ const mapSettingToItem = (s: Setting): NoticeItem => {
   };
 };
 
-/* ----- TagEditor (동일) ----- */
 function TagEditor({
   label,
   values,
@@ -176,11 +174,7 @@ function NoticeCard({
     setting.filter_keywords ?? []
   );
 
-  // ★ 다중 채널 토글
-  const initialChannels = toChannelsArray(
-    setting.channel,
-    pickFirstMessage(setting)
-  );
+  const initialChannels = ensureChannels(setting.channel);
   const [channels, setChannels] = useState<Record<Channel, boolean>>({
     kakao: initialChannels.includes("kakao"),
     discord: initialChannels.includes("discord"),
@@ -194,7 +188,7 @@ function NoticeCard({
     setKeywords(
       Array.isArray(setting.filter_keywords) ? setting.filter_keywords : []
     );
-    const init = toChannelsArray(setting.channel, pickFirstMessage(setting));
+    const init = ensureChannels(setting.channel);
     setChannels({
       kakao: init.includes("kakao"),
       discord: init.includes("discord"),
@@ -219,17 +213,13 @@ function NoticeCard({
       return;
     }
 
-    // 선택 개수에 따라 단일/배열 전송
-    const channelPayload: Channel | Channel[] =
-      chosen.length === 1 ? chosen[0] : chosen;
-
     try {
       setSaving(true);
       const updated = await updateSetting(getId(setting), {
         name: name.trim(),
         url_list: urls,
         filter_keywords: keywords,
-        channel: channelPayload, // ★ 단일/배열 모두 지원
+        channel: chosen, // ✅ 항상 배열로 전송
       });
       onUpdated(updated);
       setEditing(false);
@@ -377,12 +367,12 @@ function NoticeCard({
             onChange={setKeywords}
           />
           <div style={{ height: 8 }} />
-          <TagEditor
+          {/* <TagEditor
             label="URL 목록"
             values={urls}
             placeholder="새 url 입력"
             onChange={setUrls}
-          />
+          /> */}
         </>
       ) : (
         <>
@@ -478,7 +468,6 @@ function NoticeSettingInner() {
     const id = getId(s);
     setSettingsMap((prev) => ({ ...prev, [id]: s }));
     setItems((prev) => [...prev, mapSettingToItem(s)]); // 맨 밑에 추가
-    // setBanner({ type: "success", text: "알림 설정이 생성되었습니다." }); // 선택
   };
 
   const empty = useMemo(
@@ -530,7 +519,6 @@ function NoticeSettingInner() {
           );
         })}
 
-      {/* ✅ 원본 Setting을 받아오는 콜백 전달 */}
       <CreateNotice onCreated={handleCreated} />
     </div>
   );
