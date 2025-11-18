@@ -66,6 +66,20 @@ export const initialDomains: InitialDomainData[] = [
     keywords: ["예비창업"],
     setting_ids: [],
   },
+    {
+    _id: "2",
+    name: "공모전",
+    url_list: ["https://www.naver.com/"],
+    keywords: ["공모전"],
+    setting_ids: [],
+  },
+  {
+    _id: "3",
+    name: "정책지원",
+    url_list: ["https://www.google.com/"],
+    keywords: ["정책"],
+    setting_ids: [],
+  },
   // 필요에 따라 더 많은 도메인을 추가할 수 있습니다
   // {
   //   _id: "2", // 또는 숫자로 _id: 2

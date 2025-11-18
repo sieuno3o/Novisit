@@ -6,6 +6,7 @@ export interface ISetting extends Document {
   domain_id: string;
   name: string;
   channel: string[];
+  summary: boolean;
   created_at: Date;
   messages: string[];
 }
@@ -16,6 +17,7 @@ const SettingSchema = new Schema<ISetting>({
   domain_id: { type: String, required: true },
   name: { type: String, required: true },
   channel: { type: [String], required: true },
+  summary: { type: Boolean, default: false },
   created_at: { type: Date, default: Date.now },
   messages: [{ type: Schema.Types.ObjectId, ref: "Message" }],
 });
