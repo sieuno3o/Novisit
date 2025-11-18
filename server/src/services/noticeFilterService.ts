@@ -204,20 +204,25 @@ export async function sendNotifications(
             console.log(`[알림] - 전체 결과 이미지 URL: ${crawlResult.imageUrl || '없음'}`);
             console.log(`[알림] - 최종 사용할 이미지 URL: ${imageUrlForMessage}`);
             
-            let summary = '';
-            try {
-              console.log(`[OpenAI] 공지사항 #${notice.number} 요약 시도...`);
-              summary = await getSummaryFromText(detailContent);
-              console.log(`[OpenAI] 공지사항 #${notice.number} 요약 완료`);
-            } catch (summaryError: any) {
-              console.error(`[OpenAI] 공지사항 #${notice.number} 요약 실패:`, summaryError.message);
-              // 요약 실패 시, 기존의 잘라내기 방식으로 대체
+            let messageContent = '';
+            if (setting.summary) {
+              try {
+                console.log(`[OpenAI] 공지사항 #${notice.number} 요약 시도...`);
+                messageContent = await getSummaryFromText(detailContent);
+                console.log(`[OpenAI] 공지사항 #${notice.number} 요약 완료`);
+              } catch (summaryError: any) {
+                console.error(`[OpenAI] 공지사항 #${notice.number} 요약 실패:`, summaryError.message);
+                // 요약 실패 시, 기존의 잘라내기 방식으로 대체
+                const truncatedContent = detailContent.substring(0, 500);
+                messageContent = `${truncatedContent}${detailContent.length > 500 ? '...' : ''}`;
+              }
+            } else {
+              // 요약 비활성화 시, 기존의 잘라내기 방식으로 대체
               const truncatedContent = detailContent.substring(0, 500);
-              summary = `${truncatedContent}${detailContent.length > 500 ? '...' : ''}`;
+              messageContent = `${truncatedContent}${detailContent.length > 500 ? '...' : ''}`;
             }
 
-            const description = summary;
-            const messageContent = summary;
+            const description = messageContent;
             
             // 카카오 메시지 전송
             await sendKakaoMessage(
