@@ -31,7 +31,7 @@ export const initialDomains: InitialDomainData[] = [
     setting_ids: [],
   },
   {
-    _id: "4",
+    _id: "3",
     name: "교환학생",
     url_list: [
       "https://www.pknu.ac.kr/main/163",
@@ -40,7 +40,7 @@ export const initialDomains: InitialDomainData[] = [
     setting_ids: [],
   },
   {
-    _id: "5",
+    _id: "4",
     name: "테스트",
     url_list: [
       "https://preview--pknu-notice-watch.lovable.app",
@@ -49,7 +49,7 @@ export const initialDomains: InitialDomainData[] = [
     setting_ids: [],
   },
   {
-    _id: "6",
+    _id: "5",
     name: "예비창업",
     url_list: [
       "",
@@ -58,26 +58,12 @@ export const initialDomains: InitialDomainData[] = [
     setting_ids: [],
   },
   {
-    _id: "7",
+    _id: "6",
     name: "공공임대",
     url_list: [
       "",
     ],
     keywords: ["예비창업"],
-    setting_ids: [],
-  },
-    {
-    _id: "2",
-    name: "공모전",
-    url_list: ["https://www.naver.com/"],
-    keywords: ["공모전"],
-    setting_ids: [],
-  },
-  {
-    _id: "3",
-    name: "정책지원",
-    url_list: ["https://www.google.com/"],
-    keywords: ["정책"],
     setting_ids: [],
   },
   // 필요에 따라 더 많은 도메인을 추가할 수 있습니다
