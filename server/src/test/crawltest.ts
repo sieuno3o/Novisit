@@ -1,129 +1,169 @@
 import express from 'express';
 import { WebCrawler } from '../crawl/webCrawler.js';
+import { crawlAndFilterByKeywords } from '../services/noticeFilterService.js';
+import { KeywordDomainPair, CrawlJob } from '../types/job.js';
+import { JobScheduler } from '../schedule/jobScheduler.js';
 import { getLatestNoticeNumber, saveNotices } from '../repository/mongodb/noticeRepository.js';
 import { getSourceFromUrl } from '../utils/urlUtils.js';
-import { filterNotices, sendNotifications } from '../services/noticeFilterService.js';
-import { KeywordDomainPair } from '../types/job.js';
-import { JobScheduler } from '../schedule/jobScheduler.js';
 import { formatCrawlDate } from '../utils/dateUtils.js';
+
+/**
+ * 단일 URL에 대한 크롤링 작업 처리
+ * @param url 크롤링할 URL
+ * @param keywordDomainPairs 키워드-도메인 쌍 배열
+ * @param crawler WebCrawler 인스턴스
+ * @returns 크롤링 결과
+ */
+async function processSingleUrl(
+  url: string,
+  keywordDomainPairs: KeywordDomainPair[],
+  crawler: WebCrawler
+): Promise<{
+  success: boolean;
+  url: string;
+  source: string;
+  crawlDate: string;
+  lastKnownNumber: string | null;
+  totalNotices: number;
+  newNotices: number;
+  latestNumber: string | null;
+  notificationsSent: number;
+  notices: any[];
+  error?: string;
+}> {
+  const source = getSourceFromUrl(url);
+  const crawlDate = formatCrawlDate();
+  
+  try {
+    // 키워드-도메인 쌍이 없으면 에러 발생
+    if (!keywordDomainPairs || keywordDomainPairs.length === 0) {
+      throw new Error(`키워드-도메인 쌍이 없습니다. URL: ${url}`);
+    }
+    
+    const lastKnownNumber = await getLatestNoticeNumber(url, source);
+    console.log(`[크롤링 테스트] URL: ${url}, 최신 공지번호: ${lastKnownNumber || '없음'}`);
+    console.log(`[크롤링 테스트] 키워드-도메인 쌍 ${keywordDomainPairs.length}개로 크롤링 시작`);
+    
+    // crawlAndFilterByKeywords 사용 (크롤링, 저장, 필터링, 알림 전송 모두 처리)
+    const notificationsSent = await crawlAndFilterByKeywords(url, keywordDomainPairs, crawler);
+    
+    // 크롤링 결과를 가져오기 위해 다시 조회
+    const crawlResult = await crawler.crawlNoticesList(url, lastKnownNumber);
+    const latestNumber = await getLatestNoticeNumber(url, source);
+    
+    return {
+      success: true,
+      url,
+      source,
+      crawlDate,
+      lastKnownNumber,
+      totalNotices: crawlResult.totalNotices,
+      newNotices: crawlResult.notices.length,
+      latestNumber,
+      notificationsSent,
+      notices: crawlResult.notices.map(notice => ({
+        number: notice.number,
+        title: notice.title,
+        link: notice.link,
+        postedAt: notice.postedAt,
+      })),
+    };
+  } catch (error: any) {
+    console.error(`[크롤링 테스트] ${url} 처리 실패:`, error.message);
+    return {
+      success: false,
+      url,
+      source,
+      crawlDate,
+      lastKnownNumber: null,
+      totalNotices: 0,
+      newNotices: 0,
+      latestNumber: null,
+      notificationsSent: 0,
+      notices: [],
+      error: error.message,
+    };
+  }
+}
 
 export function registerCrawltestApi(app: express.Application) {
   // 즉시 수동 크롤링 테스트 엔드포인트 (POST /crawltest)
-  // 기존 크롤링 로직을 직접 사용하여 테스트
+  // DB에 있는 도메인 정보를 기반으로 기존 로직대로 크롤링 수행
   app.post('/crawltest', async (req, res) => {
     const crawler = new WebCrawler();
     
     try {
-      // 요청에서 URL 가져오기 (기본값: 부경대학교 공지사항)
-      const url = req.body?.url || 'https://www.pknu.ac.kr/main/163';
-      // 요청에서 키워드-도메인 쌍 가져오기 (선택사항)
-      let keywordDomainPairs: KeywordDomainPair[] = req.body?.keywordDomainPairs || [];
+      // JobScheduler를 사용하여 DB의 모든 도메인 정보를 기반으로 크롤링 작업 생성
+      // 기존 로직과 동일하게 URL과 KeywordDomainPair 생성
+      const jobScheduler = new JobScheduler();
+      const crawlJobs = await jobScheduler.createCrawlJobs();
       
-      // 키워드-도메인 쌍이 없으면 jobScheduler의 createCrawlJobs 로직 사용
-      if (keywordDomainPairs.length === 0) {
-        console.log(`[크롤링 테스트] 키워드-도메인 쌍이 없어 jobScheduler 로직으로 생성 시도`);
-        const jobScheduler = new JobScheduler();
-        const crawlJobs = await jobScheduler.createCrawlJobs();
-        
-        // 해당 URL에 해당하는 CrawlJob 찾기
-        const matchedJob = crawlJobs.find(job => job.url === url);
-        if (matchedJob) {
-          keywordDomainPairs = matchedJob.keywordDomainPairs;
-          console.log(`[크롤링 테스트] URL "${url}"에 해당하는 키워드-도메인 쌍 ${keywordDomainPairs.length}개 발견:`, keywordDomainPairs);
-        } else {
-          console.log(`[크롤링 테스트] URL "${url}"에 해당하는 키워드-도메인 쌍을 찾을 수 없음`);
-        }
-      }
-      
-      console.log(`[크롤링 테스트] 시작: ${url}`);
-      if (keywordDomainPairs.length > 0) {
-        console.log(`[크롤링 테스트] 키워드-도메인 쌍: ${keywordDomainPairs.length}개`);
-      }
-      
-      // URL에서 소스 이름 추출 (PKNU, NAVER 등)
-      const source = getSourceFromUrl(url);
-      
-      // 크롤링 날짜 생성 (yymmdd-hh 형식)
-      const crawlDate = formatCrawlDate();
-      
-      // 최신 공지번호 조회 (기존 로직 사용)
-      const lastKnownNumber = await getLatestNoticeNumber(url, source);
-      console.log(`[크롤링 테스트] 최신 공지번호: ${lastKnownNumber || '없음'}`);
-      
-      // 공지사항 목록 크롤링 (기존 WebCrawler 사용)
-      const crawlResult = await crawler.crawlNoticesList(url, lastKnownNumber);
-      
-      if (!crawlResult.notices || crawlResult.notices.length === 0) {
-        console.log(`[크롤링 테스트] 새 공지 없음`);
+      if (crawlJobs.length === 0) {
         await crawler.close();
-        
         return res.status(200).json({
           ok: true,
           success: true,
-          message: '크롤링 완료: 새 공지 없음',
-          url,
-          source,
-          crawlDate,
-          lastKnownNumber,
-          totalNotices: 0,
-          newNotices: 0,
+          message: '크롤링할 작업이 없습니다.',
+          results: [],
+          totalProcessed: 0,
+          totalNewNotices: 0,
+          totalNotificationsSent: 0,
           executedAt: new Date().toISOString(),
         });
       }
       
-      console.log(`[크롤링 테스트] ${crawlResult.notices.length}개 새 공지 발견`);
+      console.log(`[크롤링 테스트] DB에서 가져온 작업 수: ${crawlJobs.length}개`);
       
-      // DB에 저장 (기존 saveNotices 함수 사용)
-      const latestNumber = await saveNotices(crawlResult.notices, url, crawlDate, source);
+      // 각 작업 처리 (DB에서 가져온 모든 작업)
+      const results = [];
+      let totalNotificationsSent = 0;
       
-      console.log(`[크롤링 테스트] 저장 완료: 최신 번호 ${latestNumber}`);
-      
-      // 키워드 필터링 및 알림 전송 (키워드-도메인 쌍이 있는 경우)
-      let notificationsSent = 0;
-      if (keywordDomainPairs.length > 0) {
-        console.log(`[크롤링 테스트] 키워드 필터링 및 알림 전송 시작`);
+      for (const job of crawlJobs) {
         try {
-          const filteredNotices = await filterNotices(
-            crawlResult.notices,
-            keywordDomainPairs,
-            crawler,
-            url,
-            crawlResult
+          const result = await processSingleUrl(
+            job.url,
+            job.keywordDomainPairs,
+            crawler
           );
-          notificationsSent = await sendNotifications(filteredNotices, crawlResult);
-          console.log(`[크롤링 테스트] 알림 전송 완료: ${notificationsSent}개`);
+          results.push(result);
+          totalNotificationsSent += result.notificationsSent;
         } catch (error: any) {
-          console.error(`[크롤링 테스트] 알림 전송 중 오류:`, error.message);
-          // 알림 전송 실패해도 크롤링은 성공으로 처리
+          console.error(`[크롤링 테스트] ${job.url} 처리 실패:`, error.message);
+          results.push({
+            success: false,
+            url: job.url,
+            source: getSourceFromUrl(job.url),
+            crawlDate: formatCrawlDate(),
+            lastKnownNumber: null,
+            totalNotices: 0,
+            newNotices: 0,
+            latestNumber: null,
+            notificationsSent: 0,
+            notices: [],
+            error: error.message,
+          });
         }
-      } else {
-        console.log(`[크롤링 테스트] 키워드-도메인 쌍이 없어 알림 전송 스킵`);
       }
       
       // 크롤러 정리
       await crawler.close();
       
       // 성공 응답
-      return res.status(200).json({
-        ok: true,
-        success: true,
-        message: keywordDomainPairs.length > 0 
-          ? `크롤링, 저장 및 알림 전송 완료 (${notificationsSent}개 알림)`
-          : '크롤링 및 저장 완료',
-        url,
-        source,
-        crawlDate,
-        lastKnownNumber,
-        totalNotices: crawlResult.totalNotices,
-        newNotices: crawlResult.notices.length,
-        latestNumber,
-        notificationsSent,
-        notices: crawlResult.notices.map(notice => ({
-          number: notice.number,
-          title: notice.title,
-          link: notice.link,
-          postedAt: notice.postedAt,
-        })),
+      const allSuccess = results.every(r => r.success);
+      const totalNewNotices = results.reduce((sum, r) => sum + r.newNotices, 0);
+      
+      return res.status(allSuccess ? 200 : 207).json({
+        ok: allSuccess,
+        success: allSuccess,
+        message: results.length === 1 && results[0]
+          ? (results[0].notificationsSent > 0
+              ? `크롤링, 저장 및 알림 전송 완료 (${results[0].notificationsSent}개 알림)`
+              : '크롤링 및 저장 완료')
+          : `${results.length}개 URL 처리 완료 (총 ${totalNewNotices}개 새 공지, ${totalNotificationsSent}개 알림)`,
+        results: results,
+        totalProcessed: results.length,
+        totalNewNotices,
+        totalNotificationsSent,
         executedAt: new Date().toISOString(),
       });
       
