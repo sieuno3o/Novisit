@@ -34,7 +34,6 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
 
   const [open, setOpen] = useState(false);
 
-  // 서버 도메인 목록 사용
   const [domains, setDomains] = useState<Domain[]>([]);
   const [domainsLoading, setDomainsLoading] = useState(false);
   const [domainId, setDomainId] = useState("");
@@ -67,7 +66,6 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
     };
   }, [open]);
 
-  // 컴포넌트 마운트 시 서버에서 도메인 목록 로드
   useEffect(() => {
     let alive = true;
     (async () => {
