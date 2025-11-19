@@ -110,7 +110,6 @@ export async function filterNotices(
     // 공지사항 제목을 키워드와 비교
     const matchedPairs = keywordDomainPairs.filter(pair => {
       const matched = matchesKeywords(notice.title, [pair.keyword]);
-      console.log(`[디버깅] 키워드 "${pair.keyword}" 매칭 결과: ${matched} (제목: "${notice.title}")`);
       return matched;
     });
     

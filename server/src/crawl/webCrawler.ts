@@ -1,5 +1,6 @@
 import { NoticeResult } from '../types/notice.js';
 import { PKNUCrawler } from './pknuCrawler.js';
+import { TestCrawler } from './testCrawler.js';
 import { extractDomainName } from '../utils/urlUtils.js';
 
 // 상세 페이지 크롤링 결과
@@ -29,18 +30,20 @@ export class WebCrawler {
 
     // 도메인 이름으로 크롤러 선택
     const domainName = extractDomainName(url);
+    const lowerDomainName = domainName.toLowerCase();
     
-    switch (domainName.toLowerCase()) {
+    switch (lowerDomainName) {
       case 'pknu':
         crawler = new PKNUCrawler();
         break;
-      // 향후 다른 사이트 추가 시 여기에 추가
-      // case 'naver':
-      //   crawler = new NaverCrawler();
-      //   break;
+      case 'preview--pknu-notice-watch':
+        console.log(`[WebCrawler] TestCrawler 사용: ${url}`);
+        crawler = new TestCrawler(url);
+        break;
+      // TestCrawler를 범용 크롤러로 사용 (테이블 구조 지원)
       default:
-        console.warn(`[WebCrawler] 지원하지 않는 도메인: ${domainName} (${url}), PKNU 크롤러 사용`);
-        crawler = new PKNUCrawler();
+        console.log(`[WebCrawler] TestCrawler 사용 (기본): ${url}`);
+        crawler = new TestCrawler(url);
     }
 
     this.crawlerMap.set(url, crawler);
@@ -83,12 +86,6 @@ export class WebCrawler {
       await crawler.close();
     }
     this.crawlerMap.clear();
-  }
-
-  // 하위 호환성을 위한 메서드 (기존 코드 호환)
-  async crawlPKNUNotices(lastKnownNumber: string | null = null): Promise<NoticeResult> {
-    const pknuUrl = 'https://www.pknu.ac.kr/main/163';
-    return await this.crawlNoticesList(pknuUrl, lastKnownNumber);
   }
 }
 
