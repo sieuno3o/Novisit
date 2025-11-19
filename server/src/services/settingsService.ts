@@ -3,7 +3,7 @@ import { createSetting, getSettings, updateSetting, deleteSetting } from "../rep
 
 // 알림 설정 생성
 export async function createUserSetting(userId: string, data: any) {
-  const { domain_id, name, filter_keywords, url_list, channel } = data;
+  const { domain_id, name, channel, summary } = data;
 
   // 필수 값 확인
   if (!domain_id || !name || !channel ) {
@@ -15,9 +15,8 @@ export async function createUserSetting(userId: string, data: any) {
     user_id: userId,
     domain_id,
     name,
-    url_list: url_list || [],
-    filter_keywords: filter_keywords || [],
     channel,
+    summary: Boolean(summary),
     messages: [],
   };
 
@@ -36,6 +35,9 @@ export const getUserSettings = async (userId: string) => {
 // 알림 설정 수정
 export const updateUserSetting = async (settingId: string, updateData: any) => {
   try {
+    if (updateData.summary !== undefined) {
+      updateData.summary = Boolean(updateData.summary);
+    }
     const updated = await updateSetting(settingId, updateData);
     if (!updated) {
       throw new Error("해당 알림 설정을 찾을 수 없습니다.");

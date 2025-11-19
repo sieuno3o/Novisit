@@ -4,24 +4,26 @@ import http from "./http";
 /** 두 채널만 허용 */
 export type Channel = "kakao" | "discord";
 
-/** 생성 요청 */
+/** 생성 요청 — channel은 반드시 배열 */
 export type CreateSettingRequest = {
   domain_id: string;
   name: string;
   url_list: string[];
   filter_keywords: string[];
-  channel: Channel | Channel[];
+  channel: Channel[]; // ✅ 배열 고정
 };
 
-/** 메시지 */
+/** 메시지 — platform도 배열 유지 */
 export type Message = {
   id: string;
+  title?: string;
   contents: string;
-  sended_at: string;
-  platform: string;
+  link?: string;
+  sended_at: string; // ISO8601
+  platform: Channel[]; // ["kakao","discord"]
 };
 
-/** 설정 */
+/** 설정 — channel은 항상 배열 */
 export type Setting = {
   id?: string;
   _id?: string;
@@ -30,9 +32,8 @@ export type Setting = {
   name: string;
   url_list: string[];
   filter_keywords: string[];
-  /** 서버가 문자열("kakao,discord")로 줄 수도, 단일로 줄 수도 있어서 any union */
-  channel?: string | Channel | Channel[];
-  created_at?: string; // "2025. 10. 28." 같은 문자열
+  channel: Channel[]; // ✅ 배열 고정
+  created_at?: string;
   messages: Message[];
   [extra: string]: any;
 };
@@ -45,37 +46,49 @@ export class ApiError extends Error {
   }
 }
 
+/* ---------------- utils ---------------- */
 const normList = (v: any) => (Array.isArray(v) ? v : []);
 const getId = (s: any) => s?.id ?? s?._id;
+const toLower = (x: any) =>
+  String(x ?? "")
+    .trim()
+    .toLowerCase();
 
-const serializeChannelForServer = (v?: string | Channel | Channel[]) => {
-  if (!v) return undefined;
-  if (Array.isArray(v)) {
-    const arr = v
-      .map((x) => String(x).trim().toLowerCase())
-      .filter((x) => x === "kakao" || x === "discord");
-    return arr.join(",");
-  }
-  const one = String(v).trim().toLowerCase();
-  return one === "kakao" || one === "discord" ? one : undefined;
+/**
+ * channel/ platform을 안전한 배열로 정규화(문자열이 오더라도 최소 방어).
+ * 서버는 배열을 준다고 가정하지만, 클라이언트 안정성을 위해 남겨둠.
+ */
+const ensureChannelArray = (v: any): Channel[] => {
+  const raw = Array.isArray(v) ? v : typeof v === "string" ? v.split(",") : [];
+  return raw
+    .map((x) => toLower(x))
+    .filter((x) => x === "kakao" || x === "discord") as Channel[];
 };
 
-/* ---------- API ---------- */
+/** 메시지 정규화 (title/link/platform 포함) */
+const normMessages = (arr: any[]): Message[] =>
+  (Array.isArray(arr) ? arr : []).map((m) => ({
+    id: String(m?.id ?? m?._id ?? ""),
+    title: m?.title,
+    contents: String(m?.contents ?? ""),
+    link: m?.link ? String(m.link) : undefined,
+    sended_at: String(m?.sended_at ?? m?.sent_at ?? ""),
+    platform: ensureChannelArray(m?.platform ?? m?.channel),
+  }));
 
-/** 생성: POST /settings — { settings: {...} } */
+/* ---------------- API ---------------- */
+
+/** 생성: POST /settings — payload 그대로 전송 */
 export async function createSetting(
   payload: CreateSettingRequest
 ): Promise<Setting> {
   try {
-    const serialized = {
-      ...payload,
-      channel: serializeChannelForServer(payload.channel), // ★ 여기
-    };
-    const body = { ...serialized, settings: { ...serialized } };
+    const body = { ...payload, channel: ensureChannelArray(payload.channel) };
 
     const { data } = await http.post("/settings", body, {
       headers: { "Content-Type": "application/json" },
     });
+
     const picked = data?.settings ?? data?.setting ?? null;
     if (!picked || typeof picked !== "object") {
       throw new ApiError(
@@ -83,13 +96,14 @@ export async function createSetting(
         "서버 응답 형식이 올바르지 않습니다. (settings 없음)"
       );
     }
+
     return {
       ...(picked as any),
       id: getId(picked),
       url_list: normList(picked?.url_list),
       filter_keywords: normList(picked?.filter_keywords),
-      messages: normList(picked?.messages),
-      channel: picked?.channel,
+      messages: normMessages(picked?.messages),
+      channel: ensureChannelArray(picked?.channel),
       created_at: picked?.created_at,
     } as Setting;
   } catch (e: any) {
@@ -114,13 +128,14 @@ export async function fetchSettings(): Promise<Setting[]> {
   try {
     const { data } = await http.get("/settings");
     const list: any[] = Array.isArray(data?.settings) ? data.settings : [];
+
     return list.map((it) => ({
       ...(it ?? {}),
       id: getId(it),
       url_list: normList(it?.url_list),
       filter_keywords: normList(it?.filter_keywords),
-      messages: normList(it?.messages),
-      channel: it?.channel, // 문자열("kakao,discord") 그대로 둠 — 화면에서 파싱
+      messages: normMessages(it?.messages),
+      channel: ensureChannelArray(it?.channel),
       created_at: it?.created_at,
     })) as Setting[];
   } catch (e: any) {
@@ -149,11 +164,8 @@ export async function updateSetting(
 ): Promise<Setting> {
   try {
     const body =
-      "channel" in payload
-        ? {
-            ...payload,
-            channel: serializeChannelForServer(payload.channel as any),
-          } // ★ 여기
+      "channel" in payload && payload.channel
+        ? { ...payload, channel: ensureChannelArray(payload.channel) }
         : payload;
 
     const { data } = await http.put(`/settings/${id}`, body, {
@@ -174,8 +186,8 @@ export async function updateSetting(
       id: getId(picked) ?? id,
       url_list: normList(picked?.url_list),
       filter_keywords: normList(picked?.filter_keywords),
-      messages: normList(picked?.messages),
-      channel: picked?.channel,
+      messages: normMessages(picked?.messages),
+      channel: ensureChannelArray(picked?.channel),
       created_at: picked?.created_at,
     } as Setting;
   } catch (e: any) {

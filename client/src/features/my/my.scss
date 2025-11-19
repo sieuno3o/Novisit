@@ -1,5 +1,5 @@
 @use "../../../public/assets/style/colors" as *;
-@use "../../../public/assets/style/typography" as *; 
+@use "../../../public/assets/style/typography" as *;
 
 .my-container {
   max-width: 720px;
@@ -23,7 +23,7 @@
   border-radius: 16px;
   padding: 24px;
   margin-top: 24px;
-  box-shadow: 0 1px 0 rgba(2,22,62,0.02);
+  box-shadow: 0 1px 0 rgba(2, 22, 62, 0.02);
 }
 
 //기본 정보, 알림 채널 연동 글씨
@@ -34,7 +34,10 @@
   margin: 0 0 16px;
 }
 
-.my-card-body { display: grid; gap: 12px; }
+.my-card-body {
+  display: grid;
+  gap: 12px;
+}
 
 //이름 이메일 칸
 .info-row {
@@ -43,11 +46,15 @@
   gap: 12px;
   align-items: center;
   padding: 14px 12px;
-  border: 1px solid rgba(2,22,62,0.06);
+  border: 1px solid rgba(2, 22, 62, 0.06);
   border-radius: 12px;
 }
 
-.icon { color: #445; display:flex; align-items:center; }
+.icon {
+  color: #445;
+  display: flex;
+  align-items: center;
+}
 
 .info-key {
   font-size: 15px;
@@ -56,8 +63,8 @@
 }
 
 .info-value {
-  min-width: 0;              /* grid/flex 자식 오버플로우 방지 */
-  overflow-wrap: anywhere;   /* 너무 긴 단어 강제 줄바꿈 */
+  min-width: 0; /* grid/flex 자식 오버플로우 방지 */
+  overflow-wrap: anywhere; /* 너무 긴 단어 강제 줄바꿈 */
   word-break: break-word;
   white-space: normal;
 }
@@ -68,29 +75,51 @@
   align-items: center;
   gap: 16px;
   padding: 12px;
-  border: 1px solid rgba(2,22,62,0.06);
+  border: 1px solid rgba(2, 22, 62, 0.06);
   border-radius: 12px;
-  & + .channel-row { margin-top: 12px; }
+  & + .channel-row {
+    margin-top: 12px;
+  }
 }
 
 .channel-icon {
-  width: 28px; height: 28px; border-radius: 6px; flex: 0 0 28px;
-  background-size: cover;     
-  background-position: center; 
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  flex: 0 0 28px;
+  background-size: cover;
+  background-position: center;
   background-repeat: no-repeat;
-  &.kakao  { background-image: url("/assets/img/kakaologo.png");}
-  &.discord{ background-image: url("/assets/img/discordlogo.png");}
+  &.kakao {
+    background-image: url("/assets/img/kakaologo.png");
+  }
+  &.discord {
+    background-image: url("/assets/img/discordlogo.png");
+  }
 }
 
-.channel-info { flex: 1 1 auto; }
-.channel-name { font-size: 16px; font-weight: 600; color:#0f172a; }
-.channel-status { font-size: 15px; color:#64748b; margin-top:2px; }
-.channel-right { margin-left: auto; }
+.channel-info {
+  flex: 1 1 auto;
+}
+.channel-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+}
+.channel-status {
+  font-size: 15px;
+  color: #64748b;
+  margin-top: 2px;
+}
+.channel-right {
+  margin-left: auto;
+}
 
 //기존: @include type.button()
 .channel-action {
-  font-size: 14px; font-weight: 600;
-  border: 1px solid rgba(2,22,62,0.1);
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid rgba(2, 22, 62, 0.1);
   background: #ffffff;
   padding: 8px 14px;
   border-radius: 10px;
@@ -98,24 +127,35 @@
 }
 
 .toggle {
-  width: 48px; height: 28px; border-radius: 999px;
-  border: 1px solid rgba(2,22,62,0.15);
-  background: #e5e7eb; position: relative; cursor: pointer;
-  transition: background-color .2s ease-in-out, border-color .2s ease-in-out;
+  width: 48px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(2, 22, 62, 0.15);
+  background: #e5e7eb;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
 
   .knob {
-    position: absolute; top: 2px; left: 2px;
-    width: 24px; height: 24px; background: #fff; border-radius: 999px;
-    box-shadow: 0 1px 2px rgba(0,0,0,.08);
-    transition: left .2s ease-in-out;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background: #fff;
+    border-radius: 999px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    transition: left 0.2s ease-in-out;
   }
 
   &.on {
-    background: #2563eb; border-color: #2563eb;
-    .knob { left: 22px; }
+    background: #2563eb;
+    border-color: #2563eb;
+    .knob {
+      left: 22px;
+    }
   }
 }
-
 
 .toggle-wrap {
   display: inline-flex;
@@ -125,17 +165,23 @@
   border: 0;
   outline: none;
   cursor: pointer;
-  &:focus { outline: none; }
-  &:focus-visible { outline: none; }
+  &:focus {
+    outline: none;
+  }
+  &:focus-visible {
+    outline: none;
+  }
 }
 
-.toggle-wrap.busy { cursor: not-allowed; opacity: .7; }
+.toggle-wrap.busy {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
 
-
-.toggle-wrap, .toggle-wrap * {
+.toggle-wrap,
+.toggle-wrap * {
   box-shadow: none;
 }
-
 
 //디스코드 알림 ON 배지
 .channel-right {
@@ -164,7 +210,6 @@
   color: #6b7280; // 중간 회색
   font-weight: 380;
   font-size: 15px;
-  letter-spacing: 0.5px; // 알림·ON 사이 여백 효과
-  gap: 7px; // 실제 단어 사이 여백
+  gap: 4px; // 실제 단어 사이 여백
   user-select: none;
 }
