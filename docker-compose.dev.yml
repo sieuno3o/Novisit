@@ -26,31 +26,6 @@ services:
       - novisit-dev-network
 
   # Application service for development
-  app-dev:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: novisit-app-dev
-    ports:
-      - "5000:5000"
-    environment:
-      NODE_ENV: development
-      MONGODB_URI: mongodb://mongodb-dev:27017/novisit
-      REDIS_URL: redis://redis-dev:6379
-      REDIS_HOST: redis-dev
-      REDIS_PORT: 6379
-      PORT: 5000
-    depends_on:
-      - redis-dev
-      - mongodb-dev
-    networks:
-      - novisit-dev-network
-    volumes:
-      - ./server/src:/app/server/src:ro
-      - ./server/tsconfig.json:/app/server/tsconfig.json:ro
-    # Add shm_size for Playwright
-    shm_size: '2gb'
-
 volumes:
   redis_dev_data:
   mongodb_dev_data:

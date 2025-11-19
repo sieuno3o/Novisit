@@ -5,7 +5,7 @@ import "../../public/assets/style/_flex.scss";
 
 const NoticePage = () => {
   return (
-    <>
+    <div className="page">
       <div className="flex-col">
         <div className="flex-left">
           <NoticeHeader />
@@ -15,7 +15,7 @@ const NoticePage = () => {
           <RecentNotice />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

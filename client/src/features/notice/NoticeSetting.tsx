@@ -53,6 +53,7 @@ const ensureChannels = (v?: unknown): Channel[] => {
 
 const mapSettingToItem = (s: Setting): NoticeItem => {
   const firstMsg = pickFirstMessage(s);
+
   const primary = ensureChannels(s.channel);
   const channels =
     primary.length > 0 ? primary : ensureChannels(firstMsg?.platform);
@@ -518,7 +519,10 @@ function NoticeSettingInner() {
           );
         })}
 
-      <CreateNotice onCreated={handleCreated} />
+      <CreateNotice
+        onCreated={handleCreated}
+        existingSettings={Object.values(settingsMap)}
+      />
     </div>
   );
 }

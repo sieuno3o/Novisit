@@ -11,8 +11,8 @@ import {
   Setting,
   Channel,
 } from "../../api/settingsAPI";
-
 import { fetchMain, type Domain } from "../../api/main";
+import { useToast } from "../../components/Toast";
 
 export type NoticeItemShape = {
   id: string;
@@ -25,10 +25,12 @@ export type NoticeItemShape = {
 
 interface CreateNoticeProps {
   onCreated: (setting: Setting) => void;
+  existingSettings?: Setting[];
 }
 
-const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
+const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings = [] }) => {
   const { logout } = (useAuth() as any) ?? {};
+  const { show } = useToast();
 
   const [open, setOpen] = useState(false);
 
@@ -65,7 +67,6 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
   }, [open]);
 
   useEffect(() => {
-    if (!open) return;
     let alive = true;
     (async () => {
       try {
@@ -82,7 +83,13 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
     return () => {
       alive = false;
     };
-  }, [open]);
+  }, []);
+
+  // 이미 설정된 도메인 ID 목록
+  const usedDomainIds = useMemo(
+    () => new Set(existingSettings.map(s => s.domain_id)),
+    [existingSettings]
+  );
 
   const parseList = (text: string) =>
     text
@@ -95,11 +102,26 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
     [selected]
   );
 
+  // 사용 가능한 도메인이 있는지 확인
+  const availableDomains = useMemo(
+    () => domains.filter(d => !usedDomainIds.has(d.id)),
+    [domains, usedDomainIds]
+  );
+
   const canSubmit =
     !!domainId.trim() && !!name.trim() && chosenChannels.length > 0 && !loading;
 
   const toggle = (key: Channel) =>
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const handleOpenModal = () => {
+    // 사용 가능한 도메인이 없으면 Toast 표시
+    if (!domainsLoading && domains.length > 0 && availableDomains.length === 0) {
+      show("모든 도메인에 이미 알림 설정이 존재합니다. 새로운 알림을 추가하려면 기존 설정을 삭제해 주세요.");
+      return;
+    }
+    setOpen(true);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -110,8 +132,14 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
       return;
     }
 
+    // 이미 설정된 도메인 확인
+    if (usedDomainIds.has(domainId.trim())) {
+      setBanner({ type: "error", text: "해당 도메인은 이미 알림 설정이 존재합니다. 다른 도메인을 선택해 주세요." });
+      return;
+    }
+
     const payload = {
-      domain_id: domainId.trim(), // ← 드롭다운에서 선택된 id 사용
+      domain_id: domainId.trim(),
       name: name.trim(),
       url_list: parseList(urlText),
       filter_keywords: parseList(keywordText),
@@ -152,7 +180,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
           type="button"
           className="notice-fab"
           aria-label="알림 설정 추가"
-          onClick={() => setOpen(true)}
+          onClick={handleOpenModal}
         >
           <FiPlus size={22} />
         </button>
@@ -192,7 +220,6 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                 )}
 
                 <form className="notice-form flex-col" onSubmit={handleSubmit}>
-                  {/* ★ 변경: 도메인 드롭다운 (ID 입력칸 제거) */}
                   <label className="form__label">
                     도메인 <span className="req">*</span>
                     <select
@@ -207,13 +234,21 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                           ? "도메인 불러오는 중…"
                           : "도메인을 선택하세요"}
                       </option>
-                      {domains.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.name}
-                        </option>
-                      ))}
+                      {domains.map((d) => {
+                        const isUsed = usedDomainIds.has(d.id);
+                        return (
+                          <option key={d.id} value={d.id} disabled={isUsed}>
+                            {d.name}{isUsed ? " (이미 설정됨)" : ""}
+                          </option>
+                        );
+                      })}
                     </select>
                   </label>
+                  {usedDomainIds.size > 0 && (
+                    <div className="body3" style={{ marginTop: 4, color: "#666" }}>
+                      * 한 도메인에 하나의 알림만 설정할 수 있습니다.
+                    </div>
+                  )}
 
                   <label className="form__label">
                     설정 이름 <span className="req">*</span>
@@ -250,6 +285,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                     </div>
                   </div>
 
+                  {/* 필요 시 URL 입력 사용 */}
                   {/* <label className="form__label">
                     URL 목록 (줄바꿈 또는 쉼표)
                     <textarea
