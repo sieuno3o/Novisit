@@ -2,7 +2,6 @@
 // import Toggle from "./Toggle";
 // import { getDiscordAuthUrl } from "../../api/my";
 
-
 // type Props = {
 //   brand: "kakao" | "discord";
 //   name: string;
@@ -31,7 +30,7 @@
 
 //   useEffect(() => {
 //     setOn(!!defaultOn);
-//     setAsSwitch(brand === "discord" || !!toggleable || !!defaultOn); 
+//     setAsSwitch(brand === "discord" || !!toggleable || !!defaultOn);
 //   }, [brand, defaultOn, toggleable]);
 
 //   async function startDiscordLink() {
@@ -61,7 +60,7 @@
 //         await startDiscordLink();
 //         return;
 //       }
-//       // ON → OFF : 해제 API 
+//       // ON → OFF : 해제 API
 //       try {
 //         setBusy(true);
 //         await onToggle?.(false);
@@ -138,7 +137,6 @@
 //   );
 // }
 
-
 //버전2 : 디스코드 연동하기 버튼 이후 '연동됨 / 알림 ON' 고정
 import { useEffect, useState } from "react";
 import Toggle from "./Toggle";
@@ -147,12 +145,12 @@ import { getDiscordAuthUrl } from "../../api/my";
 type Props = {
   brand: "kakao" | "discord";
   name: string;
-  defaultOn?: boolean;            // 서버가 true면 이미 연동됨
-  toggleable?: boolean;           // kakao용
-  onText?: string;                // "연동됨"
-  offText?: string;               // "연동되지 않음"
+  defaultOn?: boolean; // 서버가 true면 이미 연동됨
+  toggleable?: boolean; // kakao용
+  onText?: string; // "연동됨"
+  offText?: string; // "연동되지 않음"
   onToggle?: (next: boolean) => void | Promise<void>; // kakao만 사용
-  actionText?: string;            // "연동하기"
+  actionText?: string; // "연동하기"
 };
 
 export default function ChannelCard({
@@ -173,14 +171,14 @@ export default function ChannelCard({
     setOn(!!defaultOn);
   }, [defaultOn]);
 
-  //Discord: 1회 연동 버튼 → 이후 영구 '연동됨 / 알림 ON' 
+  //Discord: 1회 연동 버튼 → 이후 영구 '연동됨 / 알림 ON'
   async function startDiscordLink() {
     try {
       setBusy(true);
       setJustLinked(true);
       setOn(true); // UI 즉시 고정
       const url = await getDiscordAuthUrl();
-      window.location.assign(url); // OAuth 이동
+      window.open(url, "_blank"); // OAuth 새 탭으로 이동
     } catch (e: any) {
       setJustLinked(false);
       setOn(!!defaultOn);
@@ -195,7 +193,7 @@ export default function ChannelCard({
     }
   }
 
-  //Kakao: 일반 토글 
+  //Kakao: 일반 토글
   async function handleKakaoToggle() {
     if (busy) return;
     try {
@@ -252,7 +250,9 @@ export default function ChannelCard({
               aria-checked={on}
               aria-disabled={busy}
               aria-label={`${name} ${on ? "알림 끄기" : "알림 켜기"}`}
-              className={`toggle-wrap ${on ? "on" : "off"} ${busy ? "busy" : ""}`}
+              className={`toggle-wrap ${on ? "on" : "off"} ${
+                busy ? "busy" : ""
+              }`}
               onClick={handleKakaoToggle}
             >
               <Toggle key={on ? "1" : "0"} defaultChecked={on} />
