@@ -14,11 +14,56 @@ export interface InitialDomainData {
 export const initialDomains: InitialDomainData[] = [
   {
     _id: "1", // 명시적으로 _id 지정 (문자열 또는 숫자 가능)
-    name: "취업테스트",
+    name: "공모전",
     url_list: [
       "https://www.pknu.ac.kr/main/163",
     ],
-    keywords: ["취업"],
+    keywords: ["공모전"],
+    setting_ids: [],
+  },
+  {
+    _id: "2",
+    name: "장학",
+    url_list: [
+      "https://www.pknu.ac.kr/main/163",
+    ],
+    keywords: ["장학"],
+    setting_ids: [],
+  },
+  {
+    _id: "3",
+    name: "교환학생",
+    url_list: [
+      "https://www.pknu.ac.kr/main/163",
+    ],
+    keywords: ["교환학생"],
+    setting_ids: [],
+  },
+  {
+    _id: "4",
+    name: "테스트",
+    url_list: [
+      "https://preview--pknu-notice-watch.lovable.app",
+    ],
+    keywords: ["테스트"],
+    setting_ids: [],
+  },
+  {
+    _id: "5",
+    name: "예비창업",
+    url_list: [
+      "",
+    ],
+    keywords: ["예비창업"],
+    setting_ids: [],
+  },
+  {
+    _id: "6",
+    name: "공공임대",
+    url_list: [
+      "",
+    ],
+    keywords: ["예비창업"],
     setting_ids: [],
   },
   // 필요에 따라 더 많은 도메인을 추가할 수 있습니다
