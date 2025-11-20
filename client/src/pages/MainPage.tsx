@@ -45,9 +45,9 @@ export default function MainPage() {
   }
 
   return (
-    <>
+    <div className="page">
       <Hero />
-      <Domains domains={domains.length ? domains : MOCK} />   {/* 로그인 시에만 데이터 전달 */}
-    </>
+      <Domains /> {/* 목데이터 모드면 props 없이 */}
+    </div>
   );
 }

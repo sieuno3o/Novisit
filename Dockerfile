@@ -1,6 +1,6 @@
 # Production image for pre-built application
 # Using regular node image instead of alpine for Playwright support
-FROM node:18 AS runner
+FROM node:20 AS runner
 WORKDIR /app
 
 # Install Playwright system dependencies
@@ -8,6 +8,9 @@ WORKDIR /app
 RUN apt-get update && \
     (dpkg --configure -a || true) && \
     (apt-get install -f -y || true) && \
+# DEBIAN_FRONTEND를 noninteractive로 설정하여 대화형 프롬프트 방지
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     libnss3 \
     libnspr4 \
@@ -26,11 +29,14 @@ RUN apt-get update && \
     libasound2 \
     libpango-1.0-0 \
     libcairo2 \
+    fonts-liberation \
+    libappindicator3-1 \
+    xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user
+# Create non-root user with home directory
 RUN groupadd --system --gid 1001 nodejs
-RUN useradd --system --uid 1001 -g nodejs nodejs
+RUN useradd --system --uid 1001 -g nodejs -m nodejs
 
 # Copy package files first (for better caching)
 COPY package*.json ./
@@ -66,6 +72,13 @@ RUN if [ -d "./server-tmp/dist" ] && [ "$(ls -A ./server-tmp/dist 2>/dev/null)" 
 # tsconfig.json도 복사 (배포 패키지에 포함됨)
 COPY --chown=nodejs:nodejs server/tsconfig.json ./server/tsconfig.json
 
+# Playwright 브라우저 설치 경로 설정
+ENV PLAYWRIGHT_BROWSERS_PATH=/home/nodejs/.cache/ms-playwright
+
+# nodejs 사용자의 홈 디렉토리 및 캐시 디렉토리 생성 및 권한 설정
+RUN mkdir -p /home/nodejs/.cache/ms-playwright && \
+    chown -R nodejs:nodejs /home/nodejs
+
 # nodejs 사용자로 전환하여 Playwright 브라우저 설치
 # 시스템 종속성은 이미 root로 설치했으므로, 브라우저만 nodejs 사용자로 설치
 USER nodejs
@@ -74,6 +87,7 @@ USER nodejs
 # PLAYWRIGHT_BROWSERS_PATH를 명시하여 nodejs 사용자 홈 디렉토리에 설치
 # --with-deps는 제외 (시스템 종속성은 이미 설치됨)
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/nodejs/.cache/ms-playwright
+# --with-deps는 제외 (시스템 종속성은 이미 설치됨)
 RUN cd server && npx playwright install chromium
 
 EXPOSE 5000
