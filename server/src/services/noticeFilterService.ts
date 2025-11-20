@@ -8,6 +8,8 @@ import { sendKakaoMessage } from './notificationService.js';
 import { getSummaryFromText } from './openAIService.js';
 import { getSourceFromUrl } from '../utils/urlUtils.js';
 import { formatCrawlDate } from '../utils/dateUtils.js';
+import { routeMessageByPlatform } from "./platformRouter.js";
+import Setting from '@/models/Setting.js';
 
 // 키워드 필터링 함수
 export function matchesKeywords(text: string, keywords: string[]): boolean {
@@ -219,15 +221,15 @@ export async function sendNotifications(
             const description = summary;
             const messageContent = summary;
             
-            // 카카오 메시지 전송
-            await sendKakaoMessage(
-              setting.user_id,
+            // 메시지 전송
+            await routeMessageByPlatform(
+              setting,
               notice.title,
               description,
               imageUrlForMessage,
               notice.link
             );
-            
+
             // Message 저장
             const settingId = setting._id ? String(setting._id) : setting.id;
             await saveMessage(settingId, messageContent, 'kakao', notice.link, notice.title, imageUrlForMessage);
