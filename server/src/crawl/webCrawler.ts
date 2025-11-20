@@ -1,6 +1,7 @@
 import { NoticeResult } from '../types/notice.js';
 import { PKNUCrawler } from './pknuCrawler.js';
 import { TestCrawler } from './testCrawler.js';
+import { KStartupCrawler } from './kstartupCrawler.js';
 import { extractDomainName } from '../utils/urlUtils.js';
 
 // 상세 페이지 크롤링 결과
@@ -39,6 +40,10 @@ export class WebCrawler {
       case 'preview--pknu-notice-watch':
         console.log(`[WebCrawler] TestCrawler 사용: ${url}`);
         crawler = new TestCrawler(url);
+        break;
+      case 'k-startup':
+        console.log(`[WebCrawler] KStartupCrawler 사용: ${url}`);
+        crawler = new KStartupCrawler();
         break;
       // TestCrawler를 범용 크롤러로 사용 (테이블 구조 지원)
       default:
