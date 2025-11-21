@@ -174,12 +174,78 @@ export class KStartupCrawler {
     }
   }
 
-  // 공지사항 상세 페이지 크롤링 (다음에 구현 예정)
+  // 공지사항 상세 페이지 크롤링
   async crawlNoticeDetail(noticeLink: string): Promise<NoticeDetailResult> {
-    // TODO: 상세 페이지 크롤링 로직 구현 예정
-    return {
-      content: ''
-    };
+    const browser = await this.initBrowser();
+    const context = await browser.newContext({
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      viewport: { width: 1920, height: 1080 }
+    });
+    
+    const page = await context.newPage();
+    
+    try {
+      await page.goto(noticeLink, { 
+        waitUntil: 'networkidle',
+        timeout: 30000
+      });
+      
+      // 페이지가 완전히 로드될 때까지 대기
+      await page.waitForTimeout(2000);
+      
+      // information_list-wrap이 로드될 때까지 대기
+      await page.waitForSelector('div.information_list-wrap', { 
+        timeout: 10000 
+      });
+      
+      // 공지사항 본문 텍스트 추출
+      const result = await page.evaluate(() => {
+        // div.information_list-wrap 요소 찾기
+        const wrapElement = document.querySelector('div.information_list-wrap');
+        
+        if (!wrapElement) {
+          return { content: '' };
+        }
+        
+        // div.information_list 요소들을 모두 찾기
+        const informationListElements = wrapElement.querySelectorAll('div.information_list');
+        
+        if (informationListElements.length === 0) {
+          return { content: '' };
+        }
+        
+        // 각 information_list의 내용을 추출하여 배열로 저장
+        const contentParts: string[] = [];
+        
+        informationListElements.forEach((element) => {
+          // 스크립트와 스타일 제거
+          const clone = element.cloneNode(true) as HTMLElement;
+          const scripts = clone.querySelectorAll('script, style');
+          scripts.forEach(el => el.remove());
+          
+          // 텍스트 추출
+          const text = clone.textContent?.trim() || '';
+          if (text) {
+            contentParts.push(text);
+          }
+        });
+        
+        // 모든 내용을 줄바꿈으로 연결
+        const content = contentParts.join('\n\n');
+        
+        return { content: content.trim() };
+      });
+      
+      await context.close();
+      
+      // 이미지는 없으므로 imageUrl은 반환하지 않음 (기본 이미지 사용)
+      return { content: result.content };
+      
+    } catch (error) {
+      await context.close();
+      console.error(`[KStartupCrawler] 상세 페이지 크롤링 실패 (${noticeLink}):`, error);
+      throw error;
+    }
   }
 
   // 브라우저 종료
