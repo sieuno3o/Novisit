@@ -4,9 +4,10 @@ FROM node:20 AS runner
 WORKDIR /app
 
 # Install Playwright system dependencies
-# DEBIAN_FRONTEND를 noninteractive로 설정하여 대화형 프롬프트 방지
-ENV DEBIAN_FRONTEND=noninteractive
+# dpkg 설정을 먼저 수정하고 패키지 설치
 RUN apt-get update && \
+    (dpkg --configure -a || true) && \
+    (apt-get install -f -y || true) && \
     apt-get install -y --no-install-recommends \
     libnss3 \
     libnspr4 \
@@ -68,19 +69,14 @@ RUN if [ -d "./server-tmp/dist" ] && [ "$(ls -A ./server-tmp/dist 2>/dev/null)" 
 # tsconfig.json도 복사 (배포 패키지에 포함됨)
 COPY --chown=nodejs:nodejs server/tsconfig.json ./server/tsconfig.json
 
-# Playwright 브라우저 설치 경로 설정
-ENV PLAYWRIGHT_BROWSERS_PATH=/home/nodejs/.cache/ms-playwright
-
-# nodejs 사용자의 홈 디렉토리 및 캐시 디렉토리 생성 및 권한 설정
-RUN mkdir -p /home/nodejs/.cache/ms-playwright && \
-    chown -R nodejs:nodejs /home/nodejs
-
 # nodejs 사용자로 전환하여 Playwright 브라우저 설치
 # 시스템 종속성은 이미 root로 설치했으므로, 브라우저만 nodejs 사용자로 설치
 USER nodejs
 
 # Playwright 브라우저 설치 (nodejs 사용자로 실행)
+# PLAYWRIGHT_BROWSERS_PATH를 명시하여 nodejs 사용자 홈 디렉토리에 설치
 # --with-deps는 제외 (시스템 종속성은 이미 설치됨)
+ENV PLAYWRIGHT_BROWSERS_PATH=/home/nodejs/.cache/ms-playwright
 RUN cd server && npx playwright install chromium
 
 EXPOSE 5000
