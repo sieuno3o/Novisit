@@ -143,7 +143,7 @@ import Toggle from "./Toggle";
 import { getDiscordAuthUrl } from "../../api/my";
 
 type Props = {
-  brand: "kakao" | "discord";
+  brand: "kakao" | "discord" |"push";
   name: string;
   defaultOn?: boolean; // 서버가 true면 이미 연동됨
   toggleable?: boolean; // kakao용
@@ -212,6 +212,7 @@ export default function ChannelCard({
 
   const isDiscord = brand === "discord";
   const showDiscordButton = isDiscord && !on && !justLinked; // 미연동일 때만
+ const isKakaoOrPush = brand === "kakao" || brand === "push";
 
   return (
     <div className="channel-row">

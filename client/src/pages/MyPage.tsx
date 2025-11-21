@@ -3,6 +3,11 @@ import { useSearchParams } from "react-router-dom";
 import Profile from "../features/my/ProfileCard";
 import ChannelCard from "../features/my/ChannelCard";
 import "../features/my/my.scss";
+import {
+  enablePushForCurrentUser,
+  disablePushForCurrentUser,
+} from "../firebase/fcmClient";
+import { useToast } from "../components/Toast";
 
 import { useAuth } from "../auth";
 import { setKakaoEnabled, unlinkDiscord } from "../api/my";
@@ -10,15 +15,16 @@ import { setKakaoEnabled, unlinkDiscord } from "../api/my";
 export default function MyPage() {
   const { user, loading, refreshMe } = useAuth();
   const [params] = useSearchParams();
+  const toast = useToast();
 
   // 마운트 시 1회만 내 정보 동기화
   useEffect(() => {
     (async () => {
       try {
         await refreshMe();
-      } catch {}
+      } catch { }
     })();
-  }, []); 
+  }, []);
 
   // 디스코드 콜백 결과 처리
   useEffect(() => {
@@ -68,7 +74,7 @@ export default function MyPage() {
   async function onToggleDiscord(next: boolean) {
     if (next === false) {
       try {
-        await unlinkDiscord(); 
+        await unlinkDiscord();
       } catch (e: any) {
         const msg =
           e?.response?.data?.message ||
@@ -131,6 +137,20 @@ export default function MyPage() {
           onText="연동됨"
           offText="연동되지 않음"
           onToggle={onToggleDiscord} // ON→OFF 때만 사용됨
+        />
+
+        <ChannelCard
+          brand="push"
+          name="푸시 알림"
+          defaultOn={false}
+          toggleable={true}
+          onToggle={async (next) => {
+          if (next) {
+            await enablePushForCurrentUser();
+          } else {
+            await disablePushForCurrentUser();
+          }
+        }}
         />
       </Profile>
     </div>
