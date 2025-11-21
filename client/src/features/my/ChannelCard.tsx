@@ -194,7 +194,7 @@ export default function ChannelCard({
   }
 
   //Kakao: 일반 토글
-  async function handleKakaoToggle() {
+  async function handleToggle() {
     if (busy) return;
     try {
       setBusy(true);
@@ -204,7 +204,7 @@ export default function ChannelCard({
     } catch (e) {
       setOn((prev) => !prev);
       console.error(e);
-      alert("설정을 변경할 수 없어요. 잠시 후 다시 시도해 주세요.");
+      alert(`설정을 변경할 수 없어요. 잠시 후 다시 시도해 주세요: ${e}`);
     } finally {
       setBusy(false);
     }
@@ -254,7 +254,7 @@ export default function ChannelCard({
               className={`toggle-wrap ${on ? "on" : "off"} ${
                 busy ? "busy" : ""
               }`}
-              onClick={handleKakaoToggle}
+              onClick={handleToggle}
             >
               <Toggle key={on ? "1" : "0"} defaultChecked={on} />
             </div>
