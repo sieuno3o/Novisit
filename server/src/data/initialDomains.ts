@@ -50,11 +50,11 @@ export const initialDomains: InitialDomainData[] = [
   },
   {
     _id: "5",
-    name: "예비창업",
+    name: "창업",
     url_list: [
       "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do",
     ],
-    keywords: ["예비창업"],
+    keywords: ["창업"],
     setting_ids: [],
   },
   {

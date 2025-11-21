@@ -104,9 +104,6 @@ export async function filterNotices(
   
   // 각 공지사항에 대해 처리
   for (const notice of notices) {
-    // 디버깅: 각 공지사항 제목 출력
-    console.log(`[디버깅] 공지사항 체크: #${notice.number} "${notice.title}"`);
-    
     // 공지사항 제목을 키워드와 비교
     const matchedPairs = keywordDomainPairs.filter(pair => {
       const matched = matchesKeywords(notice.title, [pair.keyword]);
@@ -114,7 +111,6 @@ export async function filterNotices(
     });
     
     if (matchedPairs.length === 0) {
-      console.log(`[디버깅] 공지사항 #${notice.number} 매칭 없음`);
       continue; // 키워드 매칭 없음
     }
     

@@ -24,8 +24,8 @@ export class KStartupCrawler {
   // 한 페이지의 공지사항 크롤링
   private async crawlPage(pageIndex: number, lastKnownNumber: string | null): Promise<{ notices: NoticePreview[], shouldContinue: boolean }> {
     const url = pageIndex === 1 
-      ? this.BASE_URL 
-      : `${this.BASE_URL}?pageIndex=${pageIndex}`;
+      ? `${this.BASE_URL}?pbancClssCd=PBC010`
+      : `${this.BASE_URL}?page=${pageIndex}&pbancClssCd=PBC010`;
     
     const browser = await this.initBrowser();
     const context = await browser.newContext({
@@ -48,12 +48,16 @@ export class KStartupCrawler {
       await page.waitForSelector('div.board_list-wrap li.notice', { timeout: 10000 });
       
       // 공지사항 데이터 추출
-      const notices = await page.evaluate(() => {
+      const result = await page.evaluate(() => {
         const notices: any[] = [];
+        const debugInfo: any = {
+          noticeElementsCount: 0
+        };
         
         try {
           // 공지사항 목록 요소 찾기
           const noticeElements = document.querySelectorAll('div.board_list-wrap li.notice');
+          debugInfo.noticeElementsCount = noticeElements.length;
           
           if (noticeElements.length === 0) {
             throw new Error('div.board_list-wrap li.notice 요소를 찾을 수 없습니다.');
@@ -65,13 +69,50 @@ export class KStartupCrawler {
               const titleElement = element.querySelector('p.tit');
               const title = titleElement?.textContent?.trim() || '';
               
-              // 번호 추출: div.board_list-wrap > li.notice > div.left > div.btn_by_bk의 onclick에서
-              const btnElement = element.querySelector('div.left div.btn_by_bk');
-              const onclickAttr = btnElement?.getAttribute('onclick') || '';
+              // 번호 추출: 여러 방법 시도
+              let number = '';
               
-              // onclick="javascript:go_view_blank(175574);"에서 숫자 추출
-              const numberMatch = onclickAttr.match(/go_view_blank\((\d+)\)/);
-              const number = numberMatch ? numberMatch[1] : '';
+              // 방법 2: li 요소의 data 속성 확인
+              if (!number) {
+                const liElement = element as HTMLElement;
+                const dataSn = liElement.getAttribute('data-pbanc-sn') || 
+                               liElement.getAttribute('data-sn') ||
+                               liElement.dataset.pbancSn ||
+                               liElement.dataset.sn ||
+                               '';
+                if (dataSn) {
+                  number = dataSn;
+                }
+              }
+              
+              // 방법 4: 다른 버튼 요소들 확인
+              if (!number) {
+                const allButtons = element.querySelectorAll('[onclick*="go_view"], [onclick*="view"], [onclick*="pbancSn"], button, a');
+                for (const btn of Array.from(allButtons)) {
+                  const onclick = btn.getAttribute('onclick') || '';
+                  if (onclick) {
+                    const match = onclick.match(/go_view_blank\((\d+)\)|view\((\d+)\)|pbancSn[=:](\d+)/);
+                    if (match) {
+                      number = match[1] || match[2] || match[3] || '';
+                      if (number) {
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+              
+              // 방법 3: 링크에서 번호 추출 (fallback)
+              if (!number) {
+                const linkElement = element.querySelector('a[href*="pbancSn"]') as HTMLAnchorElement;
+                if (linkElement) {
+                  const href = linkElement.getAttribute('href') || '';
+                  const hrefMatch = href.match(/pbancSn=(\d+)/);
+                  if (hrefMatch && hrefMatch[1]) {
+                    number = hrefMatch[1];
+                  }
+                }
+              }
               
               if (!number || !title) {
                 return; // 번호나 제목이 없으면 스킵
@@ -88,16 +129,17 @@ export class KStartupCrawler {
                 crawledAt: new Date()
               });
             } catch (error) {
-              console.error('공지사항 추출 중 오류:', error);
+              // 개별 요소 추출 실패는 무시하고 계속 진행
             }
           });
-        } catch (error) {
-          console.error('[KStartupCrawler] 공지사항 목록 크롤링 실패:', error);
+        } catch (error: any) {
           throw error;
         }
         
-        return notices;
+        return { notices, debugInfo };
       });
+      
+      const notices = result.notices;
       
       await context.close();
       
@@ -111,9 +153,22 @@ export class KStartupCrawler {
         ? notices.filter(n => parseInt(n.number) > parseInt(lastKnownNumber))
         : notices;
       
+      // shouldContinue 로직: lastKnownNumber가 없으면 계속 진행, 있으면 foundLastKnown이 false이고 notices가 있으면 계속
+      const shouldContinue = lastKnownNumber 
+        ? !foundLastKnown && notices.length > 0
+        : notices.length > 0; // lastKnownNumber가 없으면 notices가 있으면 계속 진행
+      
+      // 페이지 결과만 출력
+      console.log(`[KStartupCrawler] 페이지 ${pageIndex}: 전체 ${notices.length}개, 새 공지 ${newNotices.length}개`);
+      
+      // 추출 실패 시에만 경고 출력
+      if (notices.length === 0 && result.debugInfo.noticeElementsCount > 0) {
+        console.warn(`[KStartupCrawler] 경고: ${result.debugInfo.noticeElementsCount}개 요소를 찾았지만 추출된 공지사항이 0개입니다.`);
+      }
+      
       return {
         notices: newNotices,
-        shouldContinue: !foundLastKnown && notices.length > 0
+        shouldContinue: shouldContinue
       };
       
     } catch (error) {
@@ -139,7 +194,6 @@ export class KStartupCrawler {
         
         if (result.notices.length > 0) {
           allNewNotices.push(...result.notices);
-          console.log(`[KStartupCrawler] 페이지 ${pageIndex}: ${result.notices.length}개 새 공지 발견`);
         }
         
         shouldContinue = result.shouldContinue;
@@ -148,8 +202,6 @@ export class KStartupCrawler {
           pageIndex++;
           // 페이지 간 딜레이 (서버 부하 방지)
           await new Promise(resolve => setTimeout(resolve, 1000));
-        } else {
-          console.log(`[KStartupCrawler] 이전 크롤링 지점 도달 (페이지 ${pageIndex})`);
         }
       }
       
@@ -182,23 +234,53 @@ export class KStartupCrawler {
       viewport: { width: 1920, height: 1080 }
     });
     
-    const page = await context.newPage();
+    let page = await context.newPage();
     
     try {
-      await page.goto(noticeLink, { 
-        waitUntil: 'networkidle',
-        timeout: 30000
-      });
+      // 재시도 로직 (최대 2번 재시도)
+      let retryCount = 0;
+      const maxRetries = 2;
+      let lastError: Error | null = null;
       
-      // 페이지가 완전히 로드될 때까지 대기
-      await page.waitForTimeout(2000);
+      while (retryCount <= maxRetries) {
+        try {
+          // domcontentloaded로 변경 (더 관대한 옵션)
+          await page.goto(noticeLink, { 
+            waitUntil: 'domcontentloaded',
+            timeout: 60000 // 타임아웃을 60초로 증가
+          });
+          
+          // 페이지가 완전히 로드될 때까지 대기
+          await page.waitForTimeout(3000);
+          
+          // information_list-wrap이 로드될 때까지 대기
+          await page.waitForSelector('div.information_list-wrap', { 
+            timeout: 15000 
+          });
+          
+          // 성공하면 재시도 루프 종료
+          break;
+        } catch (error: any) {
+          lastError = error;
+          retryCount++;
+          
+          if (retryCount <= maxRetries) {
+            console.warn(`[KStartupCrawler] 상세 페이지 로드 실패 (재시도 ${retryCount}/${maxRetries}): ${noticeLink}`);
+            // 재시도 전 대기
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            // 새 페이지 생성
+            await page.close();
+            page = await context.newPage();
+          }
+        }
+      }
       
-      // information_list-wrap이 로드될 때까지 대기
-      await page.waitForSelector('div.information_list-wrap', { 
-        timeout: 10000 
-      });
+      // 모든 재시도 실패 시 에러 던지기
+      if (lastError && retryCount > maxRetries) {
+        throw lastError;
+      }
       
-      // 공지사항 본문 텍스트 추출
+      // 공지사항 본문 텍스트 추출 (구조화된 방식)
       const result = await page.evaluate(() => {
         // div.information_list-wrap 요소 찾기
         const wrapElement = document.querySelector('div.information_list-wrap');
@@ -214,26 +296,68 @@ export class KStartupCrawler {
           return { content: '' };
         }
         
-        // 각 information_list의 내용을 추출하여 배열로 저장
+        // 각 information_list의 내용을 구조화하여 추출
         const contentParts: string[] = [];
         
         informationListElements.forEach((element) => {
-          // 스크립트와 스타일 제거
-          const clone = element.cloneNode(true) as HTMLElement;
-          const scripts = clone.querySelectorAll('script, style');
-          scripts.forEach(el => el.remove());
+          const sectionParts: string[] = [];
           
-          // 텍스트 추출
-          const text = clone.textContent?.trim() || '';
-          if (text) {
-            contentParts.push(text);
+          // 1. p.title 추출 (제목)
+          const titleElement = element.querySelector('p.title');
+          if (titleElement) {
+            const title = titleElement.textContent?.trim() || '';
+            if (title) {
+              sectionParts.push(title);
+            }
+          }
+          
+          // 2. li.dot_list 요소들 추출
+          const dotListElements = element.querySelectorAll('li.dot_list');
+          dotListElements.forEach((liElement) => {
+            const itemParts: string[] = [];
+            
+            // p.tit (소제목) 추출
+            const titElement = liElement.querySelector('p.tit');
+            if (titElement) {
+              let tit = titElement.textContent || '';
+              // 공백 정리: 연속된 공백/탭을 하나로, 줄바꿈 제거
+              tit = tit.replace(/\s+/g, ' ').trim();
+              if (tit) {
+                itemParts.push(tit);
+              }
+            }
+            
+            // p.list 또는 p.txt (내용) 추출
+            const listElement = liElement.querySelector('p.list');
+            const txtElement = liElement.querySelector('p.txt');
+            
+            // p.list가 있으면 우선 사용, 없으면 p.txt 사용
+            const contentElement = listElement || txtElement;
+            if (contentElement) {
+              let content = contentElement.textContent || '';
+              // 공백 정리: 연속된 공백/탭을 하나로, 줄바꿈은 공백으로 변환
+              content = content.replace(/\s+/g, ' ').trim();
+              if (content) {
+                itemParts.push(content);
+              }
+            }
+            
+            // 소제목과 내용이 있으면 추가
+            if (itemParts.length > 0) {
+              sectionParts.push(itemParts.join('\n'));
+            }
+          });
+          
+          // 섹션 내용이 있으면 추가
+          if (sectionParts.length > 0) {
+            contentParts.push(sectionParts.join('\n\n'));
           }
         });
         
         // 모든 내용을 줄바꿈으로 연결
-        const content = contentParts.join('\n\n');
+        const content = contentParts.join('\n\n').trim();
         
-        return { content: content.trim() };
+        return { content: content };
       });
       
       await context.close();
