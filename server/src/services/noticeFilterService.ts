@@ -207,7 +207,7 @@ export async function sendNotifications(
         for (const setting of settings) {
           try {
             // 크롤링한 이미지 URL이 있으면 사용, 없으면 기본 이미지 사용
-            const imageUrlForMessage = imageUrl || crawlResult.imageUrl || 'https://t1.daumcdn.net/cafeattach/1YmK3/560c6415d44b9ae3c5225a255541c3c2c1568643';
+            const imageUrlForMessage = imageUrl || crawlResult.imageUrl || 'https://upload.wikimedia.org/wikipedia/ko/a/a2/PKNU_Logo.png?20210915113624';
             
             let messageContent = '';
             if (setting.summary) {
