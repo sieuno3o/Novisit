@@ -1,162 +1,106 @@
 import React, { useEffect, useMemo, useState, FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import "../../notice/CreateNotice.scss";                   
+import "../../notice/CreateNotice.scss";
 import { useAuth } from "../../../auth";
 import {
-    createSetting,
-    ApiError,
-    Channel,
-    Setting,
+  createSetting,
+  ApiError,
+  Channel,
+  Setting,
 } from "../../../api/settingsAPI";
 
 type Domain = { id: string; name: string };
 
 type Props = {
-    open: boolean;
-    onClose: () => void;
-    domains: Domain[];                
-    initialDomainId: string;           
-    initialDomainName?: string;       
-    onCreated?: (s: Setting) => void;  
+  open: boolean;
+  onClose: () => void;
+  domains: Domain[];
+  initialDomainId: string;
+  initialDomainName?: string;
+  onCreated?: (s: Setting) => void;
 };
 
 export default function CreateNoticeMain({
-    open,
-    onClose,
-    domains,
-    initialDomainId,
-    initialDomainName,
-    onCreated,
+  open,
+  onClose,
+  domains,
+  initialDomainId,
+  initialDomainName,
+  onCreated,
 }: Props) {
-    const navigate = useNavigate();
-    const { logout } = (useAuth() as any) ?? {};
+  const navigate = useNavigate();
+  const { logout } = (useAuth() as any) ?? {};
 
-    // ====== CreateNotice.tsx와 동일한 상태 구성 ======
-    const [name, setName] = useState("");
-    const [keywordText, setKeywordText] = useState("");
-    const [selected, setSelected] = useState<Record<Channel, boolean>>({
-        kakao: false,
-        discord: false,
-    });
-    const [loading, setLoading] = useState(false);
-    const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [name, setName] = useState("");
+  const [keywordText, setKeywordText] = useState("");
+  const [selected, setSelected] = useState<Record<Channel, boolean>>({
+    kakao: false,
+    discord: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [banner, setBanner] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
-    // 도메인명은 고정 표시
-    const domainName = useMemo(() => {
-        if (initialDomainName) return initialDomainName;
-        return domains.find((d) => d.id === initialDomainId)?.name ?? "도메인";
-    }, [domains, initialDomainId, initialDomainName]);
+  // 도메인명은 고정 표시
+  const domainName = useMemo(() => {
+    if (initialDomainName) return initialDomainName;
+    return domains.find((d) => d.id === initialDomainId)?.name ?? "도메인";
+  }, [domains, initialDomainId, initialDomainName]);
 
-    // ESC 닫기 + 스크롤 락
-    useEffect(() => {
-        if (!open) return;
-        const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-        document.addEventListener("keydown", onKey);
-        const prev = document.body.style.overflow;
-        document.body.style.overflow = "hidden";
-        return () => {
-            document.removeEventListener("keydown", onKey);
-            document.body.style.overflow = prev;
-        };
-    }, [open, onClose]);
-
-    if (!open) return null;
-
-    const toggle = (key: Channel) =>
-        setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
-
-    const parseList = (text: string) =>
-        text
-            .split(/[\n,]/g)
-            .map((s) => s.trim())
-            .filter(Boolean);
-
-    const canSubmit = !!name.trim() && (selected.kakao || selected.discord) && !loading;
-
-    const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        setBanner(null);
-
-        // 채널 단일/복수 처리
-        const chosen = (["kakao", "discord"] as Channel[]).filter((c) => selected[c]);
-        if (chosen.length === 0) {
-            setBanner({ type: "error", text: "채널을 최소 1개 이상 선택해 주세요." });
-            return;
-        }
-        const channelPayload: Channel | Channel[] = chosen.length === 1 ? chosen[0] : chosen;
-
-        const payload = {
-            domain_id: initialDomainId,          // 메인에서 받은 고정 도메인 ID
-            name: name.trim(),
-            url_list: [],                        // 메인 모달은 URL 미사용
-            filter_keywords: parseList(keywordText),
-            channel: channelPayload,             // 단일/배열 모두 지원
-        };
-
-        try {
-            setLoading(true);
-            const setting = await createSetting(payload); // 백엔드 저장
-
-            onCreated?.(setting); // 선택: 필요 시 상위에서 활용
-            onClose();
-            navigate("/notice", { replace: true }); // /notice 이동 → NoticeSetting이 fetch로 즉시 반영
-        } catch (err: any) {
-            const msg =
-                err instanceof ApiError ? err.message : "네트워크 오류가 발생했습니다.";
-            setBanner({ type: "error", text: msg });
-            if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
-                logout?.();
-            }
-        } finally {
-            setLoading(false);
-        }
+  // ESC 닫기 + 스크롤 락
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
     };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open, onClose]);
 
+  if (!open) return null;
 
-    return createPortal(
-        <div
-            className="modal-backdrop flex-center"
-            role="dialog"
-            aria-modal="true"
-            onClick={onClose}
-        >
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-                <div className="modal__header flex-center">
-                    <div className="heading3">알림 설정 생성</div>
-                </div>
+  const toggle = (key: Channel) =>
+    setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
 
-                <div className="modal__body">
-                    {banner && (
-                        <div
-                            className={`notice-banner ${banner.type === "success" ? "notice-banner--success" : "notice-banner--error"
-                                }`}
-                            role="alert"
-                        >
-                            {banner.text}
-                        </div>
-                    )}
+  const parseList = (text: string) =>
+    text
+      .split(/[\n,]/g)
+      .map((s) => s.trim())
+      .filter(Boolean);
 
   const canSubmit =
     !!name.trim() && (selected.kakao || selected.discord) && !loading;
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setBanner(null);
 
+    // 선택된 채널 목록
     const chosen = (["kakao", "discord"] as Channel[]).filter(
       (c) => selected[c]
     );
     if (chosen.length === 0) {
-      setBanner({ type: "error", text: "채널을 최소 1개 이상 선택해 주세요." });
+      setBanner({
+        type: "error",
+        text: "채널을 최소 1개 이상 선택해 주세요.",
+      });
       return;
     }
 
     const payload = {
       domain_id: initialDomainId,
       name: name.trim(),
-      url_list: [],
+      url_list: [], // 메인 모달에서는 URL 미사용
       filter_keywords: parseList(keywordText),
-      channel: chosen, // 🔹 항상 Channel[]
+      channel: chosen, // ✅ 항상 Channel[]
     };
 
     try {
@@ -169,6 +113,7 @@ export default function CreateNoticeMain({
       const msg =
         err instanceof ApiError ? err.message : "네트워크 오류가 발생했습니다.";
       setBanner({ type: "error", text: msg });
+
       if (
         err instanceof ApiError &&
         (err.status === 401 || err.status === 403)
@@ -207,7 +152,7 @@ export default function CreateNoticeMain({
           )}
 
           <form className="notice-form flex-col" onSubmit={handleSubmit}>
-            {/* 도메인: 읽기 전용 표시 (드롭다운 대신) */}
+            {/* 도메인: 읽기 전용 표시 */}
             <label
               className="form__label"
               style={{ display: "flex", alignItems: "center", gap: 8 }}
@@ -222,7 +167,7 @@ export default function CreateNoticeMain({
                   paddingBottom: "3px",
                   display: "inline-block",
                   width: "fit-content",
-                  minWidth: `${domainName.length * 10 + 20}px`, // 글자 수 기반으로 살짝 여유
+                  minWidth: `${domainName.length * 10 + 20}px`,
                   textAlign: "left",
                   pointerEvents: "none",
                 }}
