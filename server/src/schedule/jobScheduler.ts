@@ -96,13 +96,6 @@ export class JobScheduler {
         
         // 각 Domain의 url_list를 순회
         for (const url of domain.url_list) {
-          // k-startup만 테스트: k-startup 도메인이 아닌 URL은 스킵
-          const domainName = extractDomainName(url);
-          const lowerDomainName = domainName.toLowerCase();
-          if (lowerDomainName !== 'k-startup') {
-            console.log(`[스케줄러] k-startup 테스트 모드: ${url} (${lowerDomainName}) 스킵`);
-            continue;
-          }
           
           // 해당 url에 대한 keywordDomainPairs 배열이 없으면 생성
           if (!urlMap.has(url)) {

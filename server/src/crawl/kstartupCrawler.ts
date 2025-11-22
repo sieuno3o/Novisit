@@ -232,16 +232,18 @@ export class KStartupCrawler {
   }
 
   // 공지사항 목록 크롤링
-  async crawlNoticesList(lastKnownNumber: string | null = null): Promise<NoticeResult> {
+  // @param lastKnownNumber 마지막으로 알려진 공지사항 번호 (증분 크롤링용)
+  // @param maxPages 최대 크롤링할 페이지 수 (기본값: 3)
+  async crawlNoticesList(lastKnownNumber: string | null = null, maxPages: number = 3): Promise<NoticeResult> {
     try {
       const allNewNotices: NoticePreview[] = [];
       let pageIndex = 1;
       let shouldContinue = true;
       
-      console.log(`[KStartupCrawler] 증분 크롤링 시작 (마지막 번호: ${lastKnownNumber || '없음'})`);
+      console.log(`[KStartupCrawler] 증분 크롤링 시작 (마지막 번호: ${lastKnownNumber || '없음'}, 최대 페이지: ${maxPages})`);
       
-      // 페이지별로 크롤링
-      while (shouldContinue && pageIndex <= 3) { // 최대 3페이지
+      // 페이지별로 크롤링 (최대 maxPages 페이지)
+      while (shouldContinue && pageIndex <= maxPages) {
         console.log(`[KStartupCrawler] 페이지 ${pageIndex} 크롤링 중...`);
         
         const result = await this.crawlPage(pageIndex, lastKnownNumber);
@@ -250,12 +252,19 @@ export class KStartupCrawler {
           allNewNotices.push(...result.notices);
         }
         
+        // 이전 크롤링 지점에 도달했거나 더 이상 새 공지가 없으면 중단
         shouldContinue = result.shouldContinue;
         
-        if (shouldContinue) {
+        if (shouldContinue && pageIndex < maxPages) {
           pageIndex++;
           // 페이지 간 딜레이 (서버 부하 방지)
           await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          // 최대 페이지 도달 또는 중단 조건 만족
+          if (pageIndex >= maxPages) {
+            console.log(`[KStartupCrawler] 최대 페이지(${maxPages}) 도달. 크롤링 종료.`);
+          }
+          break;
         }
       }
       
