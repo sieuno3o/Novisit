@@ -1,4 +1,4 @@
-import React, { useState, FormEvent, useEffect } from "react";
+import React, { useState, FormEvent, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import "../../../public/assets/style/_flex.scss";
 import "../../../public/assets/style/_typography.scss";
@@ -11,28 +11,30 @@ import {
   Setting,
   Channel,
 } from "../../api/settingsAPI";
-import { fetchMain, type Domain } from "../../api/main"; // ★ 추가: 서버 도메인 목록 사용
+import { fetchMain, type Domain } from "../../api/main";
+import { useToast } from "../../components/Toast";
 
-// 필요시 유지해도 되지만 현재는 미사용
 export type NoticeItemShape = {
   id: string;
   title: string;
   tags: { label: string }[];
-  channels: Channel[]; // ★ 다중
+  channels: Channel[];
   date: string;
   link?: string;
 };
 
 interface CreateNoticeProps {
   onCreated: (setting: Setting) => void;
+  existingSettings?: Setting[];
 }
 
-const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
+const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings = [] }) => {
   const { logout } = (useAuth() as any) ?? {};
+  const { show } = useToast();
 
   const [open, setOpen] = useState(false);
 
-  // ★ 변경: 도메인 ID를 직접 입력하지 않고 선택하도록
+  // 서버 도메인 목록 사용
   const [domains, setDomains] = useState<Domain[]>([]);
   const [domainsLoading, setDomainsLoading] = useState(false);
   const [domainId, setDomainId] = useState("");
@@ -40,8 +42,10 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
   const [name, setName] = useState("");
   const [urlText, setUrlText] = useState("");
   const [keywordText, setKeywordText] = useState("");
+
+  // ✅ 채널은 배열만 허용하므로 단순 토글 상태만 유지
   const [selected, setSelected] = useState<Record<Channel, boolean>>({
-    kakao: false,
+    kakao: true, // 기본값 원하면 false로 변경 가능
     discord: false,
   });
 
@@ -63,9 +67,8 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
     };
   }, [open]);
 
-  // ★ 추가: 모달 열릴 때 서버에서 도메인 목록 로드
+  // 컴포넌트 마운트 시 서버에서 도메인 목록 로드
   useEffect(() => {
-    if (!open) return;
     let alive = true;
     (async () => {
       try {
@@ -82,7 +85,13 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
     return () => {
       alive = false;
     };
-  }, [open]);
+  }, []);
+
+  // 이미 설정된 도메인 ID 목록
+  const usedDomainIds = useMemo(
+    () => new Set(existingSettings.map(s => s.domain_id)),
+    [existingSettings]
+  );
 
   const parseList = (text: string) =>
     text
@@ -90,49 +99,58 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
       .map((s) => s.trim())
       .filter(Boolean);
 
-  const toChannelsArray = (ch?: string | Channel | Channel[]): Channel[] => {
-    if (!ch) return [];
-    if (Array.isArray(ch)) {
-      return ch.filter((v): v is Channel => v === "kakao" || v === "discord");
-    }
-    return String(ch)
-      .split(",")
-      .map((s) => s.trim().toLowerCase())
-      .filter((v): v is Channel => v === "kakao" || v === "discord");
-  };
+  const chosenChannels = useMemo(
+    () => (["kakao", "discord"] as Channel[]).filter((c) => selected[c]),
+    [selected]
+  );
 
-  const canSubmit = !!domainId.trim() && !!name.trim() && !loading;
+  // 사용 가능한 도메인이 있는지 확인
+  const availableDomains = useMemo(
+    () => domains.filter(d => !usedDomainIds.has(d.id)),
+    [domains, usedDomainIds]
+  );
+
+  const canSubmit =
+    !!domainId.trim() && !!name.trim() && chosenChannels.length > 0 && !loading;
 
   const toggle = (key: Channel) =>
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const handleOpenModal = () => {
+    // 사용 가능한 도메인이 없으면 Toast 표시
+    if (!domainsLoading && domains.length > 0 && availableDomains.length === 0) {
+      show("모든 도메인에 이미 알림 설정이 존재합니다. 새로운 알림을 추가하려면 기존 설정을 삭제해 주세요.");
+      return;
+    }
+    setOpen(true);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setBanner(null);
 
-    const chosen = (["kakao", "discord"] as Channel[]).filter(
-      (c) => selected[c]
-    );
-    if (chosen.length === 0) {
+    if (chosenChannels.length === 0) {
       setBanner({ type: "error", text: "채널을 최소 1개 이상 선택해 주세요." });
       return;
     }
 
-    const channelPayload: Channel | Channel[] =
-      chosen.length === 1 ? chosen[0] : chosen;
+    // 이미 설정된 도메인 확인
+    if (usedDomainIds.has(domainId.trim())) {
+      setBanner({ type: "error", text: "해당 도메인은 이미 알림 설정이 존재합니다. 다른 도메인을 선택해 주세요." });
+      return;
+    }
 
     const payload = {
-      domain_id: domainId.trim(), // ← 드롭다운에서 선택된 id 사용
+      domain_id: domainId.trim(),
       name: name.trim(),
       url_list: parseList(urlText),
       filter_keywords: parseList(keywordText),
-      channel: channelPayload, // ★ 단일 or 배열
+      channel: chosenChannels,
     };
 
     try {
       setLoading(true);
       const setting = await createSetting(payload);
-
       onCreated(setting);
 
       // reset & close
@@ -140,7 +158,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
       setName("");
       setUrlText("");
       setKeywordText("");
-      setSelected({ kakao: true, discord: false });
+      setSelected({ kakao: false, discord: false });
       setOpen(false);
     } catch (err: any) {
       const msg =
@@ -164,7 +182,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
           type="button"
           className="notice-fab"
           aria-label="알림 설정 추가"
-          onClick={() => setOpen(true)}
+          onClick={handleOpenModal}
         >
           <FiPlus size={22} />
         </button>
@@ -204,7 +222,6 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                 )}
 
                 <form className="notice-form flex-col" onSubmit={handleSubmit}>
-                  {/* ★ 변경: 도메인 드롭다운 (ID 입력칸 제거) */}
                   <label className="form__label">
                     도메인 <span className="req">*</span>
                     <select
@@ -219,13 +236,21 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                           ? "도메인 불러오는 중…"
                           : "도메인을 선택하세요"}
                       </option>
-                      {domains.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.name}
-                        </option>
-                      ))}
+                      {domains.map((d) => {
+                        const isUsed = usedDomainIds.has(d.id);
+                        return (
+                          <option key={d.id} value={d.id} disabled={isUsed}>
+                            {d.name}{isUsed ? " (이미 설정됨)" : ""}
+                          </option>
+                        );
+                      })}
                     </select>
                   </label>
+                  {usedDomainIds.size > 0 && (
+                    <div className="body3" style={{ marginTop: 4, color: "#666" }}>
+                      * 한 도메인에 하나의 알림만 설정할 수 있습니다.
+                    </div>
+                  )}
 
                   <label className="form__label">
                     설정 이름 <span className="req">*</span>
@@ -237,6 +262,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                       required
                     />
                   </label>
+
                   <div className="flex-row form__group">
                     <div className="channel-label">채널</div>
                     <div className="channel-toggle-row">
@@ -261,6 +287,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated }) => {
                     </div>
                   </div>
 
+                  {/* 필요 시 URL 입력 사용 */}
                   {/* <label className="form__label">
                     URL 목록 (줄바꿈 또는 쉼표)
                     <textarea

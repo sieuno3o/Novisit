@@ -20,13 +20,16 @@ export type Domain = {
 
 export { hardLogout } from "./http";
 
-export async function beginKakaoLogin(from: string = "/") {
+export async function beginKakaoLogin(from: string = "/", options?: { prompt?: 'login' }) {
   sessionStorage.setItem(
     "__oauth_state",
     JSON.stringify({ from, t: Date.now() })
   );
   const url = new URL(`${import.meta.env.VITE_API_BASE_URL}/auth/kakao/login`);
   url.searchParams.set("state", from);
+  if (options?.prompt) {
+    url.searchParams.set("prompt", options.prompt);
+  }
   window.location.assign(url.toString());
 }
 

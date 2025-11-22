@@ -83,17 +83,19 @@ export async function sendKakaoMessage(
     };
     await KakaoAPI.sendMemo(accessToken, feedTemplate);
 
-    // 두 번째 메시지: 텍스트 템플릿 (요약)
-    const textTemplate = {
-      object_type: 'text',
-      text: description,
-      link: {
-        web_url: linkUrl,
-        mobile_web_url: linkUrl
-      },
-      button_title: '자세히 보기'
-    };
-    return await KakaoAPI.sendMemo(accessToken, textTemplate);
+    // 두 번째 메시지: 텍스트 템플릿 (요약, 내용이 있을 경우에만 전송)
+    if (description && description.trim() !== '') {
+      const textTemplate = {
+        object_type: 'text',
+        text: description,
+        link: {
+          web_url: linkUrl,
+          mobile_web_url: linkUrl
+        },
+        button_title: '자세히 보기'
+      };
+      return await KakaoAPI.sendMemo(accessToken, textTemplate);
+    }
 
   } catch (error: any) {
     // 4. 시도가 실패했을 경우 (예: 갱신 후에도 토큰이 유효하지 않거나 다른 이유)
@@ -141,17 +143,20 @@ export async function sendKakaoMessage(
       };
       await KakaoAPI.sendMemo(newAccessToken, feedTemplate);
 
-      // 두 번째 메시지: 텍스트 템플릿 (요약)
-      const textTemplate = {
-        object_type: 'text',
-        text: description,
-        link: {
-          web_url: linkUrl,
-          mobile_web_url: linkUrl
-        },
-        button_title: '자세히 보기'
-      };
-      return await KakaoAPI.sendMemo(newAccessToken, textTemplate);
+      // 두 번째 메시지: 텍스트 템플릿 (요약, 내용이 있을 경우에만 전송)
+      if (description && description.trim() !== '') {
+        const textTemplate = {
+          object_type: 'text',
+          text: description,
+          link: {
+            web_url: linkUrl,
+            mobile_web_url: linkUrl
+          },
+          button_title: '자세히 보기'
+        };
+        return await KakaoAPI.sendMemo(newAccessToken, textTemplate);
+      }
+      return; // 텍스트 템플릿을 보내지 않은 경우 여기서 함수 종료
     }
 
     // 5. 401이 아닌 다른 모든 에러는 처리할 수 없으므로 로그를 남기고 상위 호출자에게 그대로 전파.

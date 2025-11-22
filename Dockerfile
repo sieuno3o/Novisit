@@ -1,10 +1,15 @@
 # Production image for pre-built application
 # Using regular node image instead of alpine for Playwright support
-FROM node:18 AS runner
+FROM node:20 AS runner
 WORKDIR /app
 
 # Install Playwright system dependencies
 # dpkg 설정을 먼저 수정하고 패키지 설치
+RUN apt-get update && \
+    (dpkg --configure -a || true) && \
+    (apt-get install -f -y || true) && \
+# DEBIAN_FRONTEND를 noninteractive로 설정하여 대화형 프롬프트 방지
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     (dpkg --configure -a || true) && \
     (apt-get install -f -y || true) && \
@@ -26,11 +31,14 @@ RUN apt-get update && \
     libasound2 \
     libpango-1.0-0 \
     libcairo2 \
+    fonts-liberation \
+    libappindicator3-1 \
+    xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user
+# Create non-root user with home directory
 RUN groupadd --system --gid 1001 nodejs
-RUN useradd --system --uid 1001 -g nodejs nodejs
+RUN useradd --system --uid 1001 -g nodejs -m nodejs
 
 # Copy package files first (for better caching)
 COPY package*.json ./

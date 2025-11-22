@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { createClient } from "redis";
 import authRouter from "./routes/authRoutes.js";
+import "./config/firebase"; // Firebase Admin SDK 초기화
 
 import mainRoutes from "./routes/mainRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
