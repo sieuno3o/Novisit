@@ -27,7 +27,8 @@ export async function beginKakaoLogin(
     "__oauth_state",
     JSON.stringify({ from, t: Date.now() })
   );
-  const url = new URL(`${import.meta.env.VITE_API_BASE_URL}/auth/kakao/login`);
+  // _redirects 기준: /auth/* → 백엔드로 프록시
+  const url = new URL("/auth/kakao/login", window.location.origin);
   url.searchParams.set("state", from);
   if (options?.prompt) {
     url.searchParams.set("prompt", options.prompt);
