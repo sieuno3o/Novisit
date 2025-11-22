@@ -1,4 +1,4 @@
-zzimport http, { tokenStore, hardLogout } from "./http";
+import http, { tokenStore, hardLogout } from "./http";
 
 export type ChannelState = "disconnected" | "off" | "on";
 export type User = {
@@ -19,7 +19,10 @@ export type Domain = {
 
 export { hardLogout } from "./http";
 
-export async function beginKakaoLogin(from: string = "/", options?: { prompt?: 'login' }) {
+export async function beginKakaoLogin(
+  from: string = "/",
+  options?: { prompt?: "login" }
+) {
   sessionStorage.setItem(
     "__oauth_state",
     JSON.stringify({ from, t: Date.now() })
