@@ -8,6 +8,7 @@ import {
   ApiError,
   Channel,
   Setting,
+  CreateSettingRequest, // ✅ 추가
 } from "../../../api/settingsAPI";
 
 type Domain = { id: string; name: string };
@@ -82,23 +83,24 @@ export default function CreateNoticeMain({
     e.preventDefault();
     setBanner(null);
 
-    // 채널 단일/복수 처리
+    // 선택된 채널 목록
     const chosen = (["kakao", "discord"] as Channel[]).filter(
       (c) => selected[c]
     );
     if (chosen.length === 0) {
-      setBanner({ type: "error", text: "채널을 최소 1개 이상 선택해 주세요." });
+      setBanner({
+        type: "error",
+        text: "채널을 최소 1개 이상 선택해 주세요.",
+      });
       return;
     }
-    const channelPayload: Channel | Channel[] =
-      chosen.length === 1 ? chosen[0] : chosen;
 
-    const payload = {
+    const payload: CreateSettingRequest = {
       domain_id: initialDomainId, // 메인에서 받은 고정 도메인 ID
       name: name.trim(),
       url_list: [], // 메인 모달은 URL 미사용
       filter_keywords: parseList(keywordText),
-      channel: channelPayload, // 단일/배열 모두 지원
+      channel: chosen, // ✅ 항상 Channel[]
     };
 
     try {

@@ -1,3 +1,4 @@
+// src/features/main/domains/Domains.tsx
 import { useState } from "react";
 import { Section } from "../common/Section";
 import { DomainCard } from "./DomainCard";
@@ -19,7 +20,7 @@ export default function Domains({ domains, error }: Props) {
 
   const items = domains.map((d) => {
     // 서버에서 내려주는 문자열 기반으로 lucide 아이콘 검색
-    const Icon = (Icons as any)[d.icon] ?? Icons.Globe;
+    const Icon = (Icons as any)[d.icon ?? "Globe"] ?? Icons.Globe;
 
     const title = d.keywords?.[0] ?? d.name ?? "항목";
     return (
@@ -27,7 +28,7 @@ export default function Domains({ domains, error }: Props) {
         key={d.id}
         icon={<Icon size={28} />}
         title={d.name} // 서버 name 사용
-        desc={d.desc} // 서버 desc 사용
+        desc={d.desc ?? ""} // 서버 desc 사용(없으면 빈 문자열)
         onClick={() => setSelected({ id: d.id, name: d.name })}
       />
     );
