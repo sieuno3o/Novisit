@@ -47,6 +47,20 @@
   .recent-notice-message {
     margin-top: 17px;
     color: #777;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+
+    &.collapsed {
+      display: -webkit-box;
+      -webkit-line-clamp: 7;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    &.expanded {
+      display: block;
+    }
   }
 
   .recent-contour {
@@ -67,4 +81,10 @@
   .recent-more {
     margin-left: -10px;
   }
+}
+
+.gobtn {
+  color: #333;
+  text-decoration: none;
+  padding: 6px 12px;
 }

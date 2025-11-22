@@ -519,7 +519,10 @@ function NoticeSettingInner() {
           );
         })}
 
-      <CreateNotice onCreated={handleCreated} />
+      <CreateNotice
+        onCreated={handleCreated}
+        existingSettings={Object.values(settingsMap)}
+      />
     </div>
   );
 }

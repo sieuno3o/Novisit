@@ -1,5 +1,5 @@
 import { findUserById, updateUserName as updateUserNameRepo, deleteUser as deleteUserRepo } from '../repository/mongodb/userRepository.js';
-import { IUser } from '../models/User.js';
+import { IUser, User } from '../models/User.js';
 import { unlinkKakaoUser, logoutKakaoUser } from './kakaoAPIClient.js';
 import { getProviderTokens, deleteProviderTokens } from '../repository/redis/tokenRepository.js';
 
@@ -12,18 +12,25 @@ export const getUserInfo = async (userId: string) => {
 
   const isKakaoLinked = user.providers.some(p => p.provider === 'kakao');
   const isDiscordLinked = user.providers.some(p => p.provider === 'discord');
+  const isPushEnabled = !!user.fcmToken;
 
   return {
     name: user.name,
     email: user.email,
     isKakaoLinked,
     isDiscordLinked,
+    isPushEnabled,
   };
 };
 
 // 사용자 이름 변경
 export const updateUserName = async (userId: string, newName: string): Promise<IUser | null> => {
   return await updateUserNameRepo(userId, newName);
+};
+
+// FCM 토큰 업데이트
+export const updateFCMToken = async (userId: string, fcmToken: string | null): Promise<IUser | null> => {
+  return await User.findByIdAndUpdate(userId, { fcmToken }, { new: true }).exec();
 };
 
 // 회원 탈퇴
