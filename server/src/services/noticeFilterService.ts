@@ -271,6 +271,7 @@ export async function sendNotifications(
               imageUrlForMessage,
               notice.link
             );
+
             // Message 저장
             const settingId = setting._id ? String(setting._id) : setting.id;
             await saveMessage(

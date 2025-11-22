@@ -11,7 +11,7 @@ export default function RequireAuth() {
   if (!user) {
     return (
       <AlertThenRedirect
-        to="/login"
+        to="/login?kakao_prompt=login"
         state={{ from: location }}
         message="로그인이 필요한 페이지입니다."
       />

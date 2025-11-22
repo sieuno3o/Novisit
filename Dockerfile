@@ -8,6 +8,11 @@ WORKDIR /app
 RUN apt-get update && \
     (dpkg --configure -a || true) && \
     (apt-get install -f -y || true) && \
+# DEBIAN_FRONTEND를 noninteractive로 설정하여 대화형 프롬프트 방지
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    (dpkg --configure -a || true) && \
+    (apt-get install -f -y || true) && \
     apt-get install -y --no-install-recommends \
     libnss3 \
     libnspr4 \

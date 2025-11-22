@@ -40,7 +40,7 @@
 //       window.location.assign(url);                    // 현재 탭 이동
 //     } catch (e: any) {
 //       if (e?.response?.status === 401) {
-//         window.location.assign("/login?next=/my");
+//         window.location.assign("/login?kakao_prompt=login");
 //         return;
 //       }
 //       alert("디스코드 연동을 시작할 수 없어요. 잠시 후 다시 시도해 주세요.");
@@ -183,7 +183,7 @@ export default function ChannelCard({
       setJustLinked(false);
       setOn(!!defaultOn);
       if (e?.response?.status === 401) {
-        window.location.assign("/login?next=/my");
+        window.location.assign("/login?kakao_prompt=login");
         return;
       }
       alert("디스코드 연동을 시작할 수 없어요. 잠시 후 다시 시도해 주세요.");
@@ -194,7 +194,7 @@ export default function ChannelCard({
   }
 
   //Kakao: 일반 토글
-  async function handleKakaoToggle() {
+  async function handleToggle() {
     if (busy) return;
     try {
       setBusy(true);
@@ -204,7 +204,7 @@ export default function ChannelCard({
     } catch (e) {
       setOn((prev) => !prev);
       console.error(e);
-      alert("설정을 변경할 수 없어요. 잠시 후 다시 시도해 주세요.");
+      alert(`설정을 변경할 수 없어요. 잠시 후 다시 시도해 주세요: ${e}`);
     } finally {
       setBusy(false);
     }
@@ -254,7 +254,7 @@ export default function ChannelCard({
               className={`toggle-wrap ${on ? "on" : "off"} ${
                 busy ? "busy" : ""
               }`}
-              onClick={handleKakaoToggle}
+              onClick={handleToggle}
             >
               <Toggle key={on ? "1" : "0"} defaultChecked={on} />
             </div>

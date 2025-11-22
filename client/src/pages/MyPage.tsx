@@ -26,31 +26,35 @@ export default function MyPage() {
     })();
   }, []);
 
-  // 디스코드 콜백 결과 처리
-  useEffect(() => {
-    (async () => {
-      const result = params.get("discord");
-      if (!result) return;
-
-      // 서버에서 연동 처리 후 돌아오므로 최신 상태 재조회
-      await refreshMe();
-
-      // 간단 알림
-      const messageMap: Record<string, string> = {
-        connected: "디스코드 연동 완료!",
-        already_linked: "이미 다른 계정에 연동된 디스코드 계정입니다.",
-        invalid_code: "유효하지 않은 인가 코드입니다. 다시 시도해주세요.",
-        expired: "연동 세션이 만료되었습니다. 다시 시도해주세요.",
-        error_state: "상태(state) 검증에 실패했습니다.",
-        error: "디스코드 연동에 실패했습니다.",
-      };
-      alert(messageMap[result] ?? "연동 처리 결과를 확인할 수 없습니다.");
-
-      // 주소 깨끗하게 정리 (쿼리 제거)
-      window.history.replaceState({}, "", window.location.pathname);
-    })();
-  }, [params, refreshMe]);
-
+        // 디스코드 콜백 결과 처리
+    useEffect(() => {
+      (async () => {
+        const result = params.get("discord");
+        if (!result) return;
+  
+        // 서버에서 연동 처리 후 돌아오므로 최신 상태 재조회
+        await refreshMe();
+  
+        // 간단 알림
+        const messageMap: Record<string, string> = {
+          connected: "디스코드 연동 완료! 초대된 서버로 이동합니다.",
+          already_linked: "이미 다른 계정에 연동된 디스코드 계정입니다.",
+          invalid_code: "유효하지 않은 인가 코드입니다. 다시 시도해주세요.",
+          expired: "연동 세션이 만료되었습니다. 다시 시도해주세요.",
+          error_state: "상태(state) 검증에 실패했습니다.",
+          error: "디스코드 연동에 실패했습니다.",
+        };
+        const message = messageMap[result] ?? "연동 처리 결과를 확인할 수 없습니다.";
+        alert(message);
+        
+        if (result === 'connected') {
+          window.location.href = 'https://discord.gg/YVEn24mrbt';
+        } else {
+          // 주소 깨끗하게 정리 (쿼리 제거)
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+      })();
+    }, [params, refreshMe]);
   if (loading) return null;
 
   // 문자열("on")/불리언(true) 모두 지원하는 안전 매핑
@@ -60,6 +64,7 @@ export default function MyPage() {
   const email = user?.email ?? "—";
   const kakaoOn = asOn((user as any)?.kakao ?? (user as any)?.isKakaoLinked);
   const discordOn = asOn((user as any)?.discord ?? (user as any)?.isDiscordLinked);
+  const pushOn = asOn((user as any)?.isPushEnabled);
 
   // 카카오 토글
   async function onToggleKakao(next: boolean) {
@@ -142,15 +147,19 @@ export default function MyPage() {
         <ChannelCard
           brand="push"
           name="푸시 알림"
-          defaultOn={false}
+          defaultOn={pushOn}
           toggleable={true}
           onToggle={async (next) => {
-          if (next) {
-            await enablePushForCurrentUser();
-          } else {
-            await disablePushForCurrentUser();
-          }
-        }}
+            try {
+              if (next) {
+                await enablePushForCurrentUser();
+              } else {
+                await disablePushForCurrentUser();
+              }
+            } finally {
+              await refreshMe();
+            }
+          }}
         />
       </Profile>
     </div>

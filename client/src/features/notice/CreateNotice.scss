@@ -12,6 +12,7 @@
     background-color: #eee;
   }
 }
+
 .notice-fab {
   padding: 7px;
   width: 100%;
@@ -38,7 +39,7 @@
 }
 
 .modal {
-  width: min(560px, 92vw);
+  width: min(400px, 92vw);
   background: #fff;
   border-radius: 16px;
   padding: 25px;
@@ -74,14 +75,16 @@
   padding: 8px;
   border: none;
   border-bottom: 1px solid #d1d5db;
+  outline: none;
 }
 
 .form__input {
+  margin: 0 8px;
   width: auto;
-  flex: 1;
-  padding: 5px;
+  padding: 4px;
   border: none;
   border-bottom: 1px solid #d1d5db;
+  outline: none;
 }
 
 .form__actions {
