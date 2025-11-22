@@ -128,3 +128,6 @@ ssl/
 tmp/
 temp/
 .DS_Store
+
+# Firebase admin key
+server/src/config/firebase-admin-key.json
