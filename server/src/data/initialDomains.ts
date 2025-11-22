@@ -53,17 +53,18 @@ export const initialDomains: InitialDomainData[] = [
     name: "창업",
     url_list: [
       "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do",
+      "https://www.mss.go.kr/site/smba/ex/bbs/List.do?cbIdx=310",
     ],
     keywords: ["창업"],
     setting_ids: [],
   },
   {
     _id: "6",
-    name: "공공임대",
+    name: "해커톤",
     url_list: [
-      "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancList.do?mi=1026",
+      "https://www.campuspick.com/contest?category=108",
     ],
-    keywords: ["예비입주"],
+    keywords: ["해커톤"],
     setting_ids: [],
   },
   // 필요에 따라 더 많은 도메인을 추가할 수 있습니다
