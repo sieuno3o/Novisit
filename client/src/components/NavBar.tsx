@@ -46,7 +46,7 @@ export default function NavBar() {
           </>
         ) : (
           <>
-            <NavLink to="/login" className="login-btn body3">
+            <NavLink to="/login?kakao_prompt=login" className="login-btn body3">      
               시작하기
             </NavLink>
           </>

@@ -1,7 +1,6 @@
-// src/auth.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { me as apiMe, logout as apiLogout, User } from "./api/auth";
-import { tokenStore } from "./api/http";
+import { tokenStore, hardLogout } from "./api/http";
 
 type AuthState = {
   user: User | null;
