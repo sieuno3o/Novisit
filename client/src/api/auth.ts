@@ -1,4 +1,4 @@
-import http, { tokenStore, hardLogout } from "./http";
+zzimport http, { tokenStore, hardLogout } from "./http";
 
 export type ChannelState = "disconnected" | "off" | "on";
 export type User = {
@@ -19,28 +19,17 @@ export type Domain = {
 
 export { hardLogout } from "./http";
 
-export async function beginKakaoLogin(from: string = "/") {
+export async function beginKakaoLogin(from: string = "/", options?: { prompt?: 'login' }) {
   sessionStorage.setItem(
     "__oauth_state",
     JSON.stringify({ from, t: Date.now() })
   );
-
-  const API_BASE = (import.meta.env.VITE_API_BASE_URL || "")
-    .trim()
-    .replace(/\/+$/, "");
-  const path = "/auth/kakao/login";
-
-  let redirectUrl: string;
-
-  if (API_BASE) {
-    const url = new URL(path, API_BASE);
-    url.searchParams.set("state", from);
-    redirectUrl = url.toString();
-  } else {
-    redirectUrl = `${path}?state=${encodeURIComponent(from)}`;
+  const url = new URL(`${import.meta.env.VITE_API_BASE_URL}/auth/kakao/login`);
+  url.searchParams.set("state", from);
+  if (options?.prompt) {
+    url.searchParams.set("prompt", options.prompt);
   }
-
-  window.location.assign(redirectUrl);
+  window.location.assign(url.toString());
 }
 
 export async function exchangeKakao(appCode: string) {

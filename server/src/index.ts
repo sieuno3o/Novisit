@@ -3,14 +3,15 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { createClient } from "redis";
 import authRouter from "./routes/authRoutes.js";
+import "./config/firebase"; // Firebase Admin SDK 초기화
 
 import mainRoutes from "./routes/mainRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import cors from "cors";
-import { CrawlingService } from './services/crawlingService.js'
+import { CrawlingService } from "./services/crawlingService.js";
 import { initDiscordBot } from "./services/discordService";
-import { registerCrawltestApi } from './test/crawltest.js'
+import { registerCrawltestApi } from "./test/crawltest.js";
 import { initializeDomains } from "./repository/mongodb/domainRepository.js";
 import { initialDomains } from "./data/initialDomains.js";
 import discordMessageTestRouter from "./test/discordMessageTest.js";
@@ -18,14 +19,16 @@ import discordMessageTestRouter from "./test/discordMessageTest.js";
 // Load environment variables
 dotenv.config();
 
-
 const app = express();
 
 const PORT = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_BASE_URL || process.env.CLIENT_URL || "http://localhost:5173",
+    origin:
+      process.env.FRONTEND_BASE_URL ||
+      process.env.CLIENT_URL ||
+      "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
   })
@@ -58,7 +61,7 @@ export const redisClient = createClient({
 redisClient
   .connect()
   .then(() => {
-    console.log('✅ Redis (auth) connected successfully')
+    console.log("✅ Redis (auth) connected successfully");
   })
   .catch((error) => {
     console.error("❌ Redis connection error:", error);
@@ -85,11 +88,12 @@ app.get("/health", (req, res) => {
     status: "OK",
     timestamp: new Date().toISOString(),
     services: {
-      mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-      redis: redisClient.isReady ? 'connected' : 'disconnected'
-    }
-  })
-})
+      mongodb:
+        mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+      redis: redisClient.isReady ? "connected" : "disconnected",
+    },
+  });
+});
 
 // 디스코드 봇 실행
 initDiscordBot()
@@ -97,31 +101,31 @@ initDiscordBot()
   .catch((err) => console.error("❌ Discord Bot initialization failed:", err));
 
 // 크롤링 서비스 인스턴스
-const crawlingService = new CrawlingService()
+const crawlingService = new CrawlingService();
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`)
-  console.log(`📊 Health check: http://localhost:${PORT}/health`)
-  
+  console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+
   // 크롤링 스케줄러 초기화 (서버 시작 후)
-  crawlingService.initialize()
-})
+  crawlingService.initialize();
+});
 
 // Graceful shutdown 처리
 const shutdown = async () => {
-  console.log('\n🛑 서버를 종료합니다...')
-  
-  try {
-    await crawlingService.shutdown()
-    await redisClient.disconnect()
-    await mongoose.connection.close()
-    console.log('✅ 모든 연결이 종료되었습니다.')
-    process.exit(0)
-  } catch (error) {
-    console.error('❌ 종료 중 오류:', error)
-    process.exit(1)
-  }
-}
+  console.log("\n🛑 서버를 종료합니다...");
 
-process.on('SIGINT', shutdown)
-process.on('SIGTERM', shutdown)
+  try {
+    await crawlingService.shutdown();
+    await redisClient.disconnect();
+    await mongoose.connection.close();
+    console.log("✅ 모든 연결이 종료되었습니다.");
+    process.exit(0);
+  } catch (error) {
+    console.error("❌ 종료 중 오류:", error);
+    process.exit(1);
+  }
+};
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

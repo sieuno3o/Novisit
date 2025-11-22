@@ -9,7 +9,7 @@ export const domainMeta: Record<string, { desc: string; icon: string }> = {
     icon: "Trophy",
   },
   "정책지원": {
-    desc: "정부 및 기관의 각종 지원 사업 정보를 확인하세요.",
+    desc: "정부 및 기관의 지원 사업 정보를 확인하세요.",
     icon: "Building",
   },
 };

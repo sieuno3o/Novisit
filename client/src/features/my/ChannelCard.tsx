@@ -2,7 +2,6 @@
 // import Toggle from "./Toggle";
 // import { getDiscordAuthUrl } from "../../api/my";
 
-
 // type Props = {
 //   brand: "kakao" | "discord";
 //   name: string;
@@ -31,7 +30,7 @@
 
 //   useEffect(() => {
 //     setOn(!!defaultOn);
-//     setAsSwitch(brand === "discord" || !!toggleable || !!defaultOn); 
+//     setAsSwitch(brand === "discord" || !!toggleable || !!defaultOn);
 //   }, [brand, defaultOn, toggleable]);
 
 //   async function startDiscordLink() {
@@ -41,7 +40,7 @@
 //       window.location.assign(url);                    // 현재 탭 이동
 //     } catch (e: any) {
 //       if (e?.response?.status === 401) {
-//         window.location.assign("/login?next=/my");
+//         window.location.assign("/login?kakao_prompt=login");
 //         return;
 //       }
 //       alert("디스코드 연동을 시작할 수 없어요. 잠시 후 다시 시도해 주세요.");
@@ -61,7 +60,7 @@
 //         await startDiscordLink();
 //         return;
 //       }
-//       // ON → OFF : 해제 API 
+//       // ON → OFF : 해제 API
 //       try {
 //         setBusy(true);
 //         await onToggle?.(false);
@@ -138,21 +137,20 @@
 //   );
 // }
 
-
 //버전2 : 디스코드 연동하기 버튼 이후 '연동됨 / 알림 ON' 고정
 import { useEffect, useState } from "react";
 import Toggle from "./Toggle";
 import { getDiscordAuthUrl } from "../../api/my";
 
 type Props = {
-  brand: "kakao" | "discord";
+  brand: "kakao" | "discord" | "push";
   name: string;
-  defaultOn?: boolean;            // 서버가 true면 이미 연동됨
-  toggleable?: boolean;           // kakao용
-  onText?: string;                // "연동됨"
-  offText?: string;               // "연동되지 않음"
+  defaultOn?: boolean; // 서버가 true면 이미 연동됨
+  toggleable?: boolean; // kakao용
+  onText?: string; // "연동됨"
+  offText?: string; // "연동되지 않음"
   onToggle?: (next: boolean) => void | Promise<void>; // kakao만 사용
-  actionText?: string;            // "연동하기"
+  actionText?: string; // "연동하기"
 };
 
 export default function ChannelCard({
@@ -173,19 +171,19 @@ export default function ChannelCard({
     setOn(!!defaultOn);
   }, [defaultOn]);
 
-  //Discord: 1회 연동 버튼 → 이후 영구 '연동됨 / 알림 ON' 
+  //Discord: 1회 연동 버튼 → 이후 영구 '연동됨 / 알림 ON'
   async function startDiscordLink() {
     try {
       setBusy(true);
       setJustLinked(true);
       setOn(true); // UI 즉시 고정
       const url = await getDiscordAuthUrl();
-      window.location.assign(url); // OAuth 이동
+      window.open(url, "_blank"); // OAuth 새 탭으로 이동
     } catch (e: any) {
       setJustLinked(false);
       setOn(!!defaultOn);
       if (e?.response?.status === 401) {
-        window.location.assign("/login?next=/my");
+        window.location.assign("/login?kakao_prompt=login");
         return;
       }
       alert("디스코드 연동을 시작할 수 없어요. 잠시 후 다시 시도해 주세요.");
@@ -195,8 +193,8 @@ export default function ChannelCard({
     }
   }
 
-  //Kakao: 일반 토글 
-  async function handleKakaoToggle() {
+  //Kakao: 일반 토글
+  async function handleToggle() {
     if (busy) return;
     try {
       setBusy(true);
@@ -206,7 +204,7 @@ export default function ChannelCard({
     } catch (e) {
       setOn((prev) => !prev);
       console.error(e);
-      alert("설정을 변경할 수 없어요. 잠시 후 다시 시도해 주세요.");
+      alert(`설정을 변경할 수 없어요. 잠시 후 다시 시도해 주세요: ${e}`);
     } finally {
       setBusy(false);
     }
@@ -214,6 +212,7 @@ export default function ChannelCard({
 
   const isDiscord = brand === "discord";
   const showDiscordButton = isDiscord && !on && !justLinked; // 미연동일 때만
+  const isKakaoOrPush = brand === "kakao" || brand === "push";
 
   return (
     <div className="channel-row">
@@ -252,8 +251,10 @@ export default function ChannelCard({
               aria-checked={on}
               aria-disabled={busy}
               aria-label={`${name} ${on ? "알림 끄기" : "알림 켜기"}`}
-              className={`toggle-wrap ${on ? "on" : "off"} ${busy ? "busy" : ""}`}
-              onClick={handleKakaoToggle}
+              className={`toggle-wrap ${on ? "on" : "off"} ${
+                busy ? "busy" : ""
+              }`}
+              onClick={handleToggle}
             >
               <Toggle key={on ? "1" : "0"} defaultChecked={on} />
             </div>

@@ -28,6 +28,18 @@
   &__user {
     margin-right: 8px;
   }
+  .navbar__logo {
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+  }
+  .navbar__logo-image {
+    margin-top: 2px;
+    width: 25px;
+    height: 25px;
+    margin-right: 4px;
+  }
 }
 
 .nav-btn {
@@ -73,4 +85,83 @@
 .navbar__user {
   font-weight: 400;
   font-size: 15px;
+}
+
+/* ========== 반응형 ========== */
+
+/* 태블릿 */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 15px 12px;
+
+    &__logo {
+      font-size: 20px;
+    }
+
+    &__menu {
+      gap: 8px;
+    }
+
+    &__auth {
+      gap: 6px;
+    }
+
+    &__user {
+      display: none; // 사용자 이름 숨김
+    }
+
+    .navbar__logo-image {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  .nav-btn {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .logout-btn,
+  .login-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+/* 모바일 */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 12px 8px;
+
+    &__logo {
+      font-size: 0; // 텍스트 숨김
+    }
+
+    &__menu {
+      gap: 4px;
+    }
+
+    &__auth {
+      gap: 4px;
+    }
+
+    .navbar__logo-image {
+      width: 28px;
+      height: 28px;
+      margin-right: 0;
+    }
+  }
+
+  .nav-btn {
+    padding: 8px 10px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+
+  .logout-btn,
+  .login-btn {
+    padding: 8px 10px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
 }

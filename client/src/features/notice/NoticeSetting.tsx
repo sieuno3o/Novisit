@@ -360,12 +360,12 @@ function NoticeCard({
             </button>
           </div>
 
-          <TagEditor
+          {/* <TagEditor
             label="필터 키워드"
             values={keywords}
             placeholder="새 키워드 입력"
             onChange={setKeywords}
-          />
+          /> */}
           <div style={{ height: 8 }} />
           {/* <TagEditor
             label="URL 목록"

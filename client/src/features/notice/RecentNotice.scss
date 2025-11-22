@@ -15,6 +15,14 @@
   }
 }
 
+/* 반응형 */
+@media (max-width: 900px) {
+  .recent-notice {
+    width: 100%;
+    margin-top: 10px;
+  }
+}
+
 .recent-notice-content {
   background: #fff;
   border: 1px solid #eee;

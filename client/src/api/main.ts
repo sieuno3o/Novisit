@@ -3,8 +3,8 @@ import http from "../api/http";
 export type DomainDto = {
   id: string;
   name: string;
-  url_list: string[];
-  keywords: string[];
+  desc: string; // ← 새 필드
+  icon: string; // ← 새 필드 (예: "Globe")
 };
 
 export type MainResponse = {
@@ -21,8 +21,8 @@ export type Domain = {
 const mapDto = (d: DomainDto): Domain => ({
   id: d.id,
   name: d.name,
-  urls: d.url_list,
-  keywords: d.keywords,
+  desc: d.desc,
+  icon: d.icon,
 });
 
 //토큰 불필요
