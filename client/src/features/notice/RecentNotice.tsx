@@ -1,5 +1,7 @@
 // src/features/notice/RecentNotice.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
+// src/features/notice/RecentNotice.tsx
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./RecentNotice.scss";
 import "../../../public/assets/style/_flex.scss";
 import "../../../public/assets/style/_typography.scss";
@@ -201,7 +203,26 @@ const RecentNotice: React.FC = () => {
       {loading && (
         <div className="body3" style={{ padding: "12px 4px" }}>
           불러오는 중…
+
+      {banner && (
+        <div
+          className="notice-banner notice-banner--error"
+          role="alert"
+          style={{ marginBottom: 12 }}
+        >
+          {banner.text}
         </div>
+      )}
+
+      {loading && (
+        <div className="body3" style={{ padding: "12px 4px" }}>
+          불러오는 중…
+        </div>
+      )}
+
+      {isEmpty && (
+        <div className="body3" style={{ padding: "12px 4px" }}>
+          최근 알림이 없습니다.
       )}
 
       {isEmpty && (
@@ -280,6 +301,7 @@ const RecentNotice: React.FC = () => {
             </div>
           )}
         </div>
+      )}
       )}
     </div>
   );

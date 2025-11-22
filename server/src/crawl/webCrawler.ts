@@ -78,15 +78,27 @@ export class WebCrawler {
       return {
         url: url,
         title: '',
+        title: '',
         timestamp: new Date().toISOString(),
+        totalNotices: 0,
+        notices: [],
         totalNotices: 0,
         notices: [],
         summary: {
           extractedAt: new Date().toISOString(),
           source: '',
           totalCount: 0
+          source: '',
+          totalCount: 0
         }
       };
+    }
+  }
+
+  // 공지사항 상세 페이지 크롤링 (URL에 따라 분기)
+  async crawlNoticeDetail(url: string, noticeLink: string): Promise<NoticeDetailResult> {
+    const crawler = this.getCrawler(url);
+    return await crawler.crawlNoticeDetail(noticeLink);
     }
   }
 

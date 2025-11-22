@@ -49,6 +49,11 @@ const ensureChannels = (v?: unknown): Channel[] => {
   return v
     .map((x) => String(x).trim().toLowerCase())
     .filter((x) => x === "kakao" || x === "discord") as Channel[];
+const ensureChannels = (v?: unknown): Channel[] => {
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((x) => String(x).trim().toLowerCase())
+    .filter((x) => x === "kakao" || x === "discord") as Channel[];
 };
 
 const mapSettingToItem = (s: Setting): NoticeItem => {
@@ -64,10 +69,24 @@ const mapSettingToItem = (s: Setting): NoticeItem => {
   };
 
   const createdRaw = (s as any).created_at;
+
+  const primary = ensureChannels(s.channel);
+  const channels =
+    primary.length > 0 ? primary : ensureChannels(firstMsg?.platform);
+
+  const formatDateOnly = (v: string) => {
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? v : d.toLocaleDateString("ko-KR");
+  };
+
+  const createdRaw = (s as any).created_at;
   const dateText =
     typeof createdRaw === "string" && createdRaw.trim()
       ? formatDateOnly(createdRaw)
+    typeof createdRaw === "string" && createdRaw.trim()
+      ? formatDateOnly(createdRaw)
       : firstMsg?.sended_at
+      ? formatDateOnly(firstMsg.sended_at)
       ? formatDateOnly(firstMsg.sended_at)
       : new Date().toLocaleDateString("ko-KR");
 
@@ -175,6 +194,7 @@ function NoticeCard({
   );
 
   const initialChannels = ensureChannels(setting.channel);
+  const initialChannels = ensureChannels(setting.channel);
   const [channels, setChannels] = useState<Record<Channel, boolean>>({
     kakao: initialChannels.includes("kakao"),
     discord: initialChannels.includes("discord"),
@@ -188,6 +208,7 @@ function NoticeCard({
     setKeywords(
       Array.isArray(setting.filter_keywords) ? setting.filter_keywords : []
     );
+    const init = ensureChannels(setting.channel);
     const init = ensureChannels(setting.channel);
     setChannels({
       kakao: init.includes("kakao"),
@@ -219,6 +240,7 @@ function NoticeCard({
         name: name.trim(),
         url_list: urls,
         filter_keywords: keywords,
+        channel: chosen, // ✅ 항상 배열로 전송
         channel: chosen, // ✅ 항상 배열로 전송
       });
       onUpdated(updated);
@@ -368,10 +390,12 @@ function NoticeCard({
           />
           <div style={{ height: 8 }} />
           {/* <TagEditor
+          {/* <TagEditor
             label="URL 목록"
             values={urls}
             placeholder="새 url 입력"
             onChange={setUrls}
+          /> */}
           /> */}
         </>
       ) : (

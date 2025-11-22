@@ -1,4 +1,5 @@
 import React, { useState, FormEvent, useEffect, useMemo } from "react";
+import React, { useState, FormEvent, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import "../../../public/assets/style/_flex.scss";
 import "../../../public/assets/style/_typography.scss";
@@ -19,6 +20,7 @@ export type NoticeItemShape = {
   title: string;
   tags: { label: string }[];
   channels: Channel[];
+  channels: Channel[];
   date: string;
   link?: string;
 };
@@ -37,14 +39,22 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
   // 서버 도메인 목록 사용
   const [domains, setDomains] = useState<Domain[]>([]);
   const [domainsLoading, setDomainsLoading] = useState(false);
+
+  // 서버 도메인 목록 사용
+  const [domains, setDomains] = useState<Domain[]>([]);
+  const [domainsLoading, setDomainsLoading] = useState(false);
   const [domainId, setDomainId] = useState("");
+
 
   const [name, setName] = useState("");
   const [urlText, setUrlText] = useState("");
   const [keywordText, setKeywordText] = useState("");
 
   // ✅ 채널은 배열만 허용하므로 단순 토글 상태만 유지
+
+  // ✅ 채널은 배열만 허용하므로 단순 토글 상태만 유지
   const [selected, setSelected] = useState<Record<Channel, boolean>>({
+    kakao: true, // 기본값 원하면 false로 변경 가능
     kakao: true, // 기본값 원하면 false로 변경 가능
     discord: false,
   });
@@ -112,6 +122,8 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
 
   const canSubmit =
     !!domainId.trim() && !!name.trim() && chosenChannels.length > 0 && !loading;
+  const canSubmit =
+    !!domainId.trim() && !!name.trim() && chosenChannels.length > 0 && !loading;
 
   const toggle = (key: Channel) =>
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -130,6 +142,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
     setBanner(null);
 
     if (chosenChannels.length === 0) {
+    if (chosenChannels.length === 0) {
       setBanner({ type: "error", text: "채널을 최소 1개 이상 선택해 주세요." });
       return;
     }
@@ -146,6 +159,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
       url_list: parseList(urlText),
       filter_keywords: parseList(keywordText),
       channel: chosenChannels,
+      channel: chosenChannels,
     };
 
     try {
@@ -156,8 +170,10 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
       // reset & close
       setDomainId("");
       setName("");
+      setName("");
       setUrlText("");
       setKeywordText("");
+      setSelected({ kakao: false, discord: false });
       setSelected({ kakao: false, discord: false });
       setOpen(false);
     } catch (err: any) {
@@ -225,6 +241,8 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
                   <label className="form__label">
                     도메인 <span className="req">*</span>
                     <select
+                    도메인 <span className="req">*</span>
+                    <select
                       className="form__input"
                       value={domainId}
                       onChange={(e) => setDomainId(e.target.value)}
@@ -263,6 +281,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
                     />
                   </label>
 
+
                   <div className="flex-row form__group">
                     <div className="channel-label">채널</div>
                     <div className="channel-toggle-row">
@@ -289,6 +308,8 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
 
                   {/* 필요 시 URL 입력 사용 */}
                   {/* <label className="form__label">
+                  {/* 필요 시 URL 입력 사용 */}
+                  {/* <label className="form__label">
                     URL 목록 (줄바꿈 또는 쉼표)
                     <textarea
                       className="form__textarea"
@@ -296,6 +317,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
                       value={urlText}
                       onChange={(e) => setUrlText(e.target.value)}
                     />
+                  </label> */}
                   </label> */}
 
                   <label className="form__label">

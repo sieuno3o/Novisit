@@ -9,7 +9,14 @@ export async function sendKakaoMessage(
   description: string,
   imageUrl: string,
   linkUrl: string
+  title: string,
+  description: string,
+  imageUrl: string,
+  linkUrl: string
 ): Promise<any> {
+  // 이미지 링크 콘솔 출력
+  console.log(`[알림] 카카오톡 메시지 전송 - 이미지 URL: ${imageUrl}`);
+  
   // 이미지 링크 콘솔 출력
   console.log(`[알림] 카카오톡 메시지 전송 - 이미지 URL: ${imageUrl}`);
   
