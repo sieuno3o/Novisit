@@ -19,9 +19,16 @@ export default function LoginPage() {
   useEffect(() => {
     if (!firedRef.current) {
       firedRef.current = true;
-      beginKakaoLogin(from);
+      const queryParams = new URLSearchParams(location.search);
+      const kakaoPrompt = queryParams.get("kakao_prompt");
+
+      if (kakaoPrompt === "login") {
+        beginKakaoLogin(from, { prompt: 'login' });
+      } else {
+        beginKakaoLogin(from);
+      }
     }
-  }, [from]);
+  }, [from, location.search]);
 
   return (
     <div

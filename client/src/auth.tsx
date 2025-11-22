@@ -1,8 +1,8 @@
-// src/auth.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { me as apiMe, logout as apiLogout, User } from "./api/auth";
-import { tokenStore } from "./api/http";
-import { disablePushForCurrentUser } from "./firebase/fcmClient"; // Added import
+import { tokenStore, hardLogout } from "./api/http";
+import { disablePushForCurrentUser } from "./firebase/fcmClient";
+
 
 type AuthState = {
   user: User | null;
