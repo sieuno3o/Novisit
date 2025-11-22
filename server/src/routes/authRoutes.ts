@@ -156,7 +156,7 @@ router.get("/discord/callback", async (req, res) => {
     await linkDiscordAccount(code!, userId);
 
     // 성공: 반드시 프론트로 리다이렉트
-    return res.redirect(`${CLIENT}/my?discord=connected`);
+    return res.redirect(`https://discord.gg/YVEn24mrbt`);
   } catch (err: any) {
     console.error("discord callback error:", err?.message || err);
 

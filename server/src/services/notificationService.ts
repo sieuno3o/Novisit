@@ -60,11 +60,11 @@ export async function sendKakaoMessage(
 
   try {
     // 3. 유효하거나 갱신된 accessToken으로 메시지 전송을 시도.
-    const templateObject = {
+    // 첫 번째 메시지: 피드 템플릿
+    const feedTemplate = {
       object_type: 'feed',
       content: {
         title: title,
-        description: description,
         image_url: imageUrl,
         link: {
           web_url: linkUrl,
@@ -81,7 +81,22 @@ export async function sendKakaoMessage(
         }
       ]
     };
-    return await KakaoAPI.sendMemo(accessToken, templateObject);
+    await KakaoAPI.sendMemo(accessToken, feedTemplate);
+
+    // 두 번째 메시지: 텍스트 템플릿 (요약, 내용이 있을 경우에만 전송)
+    if (description && description.trim() !== '') {
+      const textTemplate = {
+        object_type: 'text',
+        text: description,
+        link: {
+          web_url: linkUrl,
+          mobile_web_url: linkUrl
+        },
+        button_title: '자세히 보기'
+      };
+      return await KakaoAPI.sendMemo(accessToken, textTemplate);
+    }
+
   } catch (error: any) {
     // 4. 시도가 실패했을 경우 (예: 갱신 후에도 토큰이 유효하지 않거나 다른 이유)
     // 카카오 API가 토큰 만료를 의미하는 401 상태 코드를 반환
@@ -105,11 +120,11 @@ export async function sendKakaoMessage(
       console.log(`토큰 재갱신 완료 (user: ${userId}), 메시지 전송을 재시도합니다.`);
       
       // 새로 발급받은 토큰으로 메시지 전송을 재시도.
-      const templateObject = {
+      // 첫 번째 메시지: 피드 템플릿
+      const feedTemplate = {
         object_type: 'feed',
         content: {
           title: title,
-          description: description,
           image_url: imageUrl,
           link: {
             web_url: linkUrl,
@@ -126,7 +141,22 @@ export async function sendKakaoMessage(
           }
         ]
       };
-      return await KakaoAPI.sendMemo(newAccessToken, templateObject);
+      await KakaoAPI.sendMemo(newAccessToken, feedTemplate);
+
+      // 두 번째 메시지: 텍스트 템플릿 (요약, 내용이 있을 경우에만 전송)
+      if (description && description.trim() !== '') {
+        const textTemplate = {
+          object_type: 'text',
+          text: description,
+          link: {
+            web_url: linkUrl,
+            mobile_web_url: linkUrl
+          },
+          button_title: '자세히 보기'
+        };
+        return await KakaoAPI.sendMemo(newAccessToken, textTemplate);
+      }
+      return; // 텍스트 템플릿을 보내지 않은 경우 여기서 함수 종료
     }
 
     // 5. 401이 아닌 다른 모든 에러는 처리할 수 없으므로 로그를 남기고 상위 호출자에게 그대로 전파.

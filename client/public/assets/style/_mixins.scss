@@ -1,0 +1,6 @@
+@use "sass:meta";
+@use "./variables.scss";
+
+@mixin mq($min) {
+  @media (min-width: $min) { @content; }
+}

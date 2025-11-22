@@ -47,6 +47,7 @@ export class ApiError extends Error {
 }
 
 /* ---------------- utils ---------------- */
+/* ---------------- utils ---------------- */
 const normList = (v: any) => (Array.isArray(v) ? v : []);
 const getId = (s: any) => s?.id ?? s?._id;
 const toLower = (x: any) =>
@@ -54,10 +55,6 @@ const toLower = (x: any) =>
     .trim()
     .toLowerCase();
 
-/**
- * channel/ platform을 안전한 배열로 정규화(문자열이 오더라도 최소 방어).
- * 서버는 배열을 준다고 가정하지만, 클라이언트 안정성을 위해 남겨둠.
- */
 const ensureChannelArray = (v: any): Channel[] => {
   const raw = Array.isArray(v) ? v : typeof v === "string" ? v.split(",") : [];
   return raw
