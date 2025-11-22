@@ -126,7 +126,7 @@ export class KStartupCrawler {
                 if (spanLists.length >= 3 && spanLists[2]) {
                   const thirdSpan = spanLists[2];
                   const iElement = thirdSpan.querySelector('i');
-                  const text = iElement ? iElement.textContent?.trim() : thirdSpan.textContent?.trim() || '';
+                  const text = (iElement ? iElement.textContent?.trim() : thirdSpan.textContent?.trim()) ?? '';
                   const dateMatch = text.match(/(\d{4}-\d{2}-\d{2})/);
                   if (dateMatch && dateMatch[1]) {
                     postedAt = dateMatch[1];
@@ -141,7 +141,7 @@ export class KStartupCrawler {
                   const spanLists = bottom.querySelectorAll('span.list');
                   for (const span of Array.from(spanLists)) {
                     const iElement = span.querySelector('i');
-                    const text = iElement ? iElement.textContent?.trim() : span.textContent?.trim() || '';
+                    const text = (iElement ? iElement.textContent?.trim() : span.textContent?.trim()) ?? '';
                     if (text.includes('등록일자')) {
                       const dateMatch = text.match(/(\d{4}-\d{2}-\d{2})/);
                       if (dateMatch && dateMatch[1]) {
