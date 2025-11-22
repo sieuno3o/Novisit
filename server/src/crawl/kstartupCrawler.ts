@@ -72,20 +72,18 @@ export class KStartupCrawler {
               // 번호 추출: 여러 방법 시도
               let number = '';
               
-              // 방법 2: li 요소의 data 속성 확인
-              if (!number) {
-                const liElement = element as HTMLElement;
-                const dataSn = liElement.getAttribute('data-pbanc-sn') || 
-                               liElement.getAttribute('data-sn') ||
-                               liElement.dataset.pbancSn ||
-                               liElement.dataset.sn ||
-                               '';
-                if (dataSn) {
-                  number = dataSn;
-                }
+              // 방법 1: li 요소의 data 속성 확인
+              const liElement = element as HTMLElement;
+              const dataSn = liElement.getAttribute('data-pbanc-sn') || 
+                             liElement.getAttribute('data-sn') ||
+                             liElement.dataset.pbancSn ||
+                             liElement.dataset.sn ||
+                             '';
+              if (dataSn) {
+                number = dataSn;
               }
               
-              // 방법 4: 다른 버튼 요소들 확인
+              // 방법 2: 다른 버튼 요소들 확인
               if (!number) {
                 const allButtons = element.querySelectorAll('[onclick*="go_view"], [onclick*="view"], [onclick*="pbancSn"], button, a');
                 for (const btn of Array.from(allButtons)) {
@@ -118,6 +116,62 @@ export class KStartupCrawler {
                 return; // 번호나 제목이 없으면 스킵
               }
               
+              // 등록일자 추출: div.bottom span.list 중 3번째에서 i 태그 안의 "등록일자 2025-11-20" 형식
+              let postedAt = new Date().toISOString().split('T')[0]; // 기본값: 오늘 날짜
+              
+              // 방법 1: div.bottom span.list 중 3번째에서 추출
+              const bottomElement = element.querySelector('div.bottom');
+              if (bottomElement) {
+                const spanLists = bottomElement.querySelectorAll('span.list');
+                if (spanLists.length >= 3 && spanLists[2]) {
+                  const thirdSpan = spanLists[2];
+                  const iElement = thirdSpan.querySelector('i');
+                  const text = iElement ? iElement.textContent?.trim() : thirdSpan.textContent?.trim() || '';
+                  const dateMatch = text.match(/(\d{4}-\d{2}-\d{2})/);
+                  if (dateMatch && dateMatch[1]) {
+                    postedAt = dateMatch[1];
+                  }
+                }
+              }
+              
+              // 방법 2: 모든 span.list에서 "등록일자"가 포함된 것 찾기
+              if (postedAt === new Date().toISOString().split('T')[0]) {
+                const allBottomElements = element.querySelectorAll('div.bottom');
+                for (const bottom of Array.from(allBottomElements)) {
+                  const spanLists = bottom.querySelectorAll('span.list');
+                  for (const span of Array.from(spanLists)) {
+                    const iElement = span.querySelector('i');
+                    const text = iElement ? iElement.textContent?.trim() : span.textContent?.trim() || '';
+                    if (text.includes('등록일자')) {
+                      const dateMatch = text.match(/(\d{4}-\d{2}-\d{2})/);
+                      if (dateMatch && dateMatch[1]) {
+                        postedAt = dateMatch[1];
+                        break;
+                      }
+                    }
+                  }
+                  if (postedAt !== new Date().toISOString().split('T')[0]) break;
+                }
+              }
+              
+              // 방법 3: 전체 element에서 날짜 패턴 찾기 (최후의 수단)
+              if (postedAt === new Date().toISOString().split('T')[0]) {
+                const allText = element.textContent || '';
+                // "등록일자" 키워드 주변에서 날짜 찾기
+                const regDateMatch = allText.match(/등록일자\s*(\d{4}-\d{2}-\d{2})/);
+                if (regDateMatch && regDateMatch[1]) {
+                  postedAt = regDateMatch[1];
+                } else {
+                  // 등록일자 키워드 없이 날짜 패턴만 찾기 (div.bottom 영역 내에서만)
+                  const bottomText = bottomElement ? bottomElement.textContent || '' : '';
+                  const dateMatches = bottomText.match(/(\d{4}-\d{2}-\d{2})/g);
+                  if (dateMatches && dateMatches.length > 0) {
+                    // 여러 날짜가 있으면 첫 번째 것 사용 (보통 등록일자가 첫 번째)
+                    postedAt = dateMatches[0];
+                  }
+                }
+              }
+              
               // 링크 생성: https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?pbancClssCd=PBC010&schM=view&pbancSn={Number}
               const link = `https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?pbancClssCd=PBC010&schM=view&pbancSn=${number}`;
               
@@ -125,7 +179,7 @@ export class KStartupCrawler {
                 number: number,
                 title: title,
                 link: link,
-                postedAt: new Date().toISOString().split('T')[0],
+                postedAt: postedAt,
                 crawledAt: new Date()
               });
             } catch (error) {
