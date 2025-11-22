@@ -143,7 +143,7 @@ import Toggle from "./Toggle";
 import { getDiscordAuthUrl } from "../../api/my";
 
 type Props = {
-  brand: "kakao" | "discord";
+  brand: "kakao" | "discord" |"push";
   name: string;
   defaultOn?: boolean; // 서버가 true면 이미 연동됨
   toggleable?: boolean; // kakao용
@@ -194,7 +194,7 @@ export default function ChannelCard({
   }
 
   //Kakao: 일반 토글
-  async function handleKakaoToggle() {
+  async function handleToggle() {
     if (busy) return;
     try {
       setBusy(true);
@@ -204,7 +204,7 @@ export default function ChannelCard({
     } catch (e) {
       setOn((prev) => !prev);
       console.error(e);
-      alert("설정을 변경할 수 없어요. 잠시 후 다시 시도해 주세요.");
+      alert(`설정을 변경할 수 없어요. 잠시 후 다시 시도해 주세요: ${e}`);
     } finally {
       setBusy(false);
     }
@@ -212,6 +212,7 @@ export default function ChannelCard({
 
   const isDiscord = brand === "discord";
   const showDiscordButton = isDiscord && !on && !justLinked; // 미연동일 때만
+ const isKakaoOrPush = brand === "kakao" || brand === "push";
 
   return (
     <div className="channel-row">
@@ -253,7 +254,7 @@ export default function ChannelCard({
               className={`toggle-wrap ${on ? "on" : "off"} ${
                 busy ? "busy" : ""
               }`}
-              onClick={handleKakaoToggle}
+              onClick={handleToggle}
             >
               <Toggle key={on ? "1" : "0"} defaultChecked={on} />
             </div>

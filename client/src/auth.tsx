@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { me as apiMe, logout as apiLogout, User } from "./api/auth";
 import { tokenStore } from "./api/http";
+import { disablePushForCurrentUser } from "./firebase/fcmClient"; // Added import
 
 type AuthState = {
   user: User | null;
@@ -79,6 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const logout = async () => {
     try {
+      await disablePushForCurrentUser(); // 홍우민추가: 로그아웃시 push notifications 비활성화
       await apiLogout(); // 내부에서 tokenStore 정리한다고 가정
     } finally {
       setUser(null);
