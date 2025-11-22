@@ -5,11 +5,6 @@ import { findAllDomains } from '../repository/mongodb/domainRepository.js';
 import { IDomain } from '../models/Domain.js';
 import { extractDomainName } from '../utils/urlUtils.js';
 import { formatDate } from '../utils/dateUtils.js';
-import { QueueStatus, CrawlJob, KeywordDomainPair } from '../types/job.js';
-import { findAllDomains } from '../repository/mongodb/domainRepository.js';
-import { IDomain } from '../models/Domain.js';
-import { extractDomainName } from '../utils/urlUtils.js';
-import { formatDate } from '../utils/dateUtils.js';
 
 export class JobScheduler {
   private readonly CRAWL_TIMES = [9, 12, 15, 18]; // 한국시간 기준
@@ -22,10 +17,7 @@ export class JobScheduler {
 
 
   // 크롤링 스케줄 시작 -> 서버 시작하면 바로 실행됨
-
-  // 크롤링 스케줄 시작 -> 서버 시작하면 바로 실행됨
   start(): void {
-    console.log('🔄 공지사항 크롤링 스케줄 시작');
     console.log('🔄 공지사항 크롤링 스케줄 시작');
     console.log(`📅 한국시간: ${this.CRAWL_TIMES.join('시, ')}시`);
 
@@ -37,43 +29,7 @@ export class JobScheduler {
           // 크롤링 작업객체 생성
           const crawlJobs = await this.createCrawlJobs();
           
-          // 크롤링 작업객체 생성
-          const crawlJobs = await this.createCrawlJobs();
-          
           // 현재 날짜를 yymmdd 형식으로 가져오기
-          const dateStr = formatDate();
-          
-          // 각 크롤링 작업객체에 대해 큐에 작업 예약
-          for (const crawlJob of crawlJobs) {
-            const domainName = extractDomainName(crawlJob.url);
-            const jobName = `${domainName}-crawl-${dateStr}-${hour}h`;
-            const jobType = `crawl-${domainName}-notices`;
-            
-            // 디버깅: 큐에 추가되는 작업 데이터 확인
-            console.log(`[디버깅] 큐에 추가할 작업:`, {
-              jobName,
-              url: crawlJob.url,
-              keywordDomainPairs: crawlJob.keywordDomainPairs
-            });
-            
-            await scheduledJobsQueue.add(
-              jobName,
-              {
-                jobType,
-                url: crawlJob.url,
-                scheduledTime: hour,
-                timezone: 'Asia/Seoul',
-                message: `${domainName} 공지사항 크롤링`,
-                keywordDomainPairs: crawlJob.keywordDomainPairs // 크롤링 작업객체 정보 포함
-              },
-              {
-                removeOnComplete: 10,
-                removeOnFail: 5,
-              }
-            );
-            
-            console.log(`[스케줄] 큐에 작업 추가: ${jobName} (${crawlJob.url}), 키워드-도메인 쌍: ${crawlJob.keywordDomainPairs.length}개`);
-          }
           const dateStr = formatDate();
           
           // 각 크롤링 작업객체에 대해 큐에 작업 예약

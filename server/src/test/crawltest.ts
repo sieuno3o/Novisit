@@ -182,21 +182,6 @@ export function registerCrawltestApi(app: express.Application) {
         error: error.message || '크롤링 실패',
         executedAt: new Date().toISOString(),
       });
-      console.error('❌ 크롤링 테스트 오류:', error);
-      
-      // 크롤러 정리 (에러 발생 시에도)
-      try {
-        await crawler.close();
-      } catch (closeError) {
-        console.error('크롤러 종료 오류:', closeError);
-      }
-      
-      return res.status(500).json({
-        ok: false,
-        success: false,
-        error: error.message || '크롤링 실패',
-        executedAt: new Date().toISOString(),
-      });
     }
   });
 }
