@@ -20,14 +20,17 @@ export type Domain = {
 
 export { hardLogout } from "./http";
 
-export async function beginKakaoLogin(from: string = "/") {
+export async function beginKakaoLogin(from: string = "/", options?: { prompt?: 'login' }) {
   sessionStorage.setItem(
     "__oauth_state",
     JSON.stringify({ from, t: Date.now() })
   );
   const url = new URL(`${import.meta.env.VITE_API_BASE_URL}/auth/kakao/login`);
   url.searchParams.set("state", from);
-  window.location.assign(url.toString());
+  if (options?.prompt) {
+    url.searchParams.set("prompt", options.prompt);
+  }
+  window.location.replace(url.toString());
 }
 
 // (옵션) 콜백 교환 엔드포인트 사용하는 경우

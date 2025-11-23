@@ -14,6 +14,7 @@ export interface IUser extends Document {
   email: string;
   name?: string;
   providers: IOAuthProvider[];
+  fcmToken?: string | null;
 }
 // OAuthProvider 스키마
 const OAuthProviderSchema = new Schema<IOAuthProvider>({
@@ -29,6 +30,7 @@ const UserSchema = new Schema<IUser>({
   email: { type: String, required: true, unique: true },
   name: { type: String },
   providers: [OAuthProviderSchema],
+  fcmToken: { type: String, default: null },
 }, { timestamps: true });
 
 // User 모델

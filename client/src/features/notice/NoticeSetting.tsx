@@ -2,9 +2,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import "../../../public/assets/style/_flex.scss";
 import "../../../public/assets/style/_typography.scss";
 import "./NoticeSetting.scss";
+import "../my/my.scss";
 import { FiEdit, FiSave, FiX, FiTrash2 } from "react-icons/fi";
 import { IoMdTime } from "react-icons/io";
 import CreateNotice from "./CreateNotice";
+import Toggle from "../my/Toggle";
 import {
   fetchSettings,
   updateSetting,
@@ -27,6 +29,7 @@ interface NoticeItem {
   channels: Channel[]; // ★ 다중
   date: string;
   link?: string;
+  summary: boolean;
 }
 
 const getId = (s: Setting) => String((s as any).id ?? s._id);
@@ -44,26 +47,19 @@ const toKST = (iso: string) =>
     minute: "2-digit",
   });
 
-const toChannelsArray = (ch?: any, fallbackMsg?: Message): Channel[] => {
-  let arr: string[] = [];
-  if (Array.isArray(ch)) arr = ch;
-  else if (typeof ch === "string") arr = ch.split(","); // ★ CSV 지원
-  else if (ch === "kakao" || ch === "discord") arr = [ch];
-
-  let ret = arr
-    .map((v) => String(v).trim().toLowerCase())
-    .filter((v) => v === "kakao" || v === "discord") as Channel[];
-
-  if (ret.length === 0 && fallbackMsg?.platform) {
-    const p = String(fallbackMsg.platform).toLowerCase();
-    if (p === "kakao" || p === "discord") ret = [p as Channel];
-  }
-  return Array.from(new Set(ret));
+const ensureChannels = (v?: unknown): Channel[] => {
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((x) => String(x).trim().toLowerCase())
+    .filter((x) => x === "kakao" || x === "discord") as Channel[];
 };
 
 const mapSettingToItem = (s: Setting): NoticeItem => {
   const firstMsg = pickFirstMessage(s);
-  const channels = toChannelsArray((s as any).channel, firstMsg);
+
+  const primary = ensureChannels(s.channel);
+  const channels =
+    primary.length > 0 ? primary : ensureChannels(firstMsg?.platform);
 
   const formatDateOnly = (v: string) => {
     const d = new Date(v);
@@ -85,10 +81,10 @@ const mapSettingToItem = (s: Setting): NoticeItem => {
     channels,
     date: dateText,
     link: s.url_list?.[0],
+    summary: s.summary ?? true,
   };
 };
 
-/* ----- TagEditor (동일) ----- */
 function TagEditor({
   label,
   values,
@@ -182,15 +178,13 @@ function NoticeCard({
     setting.filter_keywords ?? []
   );
 
-  // ★ 다중 채널 토글
-  const initialChannels = toChannelsArray(
-    setting.channel,
-    pickFirstMessage(setting)
-  );
+  const initialChannels = ensureChannels(setting.channel);
   const [channels, setChannels] = useState<Record<Channel, boolean>>({
     kakao: initialChannels.includes("kakao"),
     discord: initialChannels.includes("discord"),
   });
+
+  const [summary, setSummary] = useState(setting.summary ?? true);
 
   const [saving, setSaving] = useState(false);
 
@@ -200,11 +194,12 @@ function NoticeCard({
     setKeywords(
       Array.isArray(setting.filter_keywords) ? setting.filter_keywords : []
     );
-    const init = toChannelsArray(setting.channel, pickFirstMessage(setting));
+    const init = ensureChannels(setting.channel);
     setChannels({
       kakao: init.includes("kakao"),
       discord: init.includes("discord"),
     });
+    setSummary(setting.summary ?? true);
     setEditing(true);
   };
   const cancel = () => setEditing(false);
@@ -225,17 +220,14 @@ function NoticeCard({
       return;
     }
 
-    // 선택 개수에 따라 단일/배열 전송
-    const channelPayload: Channel | Channel[] =
-      chosen.length === 1 ? chosen[0] : chosen;
-
     try {
       setSaving(true);
       const updated = await updateSetting(getId(setting), {
         name: name.trim(),
         url_list: urls,
         filter_keywords: keywords,
-        channel: channelPayload, // ★ 단일/배열 모두 지원
+        channel: chosen, // ✅ 항상 배열로 전송
+        summary,
       });
       onUpdated(updated);
       setEditing(false);
@@ -376,12 +368,31 @@ function NoticeCard({
             </button>
           </div>
 
-          <TagEditor
+          {/* ★ 요약 토글 */}
+          <div className="form__label" style={{ marginTop: 8 }}>
+            요약
+          </div>
+          <div className="notify-toggle-wrap" style={{ marginBottom: 8 }}>
+            <span className="notify-label" aria-hidden>
+              {summary ? "ON" : "OFF"}
+            </span>
+            <div
+              role="switch"
+              aria-checked={summary}
+              aria-label={`요약 ${summary ? "끄기" : "켜기"}`}
+              className={`toggle-wrap ${summary ? "on" : "off"}`}
+              onClick={() => setSummary(!summary)}
+            >
+              <Toggle key={summary ? "1" : "0"} defaultChecked={summary} />
+            </div>
+          </div>
+
+          {/* <TagEditor
             label="필터 키워드"
             values={keywords}
             placeholder="새 키워드 입력"
             onChange={setKeywords}
-          />
+          /> */}
           <div style={{ height: 8 }} />
           {/* <TagEditor
             label="URL 목록"
@@ -401,22 +412,26 @@ function NoticeCard({
           </div>
           <div className="notice-contour"></div>
 
-          {/* ★ 다중 배지 표시 */}
+          {/* 다중 배지 표시 */}
           <div className="notice-card-channel body3">
             알림 채널:&nbsp;
             {item.channels.length === 0 ? (
-              <span className="channel kakao">카카오톡</span> // fallback
+              <span className="channel kakao">카카오톡</span>
             ) : (
               item.channels.map((ch, i) => (
-                <span
-                  key={`${ch}-${i}`}
-                  className={`channel ${ch}`}
-                  style={{ marginRight: 6 }}
-                >
+                <span key={`${ch}-${i}`} className={`channel ${ch}`}>
                   {ch === "discord" ? "디스코드" : "카카오톡"}
                 </span>
               ))
             )}
+          </div>
+
+          {/* 요약 상태 표시 */}
+          <div className="notice-card-channel body3">
+            요약:&nbsp;
+            <span className="channel notify-pill">
+              {item.summary ? "ON" : "OFF"}
+            </span>
           </div>
 
           {/* 날짜: 백엔드 created_at 우선 */}
@@ -535,7 +550,10 @@ function NoticeSettingInner() {
           );
         })}
 
-      <CreateNotice onCreated={handleCreated} />
+      <CreateNotice
+        onCreated={handleCreated}
+        existingSettings={Object.values(settingsMap)}
+      />
     </div>
   );
 }

@@ -112,6 +112,7 @@ export async function linkDiscordToUser(
   
     return updatedUser;
   }
+
   
 // 사용자의 카카오 알림 수신 동의 상태를 변경합니다.
 export async function updateKakaoNotificationSetting(userId: string, enabled: boolean): Promise<IUser | null> {

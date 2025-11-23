@@ -8,9 +8,7 @@ import { fetchMain, type Domain } from "../api/main";
 export default function MainPage() {
   const { user, loading } = useAuth();
   const [domains, setDomains] = useState<Domain[]>([]);
-  const MOCK: Domain[] = [
-  { id: "1", name: "Example", urls: ["https://a", "https://b", "https://c"], keywords: ["지원","공모전","채용"] },
-];
+  const [error, setError] = useState<string | null>(null); // 추가: 에러 메시지
 
   useEffect(() => {
     let alive = true;
@@ -22,32 +20,43 @@ export default function MainPage() {
 
     (async () => {
       try {
-        const list = await fetchMain();      // 서버에서 도메인 목록
+        const list = await fetchMain();   
         if (!alive) return;
-        setDomains(Array.isArray(list) ? list : []);
-      } catch {
+        setDomains(list);
+        setError(null);                    
+      } catch (e: any) {
         if (!alive) return;
-        setDomains([]);   // 실패 시 빈 배열
+        setError(e.message ?? "도메인 조회 중 오류가 발생했습니다.");  
+        setDomains([]); // 또는 setDomains(MOCK); 로 목데이터 사용 가능
       }
     })();
 
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [user]);
 
-  if (loading) return null;
+   if (loading) {
+    return null; 
+  }
 
   if (!user) {
     return (
       <Hero>
-        <Start onClick={() => (window.location.href = "/login")} />
+        <Start onClick={() => (window.location.href = "/login?kakao_prompt=login")} />
       </Hero>
     );
   }
 
   return (
-    <>
+    <div className="page">
       <Hero />
-      <Domains domains={domains.length ? domains : MOCK} />   {/* 로그인 시에만 데이터 전달 */}
-    </>
+
+      {/*Domains 컴포넌트에 실제 도메인 배열 전달 */}
+      <Domains
+        domains={domains}
+        error={error}           // 선택: 에러 메시지가 필요하면 prop으로 전달
+      />
+    </div>
   );
 }

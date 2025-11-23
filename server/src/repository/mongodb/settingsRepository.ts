@@ -48,6 +48,7 @@ export const getSettings = async (userId: string) => {
           name: setting.name,
           domain_id: setting.domain_id.toString(),
           channel: setting.channel,
+          summary: setting.summary,
           created_at: formatKoreanDate(setting.created_at),
           messages: messages.map((m) => ({
             id: m._id.toString(),
@@ -167,6 +168,9 @@ export const deleteSetting = async (settingId: string) => {
     }
 
     const domainId = existingSetting.domain_id;
+
+    // 관련 메시지 전체 삭제
+    await Message.deleteMany({ setting_id: settingId });
 
     // Setting 삭제
     await Setting.findByIdAndDelete(settingId);
