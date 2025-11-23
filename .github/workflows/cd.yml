@@ -144,8 +144,14 @@ jobs:
             sudo mkdir -p /opt/novisit
             cd /opt/novisit
             
-            # Stop existing services
-            sudo docker-compose down || echo "No existing services to stop"
+            # Stop existing services (only if current deployment exists)
+            if [ -d "current" ] && [ -f "current/docker-compose.yml" ]; then
+              cd current
+              sudo docker-compose down || echo "No existing services to stop"
+              cd ..
+            else
+              echo "No existing deployment found, skipping docker-compose down"
+            fi
             
             # Backup current deployment (if exists)
             if [ -d "current" ]; then
