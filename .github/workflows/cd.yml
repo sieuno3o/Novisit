@@ -286,11 +286,17 @@ jobs:
               exit 1
             fi
             
-            # Stop existing services
+            # Stop existing services and remove containers
             sudo docker-compose down || echo "No existing services to stop"
             
+            # Force remove any remaining containers
+            sudo docker ps -a --filter "name=novisit" --format "{{.ID}}" | xargs -r sudo docker rm -f || true
+            
+            # Remove old images to force rebuild
+            sudo docker images --filter "reference=*novisit*" --format "{{.ID}}" | xargs -r sudo docker rmi -f || true
+            
             # Build images without cache to ensure latest code
-            sudo docker-compose build --no-cache
+            sudo docker-compose build --no-cache --pull
             
             # Start services with force recreate to ensure new containers
             sudo docker-compose up -d --force-recreate
