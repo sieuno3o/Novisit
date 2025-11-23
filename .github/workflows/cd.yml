@@ -253,6 +253,8 @@ jobs:
             JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
             FRONTEND_BASE_URL=${{ secrets.FRONTEND_BASE_URL }}
             CLIENT_URL=${{ secrets.CLIENT_URL }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            DISCORD_INVITE_URL=${{ secrets.DISCORD_INVITE_URL }}
             EOF
             
             # Verify .env file was created
