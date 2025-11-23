@@ -49,6 +49,7 @@ export class ApiError extends Error {
 }
 
 /* ---------------- utils ---------------- */
+/* ---------------- utils ---------------- */
 const normList = (v: any) => (Array.isArray(v) ? v : []);
 const getId = (s: any) => s?.id ?? s?._id;
 const toLower = (x: any) =>

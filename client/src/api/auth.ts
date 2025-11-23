@@ -30,7 +30,7 @@ export async function beginKakaoLogin(from: string = "/", options?: { prompt?: '
   if (options?.prompt) {
     url.searchParams.set("prompt", options.prompt);
   }
-  window.location.assign(url.toString());
+  window.location.replace(url.toString());
 }
 
 // (옵션) 콜백 교환 엔드포인트 사용하는 경우

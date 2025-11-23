@@ -12,7 +12,7 @@ import {
 } from "../repository/mongodb/settingsRepository.js";
 import { sendKakaoMessage } from "./notificationService.js";
 import { getSummaryFromText } from "./openAIService.js";
-import { getSourceFromUrl } from "../utils/urlUtils.js";
+import { getSourceFromUrl, extractDomainName } from "../utils/urlUtils.js";
 import { formatCrawlDate } from "../utils/dateUtils.js";
 import { routeMessageByPlatform } from "./platformRouter.js";
 import Setting from "@/models/Setting.js";
@@ -28,15 +28,16 @@ export function matchesKeywords(text: string, keywords: string[]): boolean {
  * @param url 크롤링할 URL
  * @param keywordDomainPairs 키워드와 도메인ID 쌍 배열
  * @param crawler WebCrawler 인스턴스
- * @returns 처리된 공지사항 수
+ * @returns 처리된 공지사항 수와 크롤링 결과
  */
 export async function crawlAndFilterByKeywords(
   url: string,
   keywordDomainPairs: KeywordDomainPair[],
   crawler: WebCrawler
-): Promise<number> {
+): Promise<{ notificationsSent: number; crawlResult: NoticeResult }> {
   let totalProcessed = 0;
-
+  let crawlResult: NoticeResult | null = null;
+  
   try {
     // URL에서 소스 이름 추출 (PKNU, NAVER 등)
     const source = getSourceFromUrl(url);
@@ -46,13 +47,18 @@ export async function crawlAndFilterByKeywords(
 
     // 크롤링은 한 번만 수행 (같은 URL이므로)
     const lastKnownNumber = await getLatestNoticeNumber(url, source);
-
+    
+    // campuspick은 무한 스크롤 방식이므로 1페이지, 다른 크롤러는 3페이지
+    const domainName = extractDomainName(url);
+    const lowerDomainName = domainName.toLowerCase();
+    const maxPages = (lowerDomainName === 'campuspick' || lowerDomainName === 'campuspick.com') ? 1 : 3;
+    
     // 공지사항 목록 크롤링 (URL에 따라 분기 - webCrawler에서 처리)
-    const crawlResult = await crawler.crawlNoticesList(url, lastKnownNumber);
-
+    crawlResult = await crawler.crawlNoticesList(url, lastKnownNumber, maxPages);
+    
     if (!crawlResult.notices || crawlResult.notices.length === 0) {
       console.log(`[크롤링] ${url}: 새 공지 없음`);
-      return totalProcessed;
+      return { notificationsSent: totalProcessed, crawlResult };
     }
 
     // DB에 저장 (모든 공지사항 저장) Notice객체
@@ -67,8 +73,8 @@ export async function crawlAndFilterByKeywords(
       crawlResult
     );
     totalProcessed = await sendNotifications(filteredNotices, crawlResult);
-
-    return totalProcessed;
+    
+    return { notificationsSent: totalProcessed, crawlResult };
   } catch (error: any) {
     console.error(`[크롤링] ${url} 크롤링 실패:`, error.message);
     throw error;
@@ -105,21 +111,11 @@ export async function filterNotices(
     console.log(`[필터링] 키워드-도메인 쌍이 없어 필터링 스킵`);
     return filteredNotices;
   }
-
-  // 디버깅: 키워드-도메인 쌍 정보 출력
-  console.log(
-    `[디버깅] 필터링 시작: ${notices.length}개 공지사항, ${keywordDomainPairs.length}개 키워드-도메인 쌍`
-  );
-  console.log(
-    `[디버깅] 키워드-도메인 쌍:`,
-    JSON.stringify(keywordDomainPairs, null, 2)
-  );
-
+  
+  // 디버깅 로그 제거 (불필요한 로그)
+  
   // 각 공지사항에 대해 처리
   for (const notice of notices) {
-    // 디버깅: 각 공지사항 제목 출력
-    console.log(`[디버깅] 공지사항 체크: #${notice.number} "${notice.title}"`);
-
     // 공지사항 제목을 키워드와 비교
     const matchedPairs = keywordDomainPairs.filter((pair) => {
       const matched = matchesKeywords(notice.title, [pair.keyword]);
@@ -127,7 +123,6 @@ export async function filterNotices(
     });
 
     if (matchedPairs.length === 0) {
-      console.log(`[디버깅] 공지사항 #${notice.number} 매칭 없음`);
       continue; // 키워드 매칭 없음
     }
 
@@ -142,12 +137,7 @@ export async function filterNotices(
       const detailResult = await crawler.crawlNoticeDetail(url, notice.link);
       detailContent = detailResult.content;
       imageUrl = detailResult.imageUrl;
-      console.log(
-        `[크롤링] 공지사항 #${notice.number} 상세 페이지 크롤링 완료 (${detailContent.length}자)`
-      );
-      console.log(
-        `[크롤링] 공지사항 #${notice.number} 이미지 URL: ${imageUrl || "없음"}`
-      );
+      // 상세 페이지 크롤링 완료 로그 제거 (불필요한 로그)
     } catch (error: any) {
       console.error(
         `[크롤링] 공지사항 #${notice.number} 상세 페이지 크롤링 실패:`,
@@ -212,36 +202,17 @@ export async function sendNotifications(
           console.log(`[알림] domain_id ${domain_id}: Settings 없음`);
           continue;
         }
-
-        console.log(
-          `[알림] domain_id ${domain_id}: ${settings.length}개 Setting 발견`
-        );
-
+        
         // 각 Setting의 user_id로 알림 전송 및 Message 저장
         for (const setting of settings) {
           try {
             // 크롤링한 이미지 URL이 있으면 사용, 없으면 기본 이미지 사용
-            const imageUrlForMessage =
-              imageUrl ||
-              crawlResult.imageUrl ||
-              "https://t1.daumcdn.net/cafeattach/1YmK3/560c6415d44b9ae3c5225a255541c3c2c1568643";
-            console.log(`[알림] 공지사항 #${notice.number} "${notice.title}"`);
-            console.log(
-              `[알림] - 현재 공지사항 이미지 URL: ${imageUrl || "없음"}`
-            );
-            console.log(
-              `[알림] - 전체 결과 이미지 URL: ${crawlResult.imageUrl || "없음"}`
-            );
-            console.log(
-              `[알림] - 최종 사용할 이미지 URL: ${imageUrlForMessage}`
-            );
-
-            let messageContent = "";
+            const imageUrlForMessage = imageUrl || crawlResult.imageUrl || 'https://upload.wikimedia.org/wikipedia/ko/a/a2/PKNU_Logo.png?20210915113624';
+            
+            let messageContent = '';
             if (setting.summary) {
               try {
-                console.log(`[OpenAI] 공지사항 #${notice.number} 요약 시도...`);
                 messageContent = await getSummaryFromText(detailContent);
-                console.log(`[OpenAI] 공지사항 #${notice.number} 요약 완료`);
               } catch (summaryError: any) {
                 console.error(
                   `[OpenAI] 공지사항 #${notice.number} 요약 실패:`,
@@ -259,6 +230,11 @@ export async function sendNotifications(
               messageContent = `${truncatedContent}${
                 detailContent.length > 500 ? "..." : ""
               }`;
+            }
+            
+            // messageContent가 비어있으면 기본 메시지 설정 (validation 에러 방지)
+            if (!messageContent || messageContent.trim() === '') {
+              messageContent = notice.title || '공지사항 내용을 확인해주세요.';
             }
 
             const description = messageContent;
@@ -284,10 +260,8 @@ export async function sendNotifications(
             );
 
             totalProcessed++;
-            console.log(
-              `[알림] Setting "${setting.name}" (user_id: ${setting.user_id}): 공지사항 #${notice.number} 알림 전송 완료`
-            );
-
+            console.log(`[알림] 공지사항 #${notice.number} "${notice.title}": ${settings.length}개 Setting에 알림 전송 완료`);
+            
             // 메시지 전송 간 딜레이 (API 제한 방지)
             await new Promise((resolve) => setTimeout(resolve, 500));
           } catch (error: any) {

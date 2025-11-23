@@ -50,20 +50,21 @@ export const initialDomains: InitialDomainData[] = [
   },
   {
     _id: "5",
-    name: "예비창업",
+    name: "창업",
     url_list: [
-      "",
+      "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do",
+      "https://www.mss.go.kr/site/smba/ex/bbs/List.do?cbIdx=310",
     ],
-    keywords: ["예비창업"],
+    keywords: ["창업"],
     setting_ids: [],
   },
   {
     _id: "6",
-    name: "공공임대",
+    name: "해커톤",
     url_list: [
-      "",
+      "https://www.campuspick.com/contest?category=108",
     ],
-    keywords: ["예비창업"],
+    keywords: ["해커톤"],
     setting_ids: [],
   },
   // 필요에 따라 더 많은 도메인을 추가할 수 있습니다
