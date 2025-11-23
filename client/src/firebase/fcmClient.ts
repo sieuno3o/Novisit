@@ -1,4 +1,4 @@
-import { messaging } from "./firebaseConfig"; // [가정] 같은 폴더 내 firebaseConfig.ts
+import { messaging } from "./firebaseConfig"; 
 import { getToken, deleteToken } from "firebase/messaging";
 import http from "../api/http";
 
@@ -71,7 +71,7 @@ export async function deleteFcmTokenFromServer(): Promise<void> {
 export async function enablePushForCurrentUser(): Promise<void> {
   const token = await getFcmTokenFromBrowser();
   await saveFcmTokenToServer(token);
-  console.log(token)
+  // console.log(token)
 }
 
 /**
