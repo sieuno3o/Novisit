@@ -23,8 +23,8 @@ let messaging: Messaging | null = null;
 try {
   messaging = getMessaging(app);
 } catch (err) {
-  // ⚠️ 서버환경 또는 브라우저 지원문제 때문에 실패할 수 있어 방어
-  console.warn("[가정] Firebase messaging 초기화 실패:", err);
+  //  서버환경 또는 브라우저 지원문제 때문에 실패할 수 있어 방어
+  console.warn(" Firebase messaging 초기화 실패:", err);
 }
 
 export { messaging };
