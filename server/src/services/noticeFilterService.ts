@@ -238,7 +238,6 @@ export async function sendNotifications(
             }
 
             const description = messageContent;
-            
 
             // 메시지 전송
             await routeMessageByPlatform(
@@ -249,7 +248,6 @@ export async function sendNotifications(
               notice.link
             );
 
-            
             // Message 저장
             const settingId = setting._id ? String(setting._id) : setting.id;
             await saveMessage(

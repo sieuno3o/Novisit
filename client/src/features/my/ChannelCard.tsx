@@ -40,7 +40,7 @@
 //       window.location.assign(url);                    // 현재 탭 이동
 //     } catch (e: any) {
 //       if (e?.response?.status === 401) {
-//         window.location.assign("/login?next=/my");
+//         window.location.assign("/login?kakao_prompt=login");
 //         return;
 //       }
 //       alert("디스코드 연동을 시작할 수 없어요. 잠시 후 다시 시도해 주세요.");
@@ -183,7 +183,7 @@ export default function ChannelCard({
       setJustLinked(false);
       setOn(!!defaultOn);
       if (e?.response?.status === 401) {
-        window.location.assign("/login?next=/my");
+        window.location.assign("/login?kakao_prompt=login");
         return;
       }
       alert("디스코드 연동을 시작할 수 없어요. 잠시 후 다시 시도해 주세요.");

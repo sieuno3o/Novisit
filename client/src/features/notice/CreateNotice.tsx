@@ -3,8 +3,10 @@ import { createPortal } from "react-dom";
 import "../../../public/assets/style/_flex.scss";
 import "../../../public/assets/style/_typography.scss";
 import "./CreateNotice.scss";
+import "../my/my.scss";
 import { FiPlus } from "react-icons/fi";
 import { useAuth } from "../../auth";
+import Toggle from "../my/Toggle";
 import {
   createSetting,
   ApiError,
@@ -28,7 +30,10 @@ interface CreateNoticeProps {
   existingSettings?: Setting[];
 }
 
-const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings = [] }) => {
+const CreateNotice: React.FC<CreateNoticeProps> = ({
+  onCreated,
+  existingSettings = [],
+}) => {
   const { logout } = (useAuth() as any) ?? {};
   const { show } = useToast();
 
@@ -49,6 +54,9 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
     kakao: true, // 기본값 원하면 false로 변경 가능
     discord: false,
   });
+
+  // 요약 기능 토글
+  const [summary, setSummary] = useState(true);
 
   const [loading, setLoading] = useState(false);
   const [banner, setBanner] = useState<{
@@ -90,7 +98,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
 
   // 이미 설정된 도메인 ID 목록
   const usedDomainIds = useMemo(
-    () => new Set(existingSettings.map(s => s.domain_id)),
+    () => new Set(existingSettings.map((s) => s.domain_id)),
     [existingSettings]
   );
 
@@ -107,7 +115,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
 
   // 사용 가능한 도메인이 있는지 확인
   const availableDomains = useMemo(
-    () => domains.filter(d => !usedDomainIds.has(d.id)),
+    () => domains.filter((d) => !usedDomainIds.has(d.id)),
     [domains, usedDomainIds]
   );
 
@@ -119,8 +127,14 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
 
   const handleOpenModal = () => {
     // 사용 가능한 도메인이 없으면 Toast 표시
-    if (!domainsLoading && domains.length > 0 && availableDomains.length === 0) {
-      show("모든 도메인에 이미 알림 설정이 존재합니다. 새로운 알림을 추가하려면 기존 설정을 삭제해 주세요.");
+    if (
+      !domainsLoading &&
+      domains.length > 0 &&
+      availableDomains.length === 0
+    ) {
+      show(
+        "모든 도메인에 이미 알림 설정이 존재합니다. 새로운 알림을 추가하려면 기존 설정을 삭제해 주세요."
+      );
       return;
     }
     setOpen(true);
@@ -137,7 +151,10 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
 
     // 이미 설정된 도메인 확인
     if (usedDomainIds.has(domainId.trim())) {
-      setBanner({ type: "error", text: "해당 도메인은 이미 알림 설정이 존재합니다. 다른 도메인을 선택해 주세요." });
+      setBanner({
+        type: "error",
+        text: "해당 도메인은 이미 알림 설정이 존재합니다. 다른 도메인을 선택해 주세요.",
+      });
       return;
     }
 
@@ -147,6 +164,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
       url_list: parseList(urlText),
       filter_keywords: parseList(keywordText),
       channel: chosenChannels,
+      summary,
     };
 
     try {
@@ -224,7 +242,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
 
                 <form className="notice-form flex-col" onSubmit={handleSubmit}>
                   <label className="form__label">
-                    도메인 <span className="req">*</span>
+                    도메인
                     <select
                       className="form__input"
                       value={domainId}
@@ -241,20 +259,24 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
                         const isUsed = usedDomainIds.has(d.id);
                         return (
                           <option key={d.id} value={d.id} disabled={isUsed}>
-                            {d.name}{isUsed ? " (이미 설정됨)" : ""}
+                            {d.name}
+                            {isUsed ? " (이미 설정됨)" : ""}
                           </option>
                         );
                       })}
                     </select>
                   </label>
                   {usedDomainIds.size > 0 && (
-                    <div className="body3" style={{ marginTop: 4, color: "#666" }}>
+                    <div
+                      className="body3"
+                      style={{ marginTop: 4, color: "#666" }}
+                    >
                       * 한 도메인에 하나의 알림만 설정할 수 있습니다.
                     </div>
                   )}
 
                   <label className="form__label">
-                    설정 이름 <span className="req">*</span>
+                    설정 이름
                     <input
                       className="form__input"
                       type="text"
@@ -289,6 +311,24 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
                     </div>
                   </div>
 
+                  <div className="flex-row form__group">
+                    <div className="channel-label">요약</div>
+                    <div className="notify-toggle-wrap">
+                      <span className="notify-label" aria-hidden>
+                        {summary ? "ON" : "OFF"}
+                      </span>
+                      <div
+                        role="switch"
+                        aria-checked={summary}
+                        aria-label={`요약 ${summary ? "끄기" : "켜기"}`}
+                        className={`toggle-wrap ${summary ? "on" : "off"}`}
+                        onClick={() => setSummary(!summary)}
+                      >
+                        <Toggle key={summary ? "1" : "0"} defaultChecked={summary} />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* 필요 시 URL 입력 사용 */}
                   {/* <label className="form__label">
                     URL 목록 (줄바꿈 또는 쉼표)
@@ -300,7 +340,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
                     />
                   </label> */}
 
-                  <label className="form__label">
+                  {/* <label className="form__label">
                     필터 키워드 (줄바꿈 또는 쉼표)
                     <textarea
                       className="form__textarea"
@@ -308,7 +348,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({ onCreated, existingSettings
                       value={keywordText}
                       onChange={(e) => setKeywordText(e.target.value)}
                     />
-                  </label>
+                  </label> */}
 
                   <div className="form__actions flex-center">
                     <button

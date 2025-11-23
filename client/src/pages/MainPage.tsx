@@ -43,7 +43,7 @@ export default function MainPage() {
   if (!user) {
     return (
       <Hero>
-        <Start onClick={() => (window.location.href = "/login")} />
+        <Start onClick={() => (window.location.href = "/login?kakao_prompt=login")} />
       </Hero>
     );
   }

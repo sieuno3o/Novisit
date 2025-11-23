@@ -1,10 +1,8 @@
 .site-footer {
-  background-color: #f5f6f7; 
   color: #000;
   border-top: none;
   padding: 30px 0;
   font-size: 14px;
-
 
   .site-footer__inner {
     max-width: 1200px;
@@ -41,7 +39,6 @@
     line-height: 1.8;
   }
 
-
   .site-footer__col a {
     color: #6b7280;
     text-decoration: none;
@@ -49,7 +46,7 @@
     transition: color 0.25s ease;
 
     &:hover {
-      color: #1c67ca; 
+      color: #1c67ca;
     }
   }
 
