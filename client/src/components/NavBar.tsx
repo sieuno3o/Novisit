@@ -1,4 +1,4 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth";
 import "./NavBar.scss";
 import "../../public/assets/style/_typography.scss";
@@ -8,6 +8,7 @@ import "../../public/assets/style/_colors.scss";
 export default function NavBar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const onLogout = () => {
     logout();
@@ -17,7 +18,12 @@ export default function NavBar() {
   return (
     <header className="navbar flex-between">
       <div className="flex-center">
-        <Link to="/" className="navbar__logo logo-text heading1">
+        <Link to="/" className="navbar__logo logo-text heading1 flex-row">
+          <img
+            src="/assets/img/novisitlogo.png"
+            alt="Novisit Logo"
+            className="navbar__logo-image"
+          />
           Novisit
         </Link>
       </div>
@@ -46,7 +52,11 @@ export default function NavBar() {
           </>
         ) : (
           <>
-            <NavLink to="/login?kakao_prompt=login" className="login-btn body3">      
+            <NavLink
+              to="/login?kakao_prompt=login"
+              state={{ from: location }}
+              className="login-btn body3"
+            >
               시작하기
             </NavLink>
           </>

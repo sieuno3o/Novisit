@@ -101,3 +101,12 @@
   justify-content: right;
   align-items: center;
 }
+
+/* ========== 반응형 ========== */
+@media (max-width: 900px) {
+  .flex-row-left {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0 25px;
+  }
+}
