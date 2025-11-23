@@ -271,6 +271,21 @@ jobs:
               exit 1
             fi
             
+            # Create firebase-admin-key.json file
+            mkdir -p server/src/config
+            echo '${{ secrets.FIREBASE_ADMIN_KEY }}' > server/src/config/firebase-admin-key.json
+            
+            # Verify firebase-admin-key.json file was created
+            echo "=== Verifying firebase-admin-key.json file ==="
+            if [ -f "server/src/config/firebase-admin-key.json" ]; then
+              echo "✅ firebase-admin-key.json file created successfully"
+              echo "File location: $(pwd)/server/src/config/firebase-admin-key.json"
+              echo "File size: $(wc -c < server/src/config/firebase-admin-key.json) bytes"
+            else
+              echo "❌ firebase-admin-key.json file not found!"
+              exit 1
+            fi
+            
             # Stop existing services
             sudo docker-compose down || echo "No existing services to stop"
             
