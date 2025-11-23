@@ -3,8 +3,10 @@ import { createPortal } from "react-dom";
 import "../../../public/assets/style/_flex.scss";
 import "../../../public/assets/style/_typography.scss";
 import "./CreateNotice.scss";
+import "../my/my.scss";
 import { FiPlus } from "react-icons/fi";
 import { useAuth } from "../../auth";
+import Toggle from "../my/Toggle";
 import {
   createSetting,
   ApiError,
@@ -51,6 +53,9 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({
     kakao: true, // 기본값 원하면 false로 변경 가능
     discord: false,
   });
+
+  // 요약 기능 토글
+  const [summary, setSummary] = useState(true);
 
   const [loading, setLoading] = useState(false);
   const [banner, setBanner] = useState<{
@@ -158,6 +163,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({
       url_list: parseList(urlText),
       filter_keywords: parseList(keywordText),
       channel: chosenChannels,
+      summary,
     };
 
     try {
@@ -300,6 +306,24 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({
                       >
                         디스코드
                       </button>
+                    </div>
+                  </div>
+
+                  <div className="flex-row form__group">
+                    <div className="channel-label">요약</div>
+                    <div className="notify-toggle-wrap">
+                      <span className="notify-label" aria-hidden>
+                        {summary ? "ON" : "OFF"}
+                      </span>
+                      <div
+                        role="switch"
+                        aria-checked={summary}
+                        aria-label={`요약 ${summary ? "끄기" : "켜기"}`}
+                        className={`toggle-wrap ${summary ? "on" : "off"}`}
+                        onClick={() => setSummary(!summary)}
+                      >
+                        <Toggle key={summary ? "1" : "0"} defaultChecked={summary} />
+                      </div>
                     </div>
                   </div>
 

@@ -2,9 +2,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import "../../../public/assets/style/_flex.scss";
 import "../../../public/assets/style/_typography.scss";
 import "./NoticeSetting.scss";
+import "../my/my.scss";
 import { FiEdit, FiSave, FiX, FiTrash2 } from "react-icons/fi";
 import { IoMdTime } from "react-icons/io";
 import CreateNotice from "./CreateNotice";
+import Toggle from "../my/Toggle";
 import {
   fetchSettings,
   updateSetting,
@@ -27,6 +29,7 @@ interface NoticeItem {
   channels: Channel[]; // ★ 다중
   date: string;
   link?: string;
+  summary: boolean;
 }
 
 const getId = (s: Setting) => String((s as any).id ?? s._id);
@@ -78,6 +81,7 @@ const mapSettingToItem = (s: Setting): NoticeItem => {
     channels,
     date: dateText,
     link: s.url_list?.[0],
+    summary: s.summary ?? true,
   };
 };
 
@@ -180,6 +184,8 @@ function NoticeCard({
     discord: initialChannels.includes("discord"),
   });
 
+  const [summary, setSummary] = useState(setting.summary ?? true);
+
   const [saving, setSaving] = useState(false);
 
   const startEdit = () => {
@@ -193,6 +199,7 @@ function NoticeCard({
       kakao: init.includes("kakao"),
       discord: init.includes("discord"),
     });
+    setSummary(setting.summary ?? true);
     setEditing(true);
   };
   const cancel = () => setEditing(false);
@@ -220,6 +227,7 @@ function NoticeCard({
         url_list: urls,
         filter_keywords: keywords,
         channel: chosen, // ✅ 항상 배열로 전송
+        summary,
       });
       onUpdated(updated);
       setEditing(false);
@@ -360,6 +368,25 @@ function NoticeCard({
             </button>
           </div>
 
+          {/* ★ 요약 토글 */}
+          <div className="form__label" style={{ marginTop: 8 }}>
+            요약
+          </div>
+          <div className="notify-toggle-wrap" style={{ marginBottom: 8 }}>
+            <span className="notify-label" aria-hidden>
+              {summary ? "ON" : "OFF"}
+            </span>
+            <div
+              role="switch"
+              aria-checked={summary}
+              aria-label={`요약 ${summary ? "끄기" : "켜기"}`}
+              className={`toggle-wrap ${summary ? "on" : "off"}`}
+              onClick={() => setSummary(!summary)}
+            >
+              <Toggle key={summary ? "1" : "0"} defaultChecked={summary} />
+            </div>
+          </div>
+
           {/* <TagEditor
             label="필터 키워드"
             values={keywords}
@@ -385,22 +412,26 @@ function NoticeCard({
           </div>
           <div className="notice-contour"></div>
 
-          {/* ★ 다중 배지 표시 */}
+          {/* 다중 배지 표시 */}
           <div className="notice-card-channel body3">
             알림 채널:&nbsp;
             {item.channels.length === 0 ? (
-              <span className="channel kakao">카카오톡</span> // fallback
+              <span className="channel kakao">카카오톡</span>
             ) : (
               item.channels.map((ch, i) => (
-                <span
-                  key={`${ch}-${i}`}
-                  className={`channel ${ch}`}
-                  style={{ marginRight: 6 }}
-                >
+                <span key={`${ch}-${i}`} className={`channel ${ch}`}>
                   {ch === "discord" ? "디스코드" : "카카오톡"}
                 </span>
               ))
             )}
+          </div>
+
+          {/* 요약 상태 표시 */}
+          <div className="notice-card-channel body3">
+            요약:&nbsp;
+            <span className="channel notify-pill">
+              {item.summary ? "ON" : "OFF"}
+            </span>
           </div>
 
           {/* 날짜: 백엔드 created_at 우선 */}

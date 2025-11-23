@@ -11,6 +11,7 @@ export type CreateSettingRequest = {
   url_list: string[];
   filter_keywords: string[];
   channel: Channel[]; // ✅ 배열 고정
+  summary?: boolean;  // 요약 기능 ON/OFF
 };
 
 /** 메시지 — platform도 배열 유지 */
@@ -33,6 +34,7 @@ export type Setting = {
   url_list: string[];
   filter_keywords: string[];
   channel: Channel[]; // ✅ 배열 고정
+  summary?: boolean;  // 요약 기능 ON/OFF
   created_at?: string;
   messages: Message[];
   [extra: string]: any;
@@ -151,7 +153,7 @@ export async function fetchSettings(): Promise<Setting[]> {
 
 /** 수정: PUT /settings/{id} — { updatedSetting: {...} } */
 export type UpdateSettingRequest = Partial<
-  Pick<Setting, "name" | "filter_keywords" | "url_list" | "channel">
+  Pick<Setting, "name" | "filter_keywords" | "url_list" | "channel" | "summary">
 >;
 
 export async function updateSetting(
