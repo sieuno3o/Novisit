@@ -44,11 +44,26 @@
     }
   }
 
+  // 선택된 카드
+  &.notice-card--selected {
+    border: 2px solid #3b77d0;
+    background: #f0f7ff;
+    box-shadow: 0 4px 12px rgba(59, 119, 208, 0.2);
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(59, 119, 208, 0.25);
+      border: 2px solid #3b77d0;
+    }
+  }
+
   .notice-card-header {
     margin-bottom: 12px;
 
     .notice-card-title {
+      margin-top: 3px;
+      margin-left: 7px;
       font-weight: 500;
+      align-items: center;
     }
 
     .notice-card-edit {
@@ -85,10 +100,13 @@
 
   // 편집 모드 라벨
   .form__label {
-    font-size: 14px;
-    font-weight: 500;
+    align-items: center;
     color: #333;
     margin-bottom: 6px;
+
+    .notify-label {
+      margin-left: 3px;
+    }
   }
 
   // 채널 토글 영역
@@ -131,11 +149,13 @@
       }
     }
   }
-
+  .notice-card-header-left {
+    display: flex;
+    align-items: center;
+  }
   .notice-card-tags {
     display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
+    flex-wrap: wrap;
 
     .tag {
       padding: 4px 10px;
@@ -144,7 +164,20 @@
       font-weight: 600;
       color: #fff;
       background: linear-gradient(100deg, #50afcf 0%, #3b77d08f 100%);
+
+      &.domain-tag {
+        background: #ffffff;
+        color: #7289da;
+        border: 1px solid #7289da;
+        border-radius: 100px;
+      }
     }
+  }
+
+  // 읽기 전용 토글
+  .toggle-wrap.readonly {
+    pointer-events: none;
+    opacity: 0.8;
   }
 
   .notice-card-link {

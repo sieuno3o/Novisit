@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./auth";
 import RequireAuth from "./routes/RequireAuth";
@@ -7,13 +8,29 @@ import LoginPage from "./pages/LoginPage";
 import KakaoFinishPage from "./pages/KakaoFinishPage";
 import NoticePage from "./pages/NoticePage";
 import MyPage from "./pages/MyPage";
-import { ToastProvider } from "./components/Toast";
+import { ToastProvider, useToast } from "./components/Toast";
 import ScrollToTop from "./components/ScrollToTop";
+import { getAndClearSessionExpiredMessage } from "./api/http";
+
+// 세션 만료 메시지 표시 컴포넌트
+function SessionExpiredNotifier() {
+  const { show } = useToast();
+
+  useEffect(() => {
+    const msg = getAndClearSessionExpiredMessage();
+    if (msg) {
+      show(msg);
+    }
+  }, [show]);
+
+  return null;
+}
 
 export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <SessionExpiredNotifier />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
