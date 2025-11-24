@@ -1,4 +1,4 @@
-import * as userRepository from "../repository/mongodb/userRepository";
+import * as userRepository from "../repository/mongodb/userRepository.js";
 import { Client, GatewayIntentBits, Partials, User, EmbedBuilder } from "discord.js";
 
 const client = new Client({
