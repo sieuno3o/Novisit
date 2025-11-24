@@ -16,6 +16,7 @@ import {
   Message,
   Channel,
 } from "../../api/settingsAPI";
+import { fetchMain, type Domain } from "../../api/main";
 import { ToastProvider, useToast } from "../../components/Toast";
 
 interface Tag {
@@ -25,6 +26,7 @@ interface Tag {
 interface NoticeItem {
   id: string;
   title: string;
+  domainName: string;
   tags: Tag[];
   channels: Channel[]; // ★ 다중
   date: string;
@@ -54,7 +56,10 @@ const ensureChannels = (v?: unknown): Channel[] => {
     .filter((x) => x === "kakao" || x === "discord") as Channel[];
 };
 
-const mapSettingToItem = (s: Setting): NoticeItem => {
+const mapSettingToItem = (
+  s: Setting,
+  domainMap: Record<string, string>
+): NoticeItem => {
   const firstMsg = pickFirstMessage(s);
 
   const primary = ensureChannels(s.channel);
@@ -77,6 +82,7 @@ const mapSettingToItem = (s: Setting): NoticeItem => {
   return {
     id: getId(s),
     title: s.name,
+    domainName: domainMap[s.domain_id] ?? "",
     tags: (s.filter_keywords ?? []).map((k) => ({ label: k })),
     channels,
     date: dateText,
@@ -161,13 +167,17 @@ function TagEditor({
 function NoticeCard({
   item,
   setting,
+  isSelected,
   onUpdated,
   onDeleted,
+  onSelect,
 }: {
   item: NoticeItem;
   setting: Setting;
+  isSelected: boolean;
   onUpdated: (updated: Setting) => void;
   onDeleted: (id: string) => void;
+  onSelect: (domainId: string | null) => void;
 }) {
   const { show } = useToast();
 
@@ -259,19 +269,45 @@ function NoticeCard({
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // 편집 중이거나 버튼/인풋 클릭 시에는 선택 동작 안함
+    if (editing) return;
+    const target = e.target as HTMLElement;
+    if (target.closest("button") || target.closest("input") || target.closest("a")) return;
+
+    // 이미 선택된 카드면 선택 해제, 아니면 선택
+    onSelect(isSelected ? null : setting.domain_id);
+  };
+
   return (
-    <div className={`notice-card ${editing ? "notice-card--editing" : ""}`}>
+    <div
+      className={`notice-card ${editing ? "notice-card--editing" : ""} ${isSelected ? "notice-card--selected" : ""}`}
+      onClick={handleCardClick}
+      style={{ cursor: editing ? "default" : "pointer" }}
+    >
       <div className="notice-card-header flex-between">
-        {!editing ? (
-          <div className="notice-card-title body1">{item.title}</div>
-        ) : (
-          <input
-            className="form__input body1"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            aria-label="설정 이름"
-          />
-        )}
+        <div className="flex-row notice-card-header-left">
+          <div className="notice-card-tags">
+            {!editing && item.domainName && (
+              <span className="tag domain-tag">{item.domainName}</span>
+            )}
+            {item.tags.map((t, i) => (
+              <span className="tag" key={i}>
+                {t.label}
+              </span>
+            ))}
+          </div>
+          {!editing ? (
+            <div className="notice-card-title body1">{item.title}</div>
+          ) : (
+            <input
+              className="form__input body1"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              aria-label="설정 이름"
+            />
+          )}
+        </div>
 
         <div className="flex-row gap-8">
           {!editing ? (
@@ -344,10 +380,8 @@ function NoticeCard({
       {editing ? (
         <>
           {/* ★ 채널 다중 토글 */}
-          <div className="form__label" style={{ marginTop: 8 }}>
-            채널
-          </div>
-          <div className="channel-toggle-row" style={{ marginBottom: 8 }}>
+          <div className="form__label body3">채널</div>
+          <div className="channel-toggle-row">
             <button
               type="button"
               className={`chip ${
@@ -369,21 +403,21 @@ function NoticeCard({
           </div>
 
           {/* ★ 요약 토글 */}
-          <div className="form__label" style={{ marginTop: 8 }}>
-            요약
-          </div>
-          <div className="notify-toggle-wrap" style={{ marginBottom: 8 }}>
-            <span className="notify-label" aria-hidden>
-              {summary ? "ON" : "OFF"}
-            </span>
-            <div
-              role="switch"
-              aria-checked={summary}
-              aria-label={`요약 ${summary ? "끄기" : "켜기"}`}
-              className={`toggle-wrap ${summary ? "on" : "off"}`}
-              onClick={() => setSummary(!summary)}
-            >
-              <Toggle key={summary ? "1" : "0"} defaultChecked={summary} />
+          <div className="form__label flex-row">
+            <div className="body3">요약</div>
+            <div className="notify-toggle-wrap">
+              <span className="notify-label" aria-hidden>
+                {summary ? "ON" : "OFF"}
+              </span>
+              <div
+                role="switch"
+                aria-checked={summary}
+                aria-label={`요약 ${summary ? "끄기" : "켜기"}`}
+                className={`toggle-wrap ${summary ? "on" : "off"}`}
+                onClick={() => setSummary(!summary)}
+              >
+                <Toggle key={summary ? "1" : "0"} defaultChecked={summary} />
+              </div>
             </div>
           </div>
 
@@ -403,14 +437,7 @@ function NoticeCard({
         </>
       ) : (
         <>
-          <div className="notice-card-tags">
-            {item.tags.map((t, i) => (
-              <span className="tag" key={i}>
-                {t.label}
-              </span>
-            ))}
-          </div>
-          <div className="notice-contour"></div>
+          {/* <div className="notice-contour"></div> */}
 
           {/* 다중 배지 표시 */}
           <div className="notice-card-channel body3">
@@ -426,12 +453,22 @@ function NoticeCard({
             )}
           </div>
 
-          {/* 요약 상태 표시 */}
+          {/* 요약 상태 토글 (읽기 전용) */}
           <div className="notice-card-channel body3">
-            요약:&nbsp;
-            <span className="channel notify-pill">
-              {item.summary ? "ON" : "OFF"}
-            </span>
+            <div className="notify-toggle-wrap flex-row">
+              <span className="notify-label body3">요약</span>
+              <span className="notify-label" aria-hidden>
+                {summary ? "ON" : "OFF"}
+              </span>
+              <div
+                className={`toggle-wrap ${
+                  item.summary ? "on" : "off"
+                } readonly`}
+                aria-label={`요약 ${item.summary ? "ON" : "OFF"}`}
+              >
+                <Toggle defaultChecked={item.summary} />
+              </div>
+            </div>
           </div>
 
           {/* 날짜: 백엔드 created_at 우선 */}
@@ -448,9 +485,15 @@ function NoticeCard({
 }
 
 /* ----- 리스트 컨테이너 ----- */
-function NoticeSettingInner() {
+interface NoticeSettingProps {
+  selectedDomainId: string | null;
+  onSelectDomain: (domainId: string | null) => void;
+}
+
+function NoticeSettingInner({ selectedDomainId, onSelectDomain }: NoticeSettingProps) {
   const [items, setItems] = useState<NoticeItem[]>([]);
   const [settingsMap, setSettingsMap] = useState<Record<string, Setting>>({});
+  const [domainMap, setDomainMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [banner, setBanner] = useState<{
     type: "success" | "error";
@@ -462,11 +505,21 @@ function NoticeSettingInner() {
       setLoading(true);
       setBanner(null);
       try {
-        const list = await fetchSettings();
+        // 도메인 목록과 설정 목록을 병렬로 가져오기
+        const [domains, list] = await Promise.all([
+          fetchMain(),
+          fetchSettings(),
+        ]);
+
+        // 도메인 ID → 이름 매핑
+        const dMap: Record<string, string> = {};
+        domains.forEach((d) => (dMap[d.id] = d.name));
+        setDomainMap(dMap);
+
         const m: Record<string, Setting> = {};
         list.forEach((s) => (m[getId(s)] = s));
         setSettingsMap(m);
-        setItems(list.map(mapSettingToItem));
+        setItems(list.map((s) => mapSettingToItem(s, dMap)));
       } catch (e: any) {
         setBanner({
           type: "error",
@@ -482,7 +535,7 @@ function NoticeSettingInner() {
     const id = getId(u);
     setSettingsMap((prev) => ({ ...prev, [id]: u }));
     setItems((prev) =>
-      prev.map((it) => (it.id === id ? mapSettingToItem(u) : it))
+      prev.map((it) => (it.id === id ? mapSettingToItem(u, domainMap) : it))
     );
   };
 
@@ -498,7 +551,7 @@ function NoticeSettingInner() {
   const handleCreated = (s: Setting) => {
     const id = getId(s);
     setSettingsMap((prev) => ({ ...prev, [id]: s }));
-    setItems((prev) => [...prev, mapSettingToItem(s)]); // 맨 밑에 추가
+    setItems((prev) => [...prev, mapSettingToItem(s, domainMap)]); // 맨 밑에 추가
   };
 
   const empty = useMemo(
@@ -544,8 +597,10 @@ function NoticeSettingInner() {
               key={it.id}
               item={it}
               setting={s}
+              isSelected={selectedDomainId === s.domain_id}
               onUpdated={handleUpdated}
               onDeleted={handleDeleted}
+              onSelect={onSelectDomain}
             />
           );
         })}
@@ -558,9 +613,9 @@ function NoticeSettingInner() {
   );
 }
 
-const NoticeSetting: React.FC = () => (
+const NoticeSetting: React.FC<NoticeSettingProps> = ({ selectedDomainId, onSelectDomain }) => (
   <ToastProvider>
-    <NoticeSettingInner />
+    <NoticeSettingInner selectedDomainId={selectedDomainId} onSelectDomain={onSelectDomain} />
   </ToastProvider>
 );
 

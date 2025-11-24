@@ -71,15 +71,13 @@ http.interceptors.request.use((config) => {
   }
   if (import.meta.env.DEV) {
     try {
-      console.log("[HTTP] →", http.getUri(config));
-      const h = (config.headers as Record<string, unknown>) || {};
-      console.log(
-        "[HTTP]   Authorization:",
-        (h?.Authorization || h?.authorization || "(none)") as string
-      );
-    } catch {
-      // 개발 환경에서 로깅 실패는 무시
-    }
+      // console.log("[HTTP] →", http.getUri(config));
+      const h = (config.headers as any) || {};
+      // console.log(
+      //   "[HTTP]   Authorization:",
+      //   h?.Authorization || h?.authorization || "(none)"
+      // );
+    } catch {}
   }
   return config;
 });
@@ -100,15 +98,31 @@ async function doRefresh(): Promise<string> {
   return newAT;
 }
 
-export function hardLogout(opts?: { redirectTo?: string | false }) {
+const SESSION_EXPIRED_KEY = "__session_expired_message";
+
+export function hardLogout(opts?: { redirectTo?: string | false; reason?: "expired" }) {
   tokenStore.setAccess(null);
   tokenStore.setRefresh(null);
   sessionStorage.removeItem("__oauth_state");
+
+  // 세션 만료로 인한 로그아웃인 경우 메시지 저장
+  if (opts?.reason === "expired") {
+    sessionStorage.setItem(SESSION_EXPIRED_KEY, "로그인이 만료되었습니다. 다시 로그인 해주세요.");
+  }
 
   if (opts?.redirectTo !== false) {
     const to = typeof opts?.redirectTo === "string" ? opts.redirectTo : "/";
     window.location.replace(to);
   }
+}
+
+// 세션 만료 메시지 확인 및 삭제
+export function getAndClearSessionExpiredMessage(): string | null {
+  const msg = sessionStorage.getItem(SESSION_EXPIRED_KEY);
+  if (msg) {
+    sessionStorage.removeItem(SESSION_EXPIRED_KEY);
+  }
+  return msg;
 }
 
 http.interceptors.response.use(
@@ -132,18 +146,18 @@ http.interceptors.response.use(
     }
 
     if (isRefreshUrl(original.url)) {
-      hardLogout({ redirectTo: "/" });
+      hardLogout({ redirectTo: "/", reason: "expired" });
       return Promise.reject(err);
     }
 
     if (status === 403) {
-      hardLogout({ redirectTo: "/" });
+      hardLogout({ redirectTo: "/", reason: "expired" });
       return Promise.reject(err);
     }
 
     if (status === 401 && !original._retry) {
       if (!tokenStore.getRefresh()) {
-        hardLogout({ redirectTo: "/" });
+        hardLogout({ redirectTo: "/", reason: "expired" });
         return Promise.reject(err);
       }
 
@@ -155,7 +169,7 @@ http.interceptors.response.use(
           })
           .catch(() => {
             waiters.forEach((w) => w(null));
-            hardLogout({ redirectTo: "/" });
+            hardLogout({ redirectTo: "/", reason: "expired" });
             throw err;
           })
           .finally(() => {

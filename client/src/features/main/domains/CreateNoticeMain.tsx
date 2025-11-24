@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import "../../notice/CreateNotice.scss";
+import "../../my/my.scss";
 import { useAuth } from "../../../auth";
 import {
   createSetting,
@@ -9,6 +10,7 @@ import {
   Channel,
   Setting,
 } from "../../../api/settingsAPI";
+import Toggle from "../../my/Toggle";
 
 type Domain = { id: string; name: string };
 
@@ -36,9 +38,12 @@ export default function CreateNoticeMain({
   const [name, setName] = useState("");
   const [keywordText, setKeywordText] = useState("");
   const [selected, setSelected] = useState<Record<Channel, boolean>>({
-    kakao: false,
+    kakao: true,
     discord: false,
   });
+
+  // 요약 기능 토글
+  const [summary, setSummary] = useState(true);
   const [loading, setLoading] = useState(false);
   const [banner, setBanner] = useState<{
     type: "success" | "error";
@@ -97,6 +102,7 @@ export default function CreateNoticeMain({
       url_list: [],
       filter_keywords: parseList(keywordText),
       channel: chosen, // 항상 배열로 전달
+      summary,
     };
 
     try {
@@ -153,29 +159,27 @@ export default function CreateNoticeMain({
               className="form__label"
               style={{ display: "flex", alignItems: "center", gap: 8 }}
             >
-              <span style={{ whiteSpace: "nowrap" }}>
-                도메인 <span className="req">*</span>
-              </span>
+              <span style={{ whiteSpace: "nowrap" }}>도메인</span>
 
               <div
                 style={{
                   borderBottom: "1px solid #ccc",
-                  paddingBottom: "3px",
+                  padding: "3px",
                   display: "inline-block",
                   width: "fit-content",
-                  minWidth: `${domainName.length * 10 + 20}px`, // 글자 수 기반으로 살짝 여유
-                  textAlign: "left",
+                  minWidth: `${domainName.length * 10 + 10}px`,
+                  textAlign: "center",
                   pointerEvents: "none",
+                  fontSize: "14px",
                 }}
               >
                 {domainName}
               </div>
-
               <input type="hidden" value={initialDomainId} />
             </label>
 
             <label className="form__label">
-              설정 이름 <span className="req">*</span>
+              설정 이름
               <input
                 className="form__input"
                 type="text"
@@ -209,7 +213,25 @@ export default function CreateNoticeMain({
               </div>
             </div>
 
-            <label className="form__label">
+            <div className="flex-row form__group">
+              <div className="channel-label">요약</div>
+              <div className="notify-toggle-wrap">
+                <span className="notify-label" aria-hidden>
+                  {summary ? "ON" : "OFF"}
+                </span>
+                <div
+                  role="switch"
+                  aria-checked={summary}
+                  aria-label={`요약 ${summary ? "끄기" : "켜기"}`}
+                  className={`toggle-wrap ${summary ? "on" : "off"}`}
+                  onClick={() => setSummary(!summary)}
+                >
+                  <Toggle key={summary ? "1" : "0"} defaultChecked={summary} />
+                </div>
+              </div>
+            </div>
+
+            {/* <label className="form__label">
               필터 키워드 (줄바꿈 또는 쉼표)
               <textarea
                 className="form__textarea"
@@ -217,7 +239,7 @@ export default function CreateNoticeMain({
                 value={keywordText}
                 onChange={(e) => setKeywordText(e.target.value)}
               />
-            </label>
+            </label> */}
 
             <div className="form__actions flex-center">
               <button
