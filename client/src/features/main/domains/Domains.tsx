@@ -45,6 +45,7 @@ export default function Domains({ domains, error }: Props) {
     const Icon = (Icons as any)[d.icon] ?? Icons.Globe;
     const isUsed = usedDomainIds.has(d.id); // 이미 설정된 도메인 여부
 
+    const title = d.keywords?.[0] ?? d.name ?? "항목";
     return (
       <DomainCard
         key={d.id}

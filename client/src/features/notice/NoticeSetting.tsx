@@ -273,7 +273,12 @@ function NoticeCard({
     // 편집 중이거나 버튼/인풋 클릭 시에는 선택 동작 안함
     if (editing) return;
     const target = e.target as HTMLElement;
-    if (target.closest("button") || target.closest("input") || target.closest("a")) return;
+    if (
+      target.closest("button") ||
+      target.closest("input") ||
+      target.closest("a")
+    )
+      return;
 
     // 이미 선택된 카드면 선택 해제, 아니면 선택
     onSelect(isSelected ? null : setting.domain_id);
@@ -281,7 +286,9 @@ function NoticeCard({
 
   return (
     <div
-      className={`notice-card ${editing ? "notice-card--editing" : ""} ${isSelected ? "notice-card--selected" : ""}`}
+      className={`notice-card ${editing ? "notice-card--editing" : ""} ${
+        isSelected ? "notice-card--selected" : ""
+      }`}
       onClick={handleCardClick}
       style={{ cursor: editing ? "default" : "pointer" }}
     >
@@ -437,7 +444,7 @@ function NoticeCard({
         </>
       ) : (
         <>
-          {/* <div className="notice-contour"></div> */}
+          <div className="notice-contour"></div>
 
           {/* 다중 배지 표시 */}
           <div className="notice-card-channel body3">
@@ -490,7 +497,10 @@ interface NoticeSettingProps {
   onSelectDomain: (domainId: string | null) => void;
 }
 
-function NoticeSettingInner({ selectedDomainId, onSelectDomain }: NoticeSettingProps) {
+function NoticeSettingInner({
+  selectedDomainId,
+  onSelectDomain,
+}: NoticeSettingProps) {
   const [items, setItems] = useState<NoticeItem[]>([]);
   const [settingsMap, setSettingsMap] = useState<Record<string, Setting>>({});
   const [domainMap, setDomainMap] = useState<Record<string, string>>({});
@@ -613,9 +623,15 @@ function NoticeSettingInner({ selectedDomainId, onSelectDomain }: NoticeSettingP
   );
 }
 
-const NoticeSetting: React.FC<NoticeSettingProps> = ({ selectedDomainId, onSelectDomain }) => (
+const NoticeSetting: React.FC<NoticeSettingProps> = ({
+  selectedDomainId,
+  onSelectDomain,
+}) => (
   <ToastProvider>
-    <NoticeSettingInner selectedDomainId={selectedDomainId} onSelectDomain={onSelectDomain} />
+    <NoticeSettingInner
+      selectedDomainId={selectedDomainId}
+      onSelectDomain={onSelectDomain}
+    />
   </ToastProvider>
 );
 
