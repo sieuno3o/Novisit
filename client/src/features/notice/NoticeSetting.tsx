@@ -273,7 +273,12 @@ function NoticeCard({
     // 편집 중이거나 버튼/인풋 클릭 시에는 선택 동작 안함
     if (editing) return;
     const target = e.target as HTMLElement;
-    if (target.closest("button") || target.closest("input") || target.closest("a")) return;
+    if (
+      target.closest("button") ||
+      target.closest("input") ||
+      target.closest("a")
+    )
+      return;
 
     // 이미 선택된 카드면 선택 해제, 아니면 선택
     onSelect(isSelected ? null : setting.domain_id);
@@ -281,7 +286,9 @@ function NoticeCard({
 
   return (
     <div
-      className={`notice-card ${editing ? "notice-card--editing" : ""} ${isSelected ? "notice-card--selected" : ""}`}
+      className={`notice-card ${editing ? "notice-card--editing" : ""} ${
+        isSelected ? "notice-card--selected" : ""
+      }`}
       onClick={handleCardClick}
       style={{ cursor: editing ? "default" : "pointer" }}
     >
@@ -437,7 +444,7 @@ function NoticeCard({
         </>
       ) : (
         <>
-          {/* <div className="notice-contour"></div> */}
+          <div className="notice-contour"></div>
 
           {/* 다중 배지 표시 */}
           <div className="notice-card-channel body3">
@@ -453,7 +460,7 @@ function NoticeCard({
             )}
           </div>
 
-          {/* 요약 상태 토글 (읽기 전용) */}
+          {/* 요약 상태 토글 (바로 수정 가능) */}
           <div className="notice-card-channel body3">
             <div className="notify-toggle-wrap flex-row">
               <span className="notify-label body3">요약</span>
@@ -461,12 +468,25 @@ function NoticeCard({
                 {summary ? "ON" : "OFF"}
               </span>
               <div
-                className={`toggle-wrap ${
-                  item.summary ? "on" : "off"
-                } readonly`}
-                aria-label={`요약 ${item.summary ? "ON" : "OFF"}`}
+                role="switch"
+                aria-checked={summary}
+                className={`toggle-wrap ${summary ? "on" : "off"}`}
+                aria-label={`요약 ${summary ? "끄기" : "켜기"}`}
+                onClick={async (e) => {
+                  e.stopPropagation(); // 카드 선택 방지
+                  const newSummary = !summary;
+                  setSummary(newSummary);
+                  try {
+                    await updateSetting(getId(setting), { summary: newSummary });
+                    onUpdated({ ...setting, summary: newSummary });
+                  } catch {
+                    setSummary(!newSummary); // 실패 시 롤백
+                    show("요약 설정 변경에 실패했습니다.");
+                  }
+                }}
+                style={{ cursor: "pointer" }}
               >
-                <Toggle defaultChecked={item.summary} />
+                <Toggle key={summary ? "1" : "0"} defaultChecked={summary} />
               </div>
             </div>
           </div>
@@ -490,7 +510,10 @@ interface NoticeSettingProps {
   onSelectDomain: (domainId: string | null) => void;
 }
 
-function NoticeSettingInner({ selectedDomainId, onSelectDomain }: NoticeSettingProps) {
+function NoticeSettingInner({
+  selectedDomainId,
+  onSelectDomain,
+}: NoticeSettingProps) {
   const [items, setItems] = useState<NoticeItem[]>([]);
   const [settingsMap, setSettingsMap] = useState<Record<string, Setting>>({});
   const [domainMap, setDomainMap] = useState<Record<string, string>>({});
@@ -613,9 +636,15 @@ function NoticeSettingInner({ selectedDomainId, onSelectDomain }: NoticeSettingP
   );
 }
 
-const NoticeSetting: React.FC<NoticeSettingProps> = ({ selectedDomainId, onSelectDomain }) => (
+const NoticeSetting: React.FC<NoticeSettingProps> = ({
+  selectedDomainId,
+  onSelectDomain,
+}) => (
   <ToastProvider>
-    <NoticeSettingInner selectedDomainId={selectedDomainId} onSelectDomain={onSelectDomain} />
+    <NoticeSettingInner
+      selectedDomainId={selectedDomainId}
+      onSelectDomain={onSelectDomain}
+    />
   </ToastProvider>
 );
 
