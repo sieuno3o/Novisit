@@ -244,8 +244,8 @@ export async function sendNotifications(
               setting,
               notice.title,
               description,
-              imageUrlForMessage,
-              notice.link
+              notice.link,
+              imageUrlForMessage
             );
 
             // Message 저장

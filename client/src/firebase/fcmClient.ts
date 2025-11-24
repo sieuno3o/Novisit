@@ -9,8 +9,7 @@ function isPushSupported() {
   return (
     typeof window !== "undefined" &&
     "Notification" in window &&
-    "serviceWorker" in navigator &&
-    !!messaging
+    "serviceWorker" in navigator
   );
 }
 

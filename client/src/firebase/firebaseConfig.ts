@@ -16,15 +16,15 @@ const firebaseConfig = {
 // Firebase 앱 초기화
 export const app = initializeApp(firebaseConfig);
 
-// messaging 객체 생성
-// (브라우저 환경에서만 정상 동작하므로 try/catch 방어로직 포함)
+// 브라우저에서만 초기화
 let messaging: Messaging | null = null;
 
-try {
-  messaging = getMessaging(app);
-} catch (err) {
-  //  서버환경 또는 브라우저 지원문제 때문에 실패할 수 있어 방어
-  console.warn(" Firebase messaging 초기화 실패:", err);
+if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+  try {
+    messaging = getMessaging(app);
+  } catch (err) {
+    console.error(" Firebase messaging 초기화 실패:", err);
+  }
 }
 
 export { messaging };
