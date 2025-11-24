@@ -11,6 +11,10 @@ import {
 } from "../../api/settingsAPI";
 import { fetchMain, type Domain } from "../../api/main";
 
+interface RecentNoticeProps {
+  selectedDomainId: string | null;
+}
+
 /** ----- 렌더용 아이템 타입 ----- */
 type RecentItem = {
   key: string;
@@ -23,7 +27,6 @@ type RecentItem = {
 
 const INITIAL_COUNT = 10;
 const PAGE_SIZE = 5;
-const NEW_DAYS = 3;
 
 const pad2 = (n: number) => (n < 10 ? `0${n}` : String(n));
 
@@ -54,11 +57,19 @@ const timeOf = (s?: string): number => {
   return m ? new Date(+m[1], +m[2] - 1, +m[3]).getTime() : -Infinity;
 };
 
-const isNewBy = (s?: string, days = NEW_DAYS): boolean => {
+const isNewBy = (s?: string): boolean => {
   const t = timeOf(s);
   if (!Number.isFinite(t)) return false;
-  const diffMs = Date.now() - t;
-  return diffMs >= 0 && diffMs <= days * 24 * 60 * 60 * 1000;
+
+  // 오늘 날짜와 알림 날짜가 같은지 비교
+  const today = new Date();
+  const noticeDate = new Date(t);
+
+  return (
+    today.getFullYear() === noticeDate.getFullYear() &&
+    today.getMonth() === noticeDate.getMonth() &&
+    today.getDate() === noticeDate.getDate()
+  );
 };
 
 const flattenAndSortMessages = (settings: Setting[]): RecentItem[] => {
@@ -81,7 +92,7 @@ const flattenAndSortMessages = (settings: Setting[]): RecentItem[] => {
   return items;
 };
 
-const RecentNotice: React.FC = () => {
+const RecentNotice: React.FC<RecentNoticeProps> = ({ selectedDomainId }) => {
   const [loading, setLoading] = useState(true);
   const [paging, setPaging] = useState(false);
   const [banner, setBanner] = useState<{ type: "error"; text: string } | null>(
@@ -138,11 +149,22 @@ const RecentNotice: React.FC = () => {
     };
   }, []);
 
+  // 선택된 도메인으로 필터링
+  const filteredItems = useMemo(() => {
+    if (!selectedDomainId) return allItems;
+    return allItems.filter((item) => item.domainId === selectedDomainId);
+  }, [allItems, selectedDomainId]);
+
+  // 선택 변경 시 visibleCount 리셋
+  useEffect(() => {
+    setVisibleCount(Math.min(INITIAL_COUNT, filteredItems.length));
+  }, [selectedDomainId, filteredItems.length]);
+
   // 무한 스크롤: 센티널 관찰
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (loading) return;
-    if (visibleCount >= allItems.length) return; // 모두 표시 완료
+    if (visibleCount >= filteredItems.length) return; // 모두 표시 완료
 
     const el = sentinelRef.current;
     if (!el) return;
@@ -154,7 +176,7 @@ const RecentNotice: React.FC = () => {
         setPaging(true);
         const timer = setTimeout(() => {
           setVisibleCount((prev) =>
-            Math.min(prev + PAGE_SIZE, allItems.length)
+            Math.min(prev + PAGE_SIZE, filteredItems.length)
           );
           setPaging(false);
         }, 300);
@@ -164,13 +186,13 @@ const RecentNotice: React.FC = () => {
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [loading, visibleCount, allItems.length]);
+  }, [loading, visibleCount, filteredItems.length]);
 
   const itemsToShow = useMemo(
-    () => allItems.slice(0, visibleCount),
-    [allItems, visibleCount]
+    () => filteredItems.slice(0, visibleCount),
+    [filteredItems, visibleCount]
   );
-  const isEmpty = !loading && allItems.length === 0;
+  const isEmpty = !loading && filteredItems.length === 0;
 
   const toggleExpand = (key: string) => {
     setExpandedItems((prev) => {
@@ -215,7 +237,7 @@ const RecentNotice: React.FC = () => {
         itemsToShow.map((it) => {
           const tagName = domainMap[it.domainId] ?? "알림";
           const dateText = formatKstDate(it.sended_at);
-          const showNew = isNewBy(it.sended_at, NEW_DAYS);
+          const showNew = isNewBy(it.sended_at);
           const isExpanded = expandedItems.has(it.key);
 
           return (
@@ -268,7 +290,7 @@ const RecentNotice: React.FC = () => {
         })}
 
       {/* 센티널 + 페이징 로딩 표시 */}
-      {!loading && !isEmpty && visibleCount < allItems.length && (
+      {!loading && !isEmpty && visibleCount < filteredItems.length && (
         <div className="flex-col" style={{ alignItems: "center" }}>
           <div
             ref={sentinelRef}

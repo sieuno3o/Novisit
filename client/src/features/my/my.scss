@@ -205,14 +205,42 @@
 }
 
 .notify-pill {
-  display: inline-flex;
-  padding: 6px 15px;
+  width: 80px;
+  // display: inline-flex;
+  text-align: center;
+  padding: 6px;
   border-radius: 9999px;
   background: transparent;
-  border: 1px solid #d1d5db; // 연한 배경
-  color: #6b7280; // 중간 회색
+  border: 1px solid #d1d5db;
+  color: #6b7280;
   font-weight: 380;
   font-size: 15px;
-  gap: 4px; // 실제 단어 사이 여백
+  gap: 4px;
   user-select: none;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &--discord {
+    cursor: pointer;
+
+    .default-text {
+      display: inline;
+    }
+    .hover-text {
+      display: none;
+    }
+
+    &:hover {
+      font-size: 15px;
+      border-color: #2563eb;
+      color: #2563eb;
+
+      .default-text {
+        display: none;
+      }
+      .hover-text {
+        display: inline;
+      }
+    }
+  }
 }

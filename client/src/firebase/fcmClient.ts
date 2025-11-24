@@ -1,4 +1,4 @@
-import { messaging } from "./firebaseConfig"; 
+import { messaging } from "./firebaseConfig";
 import { getToken, deleteToken } from "firebase/messaging";
 import http from "../api/http";
 
@@ -55,7 +55,6 @@ export async function saveFcmTokenToServer(token: string): Promise<void> {
     fcmToken: token,
   });
 }
-
 
 // 서버에서 FCM 토큰 삭제 요청
 export async function deleteFcmTokenFromServer(): Promise<void> {
