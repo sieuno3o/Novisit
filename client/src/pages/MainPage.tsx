@@ -4,6 +4,7 @@ import Domains from "../features/main/domains/Domains";
 import Start from "../features/main/Start";
 import { useAuth } from "../auth";
 import { fetchMain, type Domain } from "../api/main";
+import PreviewSlider from "../components/PreviewSlider"; 
 
 export default function MainPage() {
   const { user, loading } = useAuth();
@@ -44,6 +45,9 @@ export default function MainPage() {
     return (
       <Hero>
         <Start onClick={() => (window.location.href = "/login?kakao_prompt=login")} />
+        <div style={{ marginTop: "40px" }}>
+          <PreviewSlider />
+        </div>
       </Hero>
     );
   }
