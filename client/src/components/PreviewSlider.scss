@@ -1,31 +1,30 @@
 .preview-slider {
-  margin-top: 40px;
+  margin-top: 20px;          /* 버튼이랑 사이 간격 */
   width: 100%;
-  max-width: 1120px;
+  max-width: 1120px;         /* 페이지 전체 래퍼랑 비슷하게 */
   margin-left: auto;
   margin-right: auto;
 }
 
-/* Swiper 래퍼 */
 .preview-swiper {
   width: 100%;
-  padding: 40px 0 30px;
+  padding: 24px 0 32px;      /* 위·아래 여백 */
+  overflow: visible;         /* 양옆 슬라이드가 살짝 밖으로 나와도 보이게 */
 }
 
-/* 각 슬라이드 카드 기본 폭 */
 .preview-slide {
-  width: 700px; // 가운데 카드 폭
+  width: min(820px, 70vw);   /* 너무 넓어지지 않게 */
   transition: transform 0.35s ease, opacity 0.35s ease;
-  
 }
 
+/* 카드 박스 */
 .preview-slide__inner {
   position: relative;
   border-radius: 24px;
   overflow: hidden;
   background: #ffffff;
 
-  /*  그림자 강화 */
+  /* 그림자 */
   box-shadow:
     0 18px 40px rgba(15, 35, 80, 0.25),
     0 6px 12px rgba(0, 0, 0, 0.15);
@@ -37,12 +36,10 @@
   height: auto;
 }
 
-
-/* 가운데/양옆 크기 차이 & 투명도 */
 .preview-swiper .swiper-slide {
-  transform: scale(0.7);
+  transform: scale(0.78);    /* 양옆 슬라이드 살짝 축소 */
   opacity: 0.45;
-  
+  transition: transform 0.35s ease, opacity 0.35s ease;
 }
 
 .preview-swiper .swiper-slide-active {
@@ -51,22 +48,21 @@
   z-index: 2;
 }
 
-.preview-swiper {
-  overflow: visible;   /* 양 옆이 살짝 밖으로 나와도 보이게 */
-}
-
-/* 네비게이션 버튼 공통 스타일 */
 .preview-swiper .swiper-button-next,
 .preview-swiper .swiper-button-prev {
-  background: none !important; 
-  box-shadow: none !important;
-  width: 44px;
-  height: 44px;
+  /* Swiper 기본 스타일 제거 */
+  background: none !important;  
+  box-shadow: none !important; 
+  border: none !important;
+
+  width: 40px;
+  height: 40px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow:
     0 12px 30px rgba(15, 35, 80, 0.25),
     0 0 0 1px rgba(0, 0, 0, 0.02);
+
   color: #6478a2;
   top: 50%;
   transform: translateY(-50%);
@@ -76,27 +72,69 @@
   cursor: pointer;
 }
 
-/* 버튼 안 기본 화살표 모양 커스터마이징 */
+/* 화살표 모양 */
 .preview-swiper .swiper-button-next::after,
 .preview-swiper .swiper-button-prev::after {
   font-size: 18px;
   font-weight: 700;
 }
 
-/* 왼쪽 / 오른쪽 위치 조정: 카드 양 옆에 좀 더 가깝게 */
+/* 위치: 카드 양 옆에 가깝게 */
 .preview-swiper .swiper-button-prev {
-  left: 12%;
+  left: 4%;
 }
 
 .preview-swiper .swiper-button-next {
-  right: 12%;
+  right: 4%;
 }
 
-/* 호버 시 살짝 떠오르는 느낌 */
-.preview-swiper .swiper-button-next:hover,
-.preview-swiper .swiper-button-prev:hover {
-  transform: translateY(-50%) translateY(-1px);
-  box-shadow:
-    0 18px 40px rgba(15, 35, 80, 0.32),
-    0 0 0 1px rgba(0, 0, 0, 0.03);
+/* 데스크탑에서 hover 효과 */
+@media (min-width: 1025px) {
+  .preview-swiper .swiper-button-next:hover,
+  .preview-swiper .swiper-button-prev:hover {
+    transform: translateY(-50%) translateY(-1px);
+    box-shadow:
+      0 18px 40px rgba(15, 35, 80, 0.32),
+      0 0 0 1px rgba(0, 0, 0, 0.03);
+  }
+}
+
+@media (max-width: 900px) {
+  .preview-slide {
+    width: 70vw;              /* 화면 거의 꽉 채우기 */
+  }
+
+  .preview-swiper .swiper-button-prev {
+    left: 4%;
+  }
+
+  .preview-swiper .swiper-button-next {
+    right: 4%;
+  }
+}
+
+/* 아주 작은 모바일: 버튼을 아래로 내리기 */
+@media (max-width: 700px) {
+  .preview-swiper {
+    padding-bottom: 70px;
+  }
+
+  .preview-swiper .swiper-button-prev,
+  .preview-swiper .swiper-button-next {
+    top: auto;
+    bottom: 0;
+  }
+
+  .preview-swiper .swiper-button-prev {
+    left: calc(50% - 52px);   /* 가운데 기준 왼쪽 */
+  }
+
+  .preview-swiper .swiper-button-next {
+    right: calc(50% - 52px);  /* 가운데 기준 오른쪽 */
+  }
+
+  .preview-swiper .swiper-slide {
+    transform: scale(0.95);   /* 작은 화면에서는 거의 같은 크기로 */
+    opacity: 1;
+  }
 }

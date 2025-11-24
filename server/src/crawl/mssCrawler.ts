@@ -152,15 +152,30 @@ export class MSSCrawler {
           
           rows.forEach((row) => {
             try {
+              // 빈 행 체크: row가 실제로 데이터를 가지고 있는지 확인
+              if (!row || !row.querySelector) {
+                return; // 유효하지 않은 행은 스킵
+              }
+              
               // 제목 추출: tr의 title attribute
               const title = row.getAttribute('title')?.trim() || '';
               
               // td 요소들 찾기
               const cells = row.querySelectorAll('td');
               
+              // 최소한의 셀 개수 확인 (번호, 제목, 작성자, 날짜 등이 있어야 함)
+              if (cells.length < 4) {
+                return; // 셀이 부족하면 스킵
+              }
+              
               // 번호 추출: 첫 번째 td
               const numberCell = cells[0];
               const number = numberCell?.textContent?.trim() || '';
+              
+              // 번호와 제목이 모두 있어야 함
+              if (!number || !title || number === '' || title === '') {
+                return; // 번호나 제목이 없으면 스킵
+              }
               
               // 등록일자 추출: 4번째 td (인덱스 3)
               const dateCell = cells[3];
@@ -205,8 +220,9 @@ export class MSSCrawler {
                 }
               }
               
-              if (!number || !title) {
-                return; // 번호나 제목이 없으면 스킵
+              // 최종 검증: number와 title이 유효한 값인지 확인
+              if (!number || !title || number === '' || title === '' || number === 'undefined' || title === 'undefined') {
+                return; // 유효하지 않은 값은 스킵
               }
               
               notices.push({
@@ -218,13 +234,25 @@ export class MSSCrawler {
               });
             } catch (error) {
               // 개별 요소 추출 실패는 무시하고 계속 진행
+              console.warn('[MSSCrawler] 행 처리 중 오류 (스킵):', error);
             }
           });
         } catch (error: any) {
           throw error;
         }
         
-        return notices;
+        // undefined나 빈 값이 있는 항목 제거
+        const validNotices = notices.filter(notice => 
+          notice && 
+          notice.number && 
+          notice.title && 
+          notice.number !== '' && 
+          notice.title !== '' &&
+          notice.number !== 'undefined' &&
+          notice.title !== 'undefined'
+        );
+        
+        return validNotices;
       });
       
       await context.close();

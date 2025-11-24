@@ -207,15 +207,21 @@ export class TestCrawler {
       // 페이지가 완전히 로드될 때까지 대기 (React 앱의 경우)
       await page.waitForTimeout(2000);
       
-      // 본문이 로드될 때까지 대기 (div.content만)
-      await page.waitForSelector('div.content', { 
+      // 본문이 로드될 때까지 대기 (div.container 안의 div.whitespace-pre-wrap.text-foreground.leading-relaxed)
+      await page.waitForSelector('div.container div.whitespace-pre-wrap.text-foreground.leading-relaxed', { 
         timeout: 10000 
       });
       
       // 공지사항 본문 텍스트 추출
       const result = await page.evaluate(() => {
-        // div.content만 찾기
-        const contentElement = document.querySelector('div.content');
+        // div.container 안에서 class가 "whitespace-pre-wrap text-foreground leading-relaxed"인 div 찾기
+        const container = document.querySelector('div.container');
+        
+        if (!container) {
+          return { content: '' };
+        }
+        
+        const contentElement = container.querySelector('div.whitespace-pre-wrap.text-foreground.leading-relaxed');
         
         if (!contentElement) {
           return { content: '' };
@@ -226,7 +232,7 @@ export class TestCrawler {
         const scripts = clone.querySelectorAll('script, style, nav, header, footer, aside');
         scripts.forEach(el => el.remove());
         
-        // 본문 텍스트 추출 (div.content의 전체 내용)
+        // 본문 텍스트 추출
         const content = clone.textContent?.trim() || '';
         
         return { content: content.trim() };
