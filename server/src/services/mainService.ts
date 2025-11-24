@@ -7,7 +7,7 @@ export async function getDomains() {
   return domains.map((domain: any) => {
     const meta = domainMeta[domain.name] || {
       desc: "도메인 관련 최신 소식을 제공합니다.",
-      icon: "Globe",
+      icon: "Bell",
     };
 
     return {
