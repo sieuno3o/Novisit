@@ -30,7 +30,7 @@ const PreviewSlider: React.FC = () => {
         centeredSlides={true}
         slidesPerView={"auto"}
         spaceBetween={5}
-        loop={true}
+        loop={false}
         grabCursor={true}
       >
         {slides.map((slide) => (
