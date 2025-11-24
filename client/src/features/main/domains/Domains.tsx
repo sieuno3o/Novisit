@@ -9,7 +9,7 @@ import type { Domain } from "../../../api/main";
 import { fetchSettings } from "../../../api/settingsAPI"; //  알림 설정 목록 조회
 
 type Props = {
-  domains: Domain[];          // MainPage에서 내려줄 도메인 목록
+  domains: Domain[]; // MainPage에서 내려줄 도메인 목록
   error?: string | null;
 };
 
@@ -18,7 +18,7 @@ export default function Domains({ domains, error }: Props) {
     null
   );
 
-  //  이미 알림 설정이 있는 도메인의 id 집합
+  // 이미 알림 설정이 있는 도메인의 id 집합 (항상 string으로 관리)
   const [usedDomainIds, setUsedDomainIds] = useState<Set<string>>(new Set());
 
   // 마운트 시 /settings 호출해서 사용 중인 도메인 수집
@@ -28,7 +28,15 @@ export default function Domains({ domains, error }: Props) {
       try {
         const list = await fetchSettings();
         if (!alive) return;
-        const set = new Set<string>(list.map((s) => s.domain_id));
+
+        const set = new Set<string>(
+          list
+            .map((s) => s.domain_id)
+            // null/undefined만 걸러주고 나머지는 전부 string으로 변환
+            .filter((id) => id != null)
+            .map((id) => String(id))
+        );
+
         setUsedDomainIds(set);
       } catch (e) {
         if (import.meta.env.DEV) {
@@ -42,20 +50,29 @@ export default function Domains({ domains, error }: Props) {
   }, []);
 
   const items = domains.map((d) => {
-    const Icon = (Icons as any)[d.icon] ?? Icons.Globe;
-    const isUsed = usedDomainIds.has(d.id); // 이미 설정된 도메인 여부
+    // Domain.icon 이 optional일 수 있으니 안전하게 처리
+    const Icon = (Icons as any)[d.icon as keyof typeof Icons] ?? Icons.Globe;
+
+    const idStr = String(d.id);
+    const isUsed = usedDomainIds.has(idStr); // 이미 설정된 도메인 여부
+
+    const title = d.name ?? d.keywords?.[0] ?? "항목";
 
     return (
       <DomainCard
-        key={d.id}
+        key={idStr}
         icon={<Icon size={28} />}
-        title={d.name}
-        desc={d.desc}
+        title={title}
+        desc={d.desc ?? ""} // string | undefined → string 으로 보정
         disabled={isUsed} // 버튼 비활성화
         onClick={
           isUsed
             ? undefined // 이미 사용된 도메인은 아예 클릭 이벤트 없음
-            : () => setSelected({ id: d.id, name: d.name })
+            : () =>
+                setSelected({
+                  id: idStr,
+                  name: d.name ?? "",
+                })
         }
       />
     );
