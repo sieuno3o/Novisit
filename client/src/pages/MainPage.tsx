@@ -14,20 +14,23 @@ export default function MainPage() {
   useEffect(() => {
     let alive = true;
 
-    if (!user) {        // 로그아웃/비로그인이면 목록 비움
+    if (!user) {
+      // 로그아웃/비로그인이면 목록 비움
       setDomains([]);
-      return () => { alive = false; };
+      return () => {
+        alive = false;
+      };
     }
 
     (async () => {
       try {
-        const list = await fetchMain();   
+        const list = await fetchMain();
         if (!alive) return;
         setDomains(list);
-        setError(null);                    
+        setError(null);
       } catch (e: any) {
         if (!alive) return;
-        setError(e.message ?? "도메인 조회 중 오류가 발생했습니다.");  
+        setError(e.message ?? "도메인 조회 중 오류가 발생했습니다.");
         setDomains([]); // 또는 setDomains(MOCK); 로 목데이터 사용 가능
       }
     })();
@@ -37,8 +40,8 @@ export default function MainPage() {
     };
   }, [user]);
 
-   if (loading) {
-    return null; 
+  if (loading) {
+    return null;
   }
 
   if (!user) {
@@ -59,7 +62,7 @@ export default function MainPage() {
       {/*Domains 컴포넌트에 실제 도메인 배열 전달 */}
       <Domains
         domains={domains}
-        error={error}           // 선택: 에러 메시지가 필요하면 prop으로 전달
+        error={error} // 선택: 에러 메시지가 필요하면 prop으로 전달
       />
     </div>
   );

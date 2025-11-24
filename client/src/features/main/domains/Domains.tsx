@@ -1,3 +1,4 @@
+// src/features/main/domains/Domains.tsx
 import { useState } from "react";
 import { Section } from "../common/Section";
 import { DomainCard } from "./DomainCard";
@@ -8,23 +9,26 @@ import * as Icons from "lucide-react";
 import type { Domain } from "../../../api/main";
 
 type Props = {
-  domains: Domain[];          // MainPage에서 내려줄 도메인 목록
-  error?: string | null;    
+  domains: Domain[]; // MainPage에서 내려줄 도메인 목록
+  error?: string | null;
 };
 
 export default function Domains({ domains, error }: Props) {
-  const [selected, setSelected] = useState<{ id: string; name: string } | null>(null);
+  const [selected, setSelected] = useState<{ id: string; name: string } | null>(
+    null
+  );
 
-const items = domains.map((d) => {
-  // 서버에서 내려주는 문자열 기반으로 lucide 아이콘 검색
-  const Icon = (Icons as any)[d.icon] ?? Icons.Globe;
+  const items = domains.map((d) => {
+    // 서버에서 내려주는 문자열 기반으로 lucide 아이콘 검색
+    const Icon = (Icons as any)[d.icon ?? "Globe"] ?? Icons.Globe;
 
+    const title = d.keywords?.[0] ?? d.name ?? "항목";
     return (
       <DomainCard
         key={d.id}
-        icon={<Icon size={28} />} 
-        title={d.name}       // 서버 name 사용
-        desc={d.desc}        // 서버 desc 사용
+        icon={<Icon size={28} />}
+        title={d.name} // 서버 name 사용
+        desc={d.desc ?? ""} // 서버 desc 사용(없으면 빈 문자열)
         onClick={() => setSelected({ id: d.id, name: d.name })}
       />
     );
@@ -41,9 +45,7 @@ const items = domains.map((d) => {
         titleClassName="text-center"
       >
         {/* 에러/빈 데이터 처리 */}
-        {error && (
-          <p className={s.error}>{error}</p>
-        )}
+        {error && <p className={s.error}>{error}</p>}
         {!error && items.length === 0 && (
           <p className={s.empty}>현재 제공 가능한 도메인이 없습니다.</p>
         )}
