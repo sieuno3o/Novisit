@@ -9,7 +9,7 @@ export const domainMeta: Record<string, { desc: string; icon: string }> = {
     icon: "GraduationCap",
   },
   "교환학생": {
-    desc: "해외대학에서 공부할 수 있는 기회를 안내합니다.",
+    desc: "해외에서 공부할 수 있는 기회를 안내합니다.",
     icon: "Globe",
   },
   "테스트": {
@@ -21,7 +21,7 @@ export const domainMeta: Record<string, { desc: string; icon: string }> = {
     icon: "BriefcaseBusiness",
   },
   "해커톤": {
-    desc: "참여할 수 있는 해커톤 행사 정보를 모았습니다.",
+    desc: "참여할 수 있는 해커톤 정보를 모았습니다.",
     icon: "Lightbulb",
   },
 };
