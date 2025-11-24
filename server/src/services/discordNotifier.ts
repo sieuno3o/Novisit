@@ -1,5 +1,5 @@
 // src/services/discordNotifier.ts
-import { initDiscordBot, sendDiscordMessage } from "./discordService";
+import { initDiscordBot, sendDiscordMessage } from "./discordService.js";
 
 export async function notifyDiscord(userId: string, title: string,  description: string,  linkUrl: string,  imageUrl?: string) {
   try {

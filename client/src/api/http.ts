@@ -52,8 +52,8 @@ function isRefreshUrl(u?: string): boolean {
 }
 
 if (import.meta.env.DEV) {
-  (window as any).__http = http;
-  (window as any).__API_BASE__ = http.defaults.baseURL ?? "";
+  (window as Window & { __http?: typeof http; __API_BASE__?: string }).__http = http;
+  (window as Window & { __http?: typeof http; __API_BASE__?: string }).__API_BASE__ = http.defaults.baseURL ?? "";
   console.log("[HTTP] baseURL =", http.defaults.baseURL ?? "(origin)");
   if (!http.defaults.baseURL) {
     console.warn(
@@ -72,12 +72,14 @@ http.interceptors.request.use((config) => {
   if (import.meta.env.DEV) {
     try {
       console.log("[HTTP] →", http.getUri(config));
-      const h = (config.headers as any) || {};
+      const h = (config.headers as Record<string, unknown>) || {};
       console.log(
         "[HTTP]   Authorization:",
-        h?.Authorization || h?.authorization || "(none)"
+        (h?.Authorization || h?.authorization || "(none)") as string
       );
-    } catch {}
+    } catch {
+      // 개발 환경에서 로깅 실패는 무시
+    }
   }
   return config;
 });
@@ -119,7 +121,7 @@ http.interceptors.response.use(
       console.error("[HTTP] ✖ error", {
         url: normalizeUrl(original.url),
         status,
-        code: (err as any)?.code,
+        code: (err as { code?: string })?.code,
         message: err.message,
         hasResponse: !!err.response,
       });

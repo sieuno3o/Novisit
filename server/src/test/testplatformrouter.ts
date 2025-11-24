@@ -1,4 +1,4 @@
-import { routeMessageByPlatform } from "../services/platformRouter";
+import { routeMessageByPlatform } from "../services/platformRouter.js";
 
 console.log("NODE_ENV =", process.env.NODE_ENV);
 

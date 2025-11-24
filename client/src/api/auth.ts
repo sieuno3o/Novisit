@@ -33,7 +33,7 @@ export async function beginKakaoLogin(
   if (options?.prompt) {
     url.searchParams.set("prompt", options.prompt);
   }
-  window.location.assign(url.toString());
+  window.location.replace(url.toString());
 }
 
 export async function exchangeKakao(appCode: string) {
@@ -75,6 +75,8 @@ export async function fetchMain() {
 export async function logout() {
   try {
     await http.post("/auth/logout");
-  } catch {}
+  } catch {
+    // 로그아웃 실패해도 강제 로그아웃 진행
+  }
   hardLogout({ redirectTo: "/" });
 }

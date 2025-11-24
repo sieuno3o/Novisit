@@ -1,6 +1,9 @@
 import { NoticeResult } from '../types/notice.js';
 import { PKNUCrawler } from './pknuCrawler.js';
 import { TestCrawler } from './testCrawler.js';
+import { KStartupCrawler } from './kstartupCrawler.js';
+import { MSSCrawler } from './mssCrawler.js';
+import { CampuspickCrawler } from './campuspickCrawler.js';
 import { extractDomainName } from '../utils/urlUtils.js';
 
 // 상세 페이지 크롤링 결과
@@ -11,7 +14,7 @@ export interface NoticeDetailResult {
 
 // 크롤러 인터페이스
 interface SiteCrawler {
-  crawlNoticesList(lastKnownNumber: string | null): Promise<NoticeResult>;
+  crawlNoticesList(lastKnownNumber: string | null, maxPages?: number): Promise<NoticeResult>;
   crawlNoticeDetail(noticeLink: string): Promise<NoticeDetailResult>;
   close(): Promise<void>;
 }
@@ -40,6 +43,20 @@ export class WebCrawler {
         console.log(`[WebCrawler] TestCrawler 사용: ${url}`);
         crawler = new TestCrawler(url);
         break;
+      case 'k-startup':
+        console.log(`[WebCrawler] KStartupCrawler 사용: ${url}`);
+        crawler = new KStartupCrawler();
+        break;
+      case 'mss':
+      case 'mss.go.kr':
+        console.log(`[WebCrawler] MSSCrawler 사용: ${url}`);
+        crawler = new MSSCrawler();
+        break;
+      case 'campuspick':
+      case 'campuspick.com':
+        console.log(`[WebCrawler] CampuspickCrawler 사용: ${url}`);
+        crawler = new CampuspickCrawler();
+        break;
       // TestCrawler를 범용 크롤러로 사용 (테이블 구조 지원)
       default:
         console.log(`[WebCrawler] TestCrawler 사용 (기본): ${url}`);
@@ -51,10 +68,10 @@ export class WebCrawler {
   }
 
   // 공지사항 목록 크롤링 (URL에 따라 분기)
-  async crawlNoticesList(url: string, lastKnownNumber: string | null = null): Promise<NoticeResult> {
+  async crawlNoticesList(url: string, lastKnownNumber: string | null = null, maxPages?: number): Promise<NoticeResult> {
     try {
       const crawler = this.getCrawler(url);
-      return await crawler.crawlNoticesList(lastKnownNumber);
+      return await crawler.crawlNoticesList(lastKnownNumber, maxPages);
     } catch (error: any) {
       console.error(`[WebCrawler] 크롤링 실패 (${url}):`, error.message);
       // 빈 결과 반환

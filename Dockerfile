@@ -9,11 +9,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     (dpkg --configure -a || true) && \
     (apt-get install -f -y || true) && \
-# DEBIAN_FRONTEND를 noninteractive로 설정하여 대화형 프롬프트 방지
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && \
-    (dpkg --configure -a || true) && \
-    (apt-get install -f -y || true) && \
     apt-get install -y --no-install-recommends \
     libnss3 \
     libnspr4 \
@@ -54,6 +49,7 @@ RUN if [ -f "package-lock.json" ]; then \
 
 # Copy built application files
 # 프로덕션 환경에서는 빌드된 dist 파일만 필요
+# dist 디렉토리가 없어도 빌드가 진행되도록 처리
 # dist 디렉토리가 없어도 빌드가 진행되도록 처리
 RUN mkdir -p ./server/dist ./client/dist
 

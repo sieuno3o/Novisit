@@ -1,14 +1,13 @@
 import http from "./http";
-import axios from "axios";
 
 // 카카오톡 연결 변경
 export async function setKakaoEnabled(enabled: boolean): Promise<void> {
   try {
     await http.patch("/api/auth/notifications/kakao", { enabled });
     return;
-  } catch (e: any) {
-    const s = e?.response?.status;
-
+  } catch (e: unknown) {
+    const s = (e as { response?: { status?: number } })?.response?.status;
+    
     if (s !== 404 && s !== 405) throw e;
   }
 
@@ -16,8 +15,8 @@ export async function setKakaoEnabled(enabled: boolean): Promise<void> {
   try {
     await http.patch("/api/auth/kakao/talk", { enabled });
     return;
-  } catch (e: any) {
-    const s = e?.response?.status;
+  } catch (e: unknown) {
+    const s = (e as { response?: { status?: number } })?.response?.status;
     if (s !== 404 && s !== 405) throw e;
   }
 

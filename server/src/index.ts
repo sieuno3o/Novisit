@@ -3,15 +3,15 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { createClient } from "redis";
 import authRouter from "./routes/authRoutes.js";
-import "./config/firebase"; // Firebase Admin SDK 초기화
+import "./config/firebase.js"; // Firebase Admin SDK 초기화
 
 import mainRoutes from "./routes/mainRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import cors from "cors";
-import { CrawlingService } from "./services/crawlingService.js";
-import { initDiscordBot } from "./services/discordService";
-import { registerCrawltestApi } from "./test/crawltest.js";
+import { CrawlingService } from './services/crawlingService.js'
+import { initDiscordBot } from "./services/discordService.js";
+import { registerCrawltestApi } from './test/crawltest.js'
 import { initializeDomains } from "./repository/mongodb/domainRepository.js";
 import { initialDomains } from "./data/initialDomains.js";
 import discordMessageTestRouter from "./test/discordMessageTest.js";
