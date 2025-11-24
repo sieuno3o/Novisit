@@ -45,10 +45,8 @@ async function processSingleUrl(
     console.log(`[크롤링 테스트] 키워드-도메인 쌍 ${keywordDomainPairs.length}개로 크롤링 시작`);
     
     // crawlAndFilterByKeywords 사용 (크롤링, 저장, 필터링, 알림 전송 모두 처리)
-    const notificationsSent = await crawlAndFilterByKeywords(url, keywordDomainPairs, crawler);
+    const { notificationsSent, crawlResult } = await crawlAndFilterByKeywords(url, keywordDomainPairs, crawler);
     
-    // 크롤링 결과를 가져오기 위해 다시 조회
-    const crawlResult = await crawler.crawlNoticesList(url, lastKnownNumber);
     const latestNumber = await getLatestNoticeNumber(url, source);
     
     return {
@@ -166,6 +164,7 @@ export function registerCrawltestApi(app: express.Application) {
         totalNotificationsSent,
         executedAt: new Date().toISOString(),
       });
+      
       
     } catch (error: any) {
       console.error('❌ 크롤링 테스트 오류:', error);

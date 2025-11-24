@@ -96,6 +96,7 @@ export class JobScheduler {
         
         // 각 Domain의 url_list를 순회
         for (const url of domain.url_list) {
+          
           // 해당 url에 대한 keywordDomainPairs 배열이 없으면 생성
           if (!urlMap.has(url)) {
             urlMap.set(url, []);
