@@ -13,7 +13,7 @@ export const domainMeta: Record<string, { desc: string; icon: string }> = {
     icon: "Globe",
   },
   "테스트": {
-    desc: "NoVist의 기능을 직접 테스트해보세요.",
+    desc: "NoVisit의 기능을 직접 테스트해보세요.",
     icon: "Code",
   },
   "창업": {
