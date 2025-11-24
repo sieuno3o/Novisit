@@ -51,7 +51,7 @@ export async function getFcmTokenFromBrowser(): Promise<string> {
 
 // 서버에 FCM 토큰 저장 요청(JWT 필요)
 export async function saveFcmTokenToServer(token: string): Promise<void> {
-  await http.post("/users/fcm-token", {
+  await http.post("/api/users/fcm-token", {
     fcmToken: token,
   });
 }
@@ -59,7 +59,7 @@ export async function saveFcmTokenToServer(token: string): Promise<void> {
 
 // 서버에서 FCM 토큰 삭제 요청
 export async function deleteFcmTokenFromServer(): Promise<void> {
-  await http.delete("/users/fcm-token");
+  await http.delete("/api/users/fcm-token");
 }
 
 /**
