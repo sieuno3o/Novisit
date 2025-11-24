@@ -32,7 +32,8 @@ export default function Domains({ domains, error }: Props) {
         const set = new Set<string>(
           list
             .map((s) => s.domain_id)
-            .filter((id): id is string | number => id != null)
+            // null/undefined만 걸러주고 나머지는 전부 string으로 변환
+            .filter((id) => id != null)
             .map((id) => String(id))
         );
 
@@ -62,7 +63,7 @@ export default function Domains({ domains, error }: Props) {
         key={idStr}
         icon={<Icon size={28} />}
         title={title}
-        desc={d.desc}
+        desc={d.desc ?? ""} // string | undefined → string 으로 보정
         disabled={isUsed} // 버튼 비활성화
         onClick={
           isUsed
