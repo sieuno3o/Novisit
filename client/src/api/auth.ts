@@ -74,6 +74,8 @@ export async function fetchMain() {
 export async function logout() {
   try {
     await http.post("/auth/logout");
-  } catch {}
+  } catch {
+    // 로그아웃 실패해도 강제 로그아웃 진행
+  }
   hardLogout({ redirectTo: "/" });
 }

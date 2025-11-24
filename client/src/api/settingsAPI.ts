@@ -37,7 +37,7 @@ export type Setting = {
   summary?: boolean;  // 요약 기능 ON/OFF
   created_at?: string;
   messages: Message[];
-  [extra: string]: any;
+  [extra: string]: unknown;
 };
 
 export class ApiError extends Error {

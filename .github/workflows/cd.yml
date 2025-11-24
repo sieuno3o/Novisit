@@ -159,8 +159,14 @@ jobs:
             sudo mkdir -p /opt/novisit
             cd /opt/novisit
             
-            # Stop existing services
-            sudo docker-compose down || echo "No existing services to stop"
+            # Stop existing services (only if current deployment exists)
+            if [ -d "current" ] && [ -f "current/docker-compose.yml" ]; then
+              cd current
+              sudo docker-compose down || echo "No existing services to stop"
+              cd ..
+            else
+              echo "No existing deployment found, skipping docker-compose down"
+            fi
             
             # Backup current deployment (if exists)
             if [ -d "current" ]; then
@@ -304,8 +310,14 @@ jobs:
             # Stop existing services
             sudo docker-compose down || echo "No existing services to stop"
             
+            # Force remove any remaining containers
+            sudo docker ps -a --filter "name=novisit" --format "{{.ID}}" | xargs -r sudo docker rm -f || true
+            
+            # Remove old images to force rebuild
+            sudo docker images --filter "reference=*novisit*" --format "{{.ID}}" | xargs -r sudo docker rmi -f || true
+            
             # Build images without cache to ensure latest code
-            sudo docker-compose build --no-cache
+            sudo docker-compose build --no-cache --pull
             
             # Start services with force recreate to ensure new containers
             sudo docker-compose up -d --force-recreate
