@@ -37,7 +37,7 @@ export type Setting = {
   summary?: boolean;  // 요약 기능 ON/OFF
   created_at?: string;
   messages: Message[];
-  [extra: string]: any;
+  [extra: string]: unknown;
 };
 
 export class ApiError extends Error {
@@ -48,6 +48,7 @@ export class ApiError extends Error {
   }
 }
 
+/* ---------------- utils ---------------- */
 /* ---------------- utils ---------------- */
 const normList = (v: any) => (Array.isArray(v) ? v : []);
 const getId = (s: any) => s?.id ?? s?._id;

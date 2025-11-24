@@ -44,6 +44,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({
   const [domainsLoading, setDomainsLoading] = useState(false);
   const [domainId, setDomainId] = useState("");
 
+
   const [name, setName] = useState("");
   const [urlText, setUrlText] = useState("");
   const [keywordText, setKeywordText] = useState("");
@@ -284,6 +285,7 @@ const CreateNotice: React.FC<CreateNoticeProps> = ({
                       required
                     />
                   </label>
+
 
                   <div className="flex-row form__group">
                     <div className="channel-label">채널</div>
