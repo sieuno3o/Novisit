@@ -167,7 +167,7 @@ export async function updateSetting(
         ? { ...payload, channel: ensureChannelArray(payload.channel) }
         : payload;
 
-    const { data } = await http.put(`/settings/${id}`, body, {
+    const { data } = await http.put(`/api/settings/${id}`, body, {
       headers: { "Content-Type": "application/json" },
     });
 
