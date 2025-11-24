@@ -234,11 +234,17 @@ export default function ChannelCard({
               {actionText}
             </button>
           ) : (
-            // 연동 이후엔 토글 대신 연한색 박스
-            <span className="notify-pill" aria-label="디스코드 알림 상태">
-              <span className="label">알림</span>
-              <span className="state">ON</span>
-            </span>
+            // 연동 이후엔 호버 시 "방 입장하기"로 변경
+            <a
+              href="https://discord.gg/YVEn24mrbt"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="notify-pill notify-pill--discord"
+              aria-label="디스코드 방 입장하기"
+            >
+              <span className="default-text">알림 ON</span>
+              <span className="hover-text">서버 링크</span>
+            </a>
           )
         ) : (
           //Kakao: '알림' 텍스트 + 토글
