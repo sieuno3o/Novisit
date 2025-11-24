@@ -79,6 +79,13 @@ jobs:
       - name: Build server
         run: npm run server:build
 
+      - name: Create firebase-admin-key.json in dist
+        run: |
+          mkdir -p server/dist/config
+          printf '%s\n' '${{ secrets.FIREBASE_ADMIN_KEY }}' > server/dist/config/firebase-admin-key.json
+          echo "✅ firebase-admin-key.json created in server/dist/config"
+          echo "File size: $(wc -c < server/dist/config/firebase-admin-key.json) bytes"
+
       - name: Create deployment package
         run: |
           mkdir -p deployment
@@ -96,6 +103,14 @@ jobs:
           cp server/package.json deployment/server/
           if [ -f "server/package-lock.json" ]; then cp server/package-lock.json deployment/server/; fi
           if [ -f "server/tsconfig.json" ]; then cp server/tsconfig.json deployment/server/; fi
+          
+          # Verify firebase-admin-key.json is included in dist
+          if [ -f "server/dist/config/firebase-admin-key.json" ]; then
+            echo "✅ firebase-admin-key.json found in server/dist/config"
+          else
+            echo "❌ firebase-admin-key.json NOT found in server/dist/config"
+            exit 1
+          fi
           
           # Copy root files
           cp docker-compose.yml deployment/
@@ -270,6 +285,20 @@ jobs:
             else
               echo "❌ server/.env file not found!"
               exit 1
+            fi
+            
+            # Verify firebase-admin-key.json exists in dist/config
+            echo "=== Verifying firebase-admin-key.json ==="
+            if [ -f "server/dist/config/firebase-admin-key.json" ]; then
+              echo "✅ firebase-admin-key.json found in server/dist/config"
+              echo "File location: $(pwd)/server/dist/config/firebase-admin-key.json"
+              echo "File size: $(wc -c < server/dist/config/firebase-admin-key.json) bytes"
+            else
+              echo "❌ firebase-admin-key.json NOT found in server/dist/config!"
+              echo "Creating it now..."
+              mkdir -p server/dist/config
+              printf '%s\n' '${{ secrets.FIREBASE_ADMIN_KEY }}' > server/dist/config/firebase-admin-key.json
+              echo "✅ firebase-admin-key.json created"
             fi
             
             # Stop existing services
