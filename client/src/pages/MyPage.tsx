@@ -46,13 +46,14 @@ export default function MyPage() {
         };
         const message = messageMap[result] ?? "연동 처리 결과를 확인할 수 없습니다.";
         alert(message);
-        
+
         if (result === 'connected') {
-          window.location.href = 'https://discord.gg/YVEn24mrbt';
-        } else {
-          // 주소 깨끗하게 정리 (쿼리 제거)
-          window.history.replaceState({}, "", window.location.pathname);
+          // Discord 서버 링크를 새 탭에서 열기
+          window.open('https://discord.gg/YVEn24mrbt', '_blank');
         }
+
+        // 주소 깨끗하게 정리 (쿼리 제거)
+        window.history.replaceState({}, "", window.location.pathname);
       })();
     }, [params, refreshMe]);
   if (loading) return null;

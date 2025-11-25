@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../../../public/assets/style/_flex.scss";
 import "../../../public/assets/style/_typography.scss";
 import "./NoticeSetting.scss";
@@ -7,6 +8,7 @@ import { FiEdit, FiSave, FiX, FiTrash2 } from "react-icons/fi";
 import { IoMdTime } from "react-icons/io";
 import CreateNotice from "./CreateNotice";
 import Toggle from "../my/Toggle";
+import { useAuth } from "../../auth";
 import {
   fetchSettings,
   updateSetting,
@@ -180,6 +182,8 @@ function NoticeCard({
   onSelect: (domainId: string | null) => void;
 }) {
   const { show } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(setting.name ?? "");
@@ -216,6 +220,26 @@ function NoticeCard({
 
   const toggleCh = (key: Channel) =>
     setChannels((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const handleDiscordToggle = (isEnabling: boolean) => {
+    // Discord를 활성화하려고 할 때만 검증
+    const isDiscordLinked = (user as any)?.isDiscordLinked;
+
+    if (isEnabling && !isDiscordLinked) {
+      const confirmMessage =
+        "디스코드 계정을 먼저 연동해주세요.\n설정 페이지로 이동하시겠습니까?";
+
+      if (window.confirm(confirmMessage)) {
+        navigate("/my"); // 마이페이지로 이동
+        return;
+      }
+      // 사용자가 취소하면 토글하지 않음
+      return;
+    }
+
+    // 연동되어 있거나 비활성화하는 경우 정상 토글
+    toggleCh("discord");
+  };
 
   const save = async () => {
     if (!name.trim()) {
@@ -403,7 +427,7 @@ function NoticeCard({
               className={`chip ${
                 channels.discord ? "chip--active" : ""
               } channel discord`}
-              onClick={() => toggleCh("discord")}
+              onClick={() => handleDiscordToggle(!channels.discord)}
             >
               디스코드
             </button>

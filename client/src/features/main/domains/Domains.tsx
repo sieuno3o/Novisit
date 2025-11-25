@@ -19,7 +19,7 @@ export default function Domains({ domains, error }: Props) {
     null
   );
 
-  // 이미 알림 설정이 있는 도메인의 id 집합 (문자열로 통일)
+  //  이미 알림 설정이 있는 도메인의 id 집합
   const [usedDomainIds, setUsedDomainIds] = useState<Set<string>>(new Set());
 
   // 마운트 시 /settings 호출해서 사용 중인 도메인 수집
