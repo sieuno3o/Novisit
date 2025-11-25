@@ -1,39 +1,39 @@
-import http from "../api/http";
+// src/api/main.ts
+import http from "./http";
 
-// 서버에서 내려주는 원본 DTO 타입
+/** 백엔드에서 내려주는 원본 도메인 DTO */
 export type DomainDto = {
   id: string;
   name: string;
-  desc: string;   // ← 새 필드
-  icon: string;   // ← 새 필드 (예: "Globe")
+  desc?: string; // 서버 설명(선택)
+  icon?: string; // lucide 아이콘 이름(선택, 예: "Globe")
+  keywords?: string[]; // 키워드 목록(선택)
 };
 
 export type MainResponse = {
   domains: DomainDto[];
 };
 
-// 프론트에서 사용할 도메인 타입
+/** 프론트에서 사용하는 도메인 타입 */
 export type Domain = {
   id: string;
   name: string;
-  desc: string;   // 카드/모달에서 설명으로 사용
-  icon: string;   // 아이콘 매핑용 문자열
+  desc?: string;
+  icon?: string;
+  keywords?: string[];
 };
 
-// DTO → Domain 변환
+/** DTO → Domain 매핑 */
 const mapDto = (d: DomainDto): Domain => ({
   id: d.id,
   name: d.name,
   desc: d.desc,
   icon: d.icon,
+  keywords: d.keywords ?? [],
 });
 
-// 토큰 불필요
+/** 토큰 불필요 메인 도메인 목록 조회 */
 export async function fetchMain(): Promise<Domain[]> {
-  // 이 부분의 URL은 백엔드에서 정의한 "제공 도메인 조회" 엔드포인트 그대로 사용
-  // (지금처럼 /main 이 그 역할이라면 그대로 두면 됨)
-  const { data } = await http.get<MainResponse>("/main");
-
-  // domains가 없거나 null일 수 있으니 방어적으로 처리
+  const { data } = await http.get<MainResponse>("/api/main");
   return (data.domains ?? []).map(mapDto);
 }

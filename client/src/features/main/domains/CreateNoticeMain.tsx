@@ -9,6 +9,7 @@ import {
   ApiError,
   Channel,
   Setting,
+  CreateSettingRequest, // ✅ 추가
 } from "../../../api/settingsAPI";
 import Toggle from "../../my/Toggle";
 
@@ -87,19 +88,22 @@ export default function CreateNoticeMain({
     e.preventDefault();
     setBanner(null);
 
-    // 채널 단일/복수 처리
+    // 선택된 채널 목록
     const chosen = (["kakao", "discord"] as Channel[]).filter(
       (c) => selected[c]
     );
     if (chosen.length === 0) {
-      setBanner({ type: "error", text: "채널을 최소 1개 이상 선택해 주세요." });
+      setBanner({
+        type: "error",
+        text: "채널을 최소 1개 이상 선택해 주세요.",
+      });
       return;
     }
 
-    const payload = {
-      domain_id: initialDomainId,
+    const payload: CreateSettingRequest = {
+      domain_id: initialDomainId, // 메인에서 받은 고정 도메인 ID
       name: name.trim(),
-      url_list: [],
+      url_list: [], // 메인 모달은 URL 미사용
       filter_keywords: parseList(keywordText),
       channel: chosen, // 항상 배열로 전달
       summary,
@@ -107,7 +111,7 @@ export default function CreateNoticeMain({
 
     try {
       setLoading(true);
-      const setting = await createSetting(payload);
+      const setting = await createSetting(payload); // 백엔드 저장
 
       onCreated?.(setting); // 선택: 필요 시 상위에서 활용
       onClose();
