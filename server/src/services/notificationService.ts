@@ -84,7 +84,7 @@ export async function sendKakaoMessage(
     await KakaoAPI.sendMemo(accessToken, feedTemplate);
 
     // 두 번째 메시지: 텍스트 템플릿 (요약, 내용이 있을 경우에만 전송)
-    if (description && description.trim() !== '') {
+    if (description && description.trim() !== '' && description.trim() !== title.trim()) {
       const textTemplate = {
         object_type: 'text',
         text: description,
@@ -144,7 +144,7 @@ export async function sendKakaoMessage(
       await KakaoAPI.sendMemo(newAccessToken, feedTemplate);
 
       // 두 번째 메시지: 텍스트 템플릿 (요약, 내용이 있을 경우에만 전송)
-      if (description && description.trim() !== '') {
+      if (description && description.trim() !== '' && description.trim() !== title.trim()) {
         const textTemplate = {
           object_type: 'text',
           text: description,

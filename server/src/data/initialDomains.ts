@@ -43,7 +43,7 @@ export const initialDomains: InitialDomainData[] = [
     _id: "4",
     name: "테스트",
     url_list: [
-      "https://preview--pknu-notice-watch.lovable.app",
+      "https://pknu-notice-watch.lovable.app",
     ],
     keywords: ["테스트"],
     setting_ids: [],
