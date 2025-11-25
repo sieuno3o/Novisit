@@ -10,18 +10,23 @@ type Props = {
 };
 
 export function DomainCard({ icon, title, desc, onClick, disabled }: Props) {
+  const isDisabled = !!disabled;
+  const buttonLabel = isDisabled ? "설정 완료" : "설정하기";
+
   return (
-    <div className={s.card}>
+    <div className={`${s.card} ${isDisabled ? s.disabled : ""}`}>
       <div className={s.icon}>{icon}</div>
       <h3 className={s.title}>{title}</h3>
       <p className={s.desc}>{desc}</p>
 
       <button
-        className={`${s.button} btn-outline`}
-        disabled={disabled}                     // 비활성화
-        onClick={disabled ? undefined : onClick} // 클릭 완전 차단
+        className={`${s.button} btn-outline ${
+          isDisabled ? s.buttonDisabled : ""
+        }`}
+        disabled={isDisabled}
+        onClick={isDisabled ? undefined : onClick}
       >
-        설정하기
+        {buttonLabel}
       </button>
     </div>
   );

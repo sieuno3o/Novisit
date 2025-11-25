@@ -1,5 +1,5 @@
 // src/features/notice/RecentNotice.tsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./RecentNotice.scss";
 import "../../../public/assets/style/_flex.scss";
 import "../../../public/assets/style/_typography.scss";
@@ -27,6 +27,7 @@ type RecentItem = {
 
 const INITIAL_COUNT = 10;
 const PAGE_SIZE = 5;
+const POLLING_INTERVAL = 500; // 0.5초마다 새 알림 확인
 
 const pad2 = (n: number) => (n < 10 ? `0${n}` : String(n));
 
@@ -113,26 +114,28 @@ const RecentNotice: React.FC<RecentNoticeProps> = ({ selectedDomainId }) => {
   const [allItems, setAllItems] = useState<RecentItem[]>([]);
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
 
-  // 초기 로드: settings + domains
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
+  // 데이터 로드 함수
+  const loadData = useCallback(async (isInitial = false) => {
+    try {
+      if (isInitial) {
         setLoading(true);
         setBanner(null);
+      }
 
-        const [settings, domainList] = await Promise.all([
-          fetchSettings(),
-          fetchMain(),
-        ]);
-        if (!alive) return;
+      const [settings, domainList] = await Promise.all([
+        fetchSettings(),
+        fetchMain(),
+      ]);
 
-        const flat = flattenAndSortMessages(settings);
-        setAllItems(flat);
-        setDomains(domainList);
+      const flat = flattenAndSortMessages(settings);
+      setAllItems(flat);
+      setDomains(domainList);
+
+      if (isInitial) {
         setVisibleCount(Math.min(INITIAL_COUNT, flat.length));
-      } catch (e: any) {
-        if (!alive) return;
+      }
+    } catch (e: any) {
+      if (isInitial) {
         setBanner({
           type: "error",
           text: e?.message || "최근 알림을 불러오지 못했습니다.",
@@ -140,14 +143,25 @@ const RecentNotice: React.FC<RecentNoticeProps> = ({ selectedDomainId }) => {
         setAllItems([]);
         setDomains([]);
         setVisibleCount(0);
-      } finally {
-        if (alive) setLoading(false);
       }
-    })();
-    return () => {
-      alive = false;
-    };
+    } finally {
+      if (isInitial) setLoading(false);
+    }
   }, []);
+
+  // 초기 로드
+  useEffect(() => {
+    loadData(true);
+  }, [loadData]);
+
+  // 주기적 polling (30초마다)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData(false);
+    }, POLLING_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [loadData]);
 
   // 선택된 도메인으로 필터링
   const filteredItems = useMemo(() => {
