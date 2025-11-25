@@ -39,7 +39,7 @@ export class WebCrawler {
       case 'pknu':
         crawler = new PKNUCrawler();
         break;
-      case 'pknu-notice-watch':
+      case 'preview--pknu-notice-watch':
         console.log(`[WebCrawler] TestCrawler 사용: ${url}`);
         crawler = new TestCrawler(url);
         break;
