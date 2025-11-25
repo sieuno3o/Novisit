@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { me as apiMe, logout as apiLogout, User } from "./api/auth";
 import { tokenStore, hardLogout } from "./api/http";
 import { disablePushForCurrentUser } from "./firebase/fcmClient";
@@ -26,6 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     tokenStore.getAccess() || null
   );
   const [loading, setLoading] = useState(true);
+  const lastRefreshRef = useRef<number>(0);
 
   const syncAccessToken = () => {
     setAccessToken(tokenStore.getAccess() || null);
@@ -57,9 +58,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(false);
     })();
 
-    // 탭 전환/스토리지 변경 시 토큰 동기화
+    // 탭 전환/스토리지 변경 시 토큰 및 사용자 정보 갱신
     const onStorage = () => syncAccessToken();
-    const onFocus = () => syncAccessToken();
+    const onFocus = async () => {
+      syncAccessToken();
+
+      // 30초 쿨다운 - 과도한 API 호출 방지
+      const now = Date.now();
+      if (now - lastRefreshRef.current < 30000) return;
+
+      lastRefreshRef.current = now;
+
+      // user 정보 갱신 (토큰이 있을 때만)
+      if (tokenStore.getAccess()) {
+        try {
+          await refreshMe();
+        } catch (err) {
+          // 조용히 실패 처리 (에러 무시)
+        }
+      }
+    };
+
     window.addEventListener("storage", onStorage);
     window.addEventListener("focus", onFocus);
     return () => {

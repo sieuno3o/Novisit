@@ -32,7 +32,7 @@ export default function CreateNoticeMain({
   onCreated,
 }: Props) {
   const navigate = useNavigate();
-  const { logout } = (useAuth() as any) ?? {};
+  const { user, logout } = (useAuth() as any) ?? {};
 
   // ====== CreateNotice.tsx와 동일한 상태 구성 ======
   const [name, setName] = useState("");
@@ -73,6 +73,27 @@ export default function CreateNoticeMain({
 
   const toggle = (key: Channel) =>
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const handleDiscordToggle = (isEnabling: boolean) => {
+    // Discord를 활성화하려고 할 때만 검증
+    const isDiscordLinked = (user as any)?.isDiscordLinked;
+
+    if (isEnabling && !isDiscordLinked) {
+      const confirmMessage =
+        "디스코드 계정을 먼저 연동해주세요.\n설정 페이지로 이동하시겠습니까?";
+
+      if (window.confirm(confirmMessage)) {
+        onClose(); // 모달 닫기
+        navigate("/my"); // 마이페이지로 이동
+        return;
+      }
+      // 사용자가 취소하면 토글하지 않음
+      return;
+    }
+
+    // 연동되어 있거나 비활성화하는 경우 정상 토글
+    toggle("discord");
+  };
 
   const parseList = (text: string) =>
     text
@@ -206,7 +227,7 @@ export default function CreateNoticeMain({
                   className={`chip ${
                     selected.discord ? "chip--active" : ""
                   } channel discord`}
-                  onClick={() => toggle("discord")}
+                  onClick={() => handleDiscordToggle(!selected.discord)}
                 >
                   디스코드
                 </button>
