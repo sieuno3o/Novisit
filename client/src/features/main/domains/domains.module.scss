@@ -70,4 +70,21 @@
 }
   
 
-  
+.buttonDisabled {
+  color: #757373;
+  border-color: #d0d3d8;
+  cursor: default;
+}
+
+.buttonDisabled:hover {
+ color: #757373;
+  border-color: #d0d3d8;
+}
+
+.card.disabled,
+.card.disabled:hover {
+  transform: none !important;
+  box-shadow: 0 10px 30px rgba(2, 6, 23, .06);
+  background: #ffffff  !important;
+  cursor: default !important;
+}
