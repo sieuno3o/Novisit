@@ -4,12 +4,13 @@ import { DomainCard } from "./DomainCard";
 import CreateNoticeMain from "./CreateNoticeMain";
 import s from "./domains.module.scss";
 import * as Icons from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 import type { Domain } from "../../../api/main";
 import { fetchSettings } from "../../../api/settingsAPI"; //  알림 설정 목록 조회
 
 type Props = {
-  domains: Domain[];          // MainPage에서 내려줄 도메인 목록
+  domains: Domain[]; // MainPage에서 내려줄 도메인 목록
   error?: string | null;
 };
 
@@ -28,7 +29,13 @@ export default function Domains({ domains, error }: Props) {
       try {
         const list = await fetchSettings();
         if (!alive) return;
-        const set = new Set<string>(list.map((s) => s.domain_id));
+
+        // domain_id가 문자열인 것만 사용 (undefined/null 방지)
+        const ids = list
+          .map((s) => s.domain_id)
+          .filter((id): id is string => typeof id === "string");
+
+        const set = new Set<string>(ids);
         setUsedDomainIds(set);
       } catch (e) {
         if (import.meta.env.DEV) {
@@ -42,20 +49,24 @@ export default function Domains({ domains, error }: Props) {
   }, []);
 
   const items = domains.map((d) => {
-    const Icon = (Icons as any)[d.icon] ?? Icons.Globe;
-    const isUsed = usedDomainIds.has(d.id); // 이미 설정된 도메인 여부
+    // 아이콘 이름이 없거나 잘못 와도 Globe로 fallback
+    const iconName = (d.icon ?? "Globe") as keyof typeof Icons;
+    const Icon = (Icons[iconName] ?? Icons.Globe) as LucideIcon;
+
+    const domainId = String(d.id);
+    const isUsed = usedDomainIds.has(domainId); // 이미 설정된 도메인 여부
 
     return (
       <DomainCard
-        key={d.id}
+        key={domainId}
         icon={<Icon size={28} />}
-        title={d.name}
-        desc={d.desc}
+        title={d.name ?? ""} // string | undefined 방지
+        desc={d.desc ?? ""} // string | undefined 방지
         disabled={isUsed} // 버튼 비활성화
         onClick={
           isUsed
             ? undefined // 이미 사용된 도메인은 아예 클릭 이벤트 없음
-            : () => setSelected({ id: d.id, name: d.name })
+            : () => setSelected({ id: domainId, name: d.name ?? "" })
         }
       />
     );
