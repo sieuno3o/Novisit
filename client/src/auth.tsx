@@ -1,8 +1,13 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 import { me as apiMe, logout as apiLogout, User } from "./api/auth";
 import { tokenStore, hardLogout } from "./api/http";
 import { disablePushForCurrentUser } from "./firebase/fcmClient";
-
 
 type AuthState = {
   user: User | null;
@@ -65,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // 30초 쿨다운 - 과도한 API 호출 방지
       const now = Date.now();
-      if (now - lastRefreshRef.current < 30000) return;
+      if (now - lastRefreshRef.current < 100) return;
 
       lastRefreshRef.current = now;
 
