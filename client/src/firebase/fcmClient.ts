@@ -28,15 +28,19 @@ export async function getFcmTokenFromBrowser(): Promise<string> {
     throw new Error("알림 권한이 허용되지 않았습니다.");
   }
 
-  // FCM용 서비스워커 등록
-  const registration = await navigator.serviceWorker.register(
-    "/firebase-messaging-sw.js"
-  );
+  // 1) FCM용 서비스워커 등록 (이미 등록되어 있으면 재사용됨)
+  await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
+    scope: "/",
+  });
+
+  // 2) "ready"를 사용해 활성화(activated)된 SW를 확보
+  const registration = await navigator.serviceWorker.ready;
 
   if (!messaging) {
     throw new Error("Firebase messaging이 초기화되지 않았습니다.");
   }
 
+  // 3) 활성화된 서비스워커를 기반으로 FCM 토큰 발급
   const token = await getToken(messaging, {
     vapidKey: VAPID_KEY,
     serviceWorkerRegistration: registration,
@@ -48,6 +52,7 @@ export async function getFcmTokenFromBrowser(): Promise<string> {
 
   return token;
 }
+
 
 // 서버에 FCM 토큰 저장 요청(JWT 필요)
 export async function saveFcmTokenToServer(token: string): Promise<void> {
